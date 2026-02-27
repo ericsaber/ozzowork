@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Mic, Square, Phone, Mail, Voicemail, MessageSquare } from "lucide-react";
+import { ArrowLeft, Mic, Square, Phone, Mail, Voicemail, MessageSquare, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addWeeks, format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,10 @@ const LogInteraction = () => {
   const [followUpDate, setFollowUpDate] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const { data: contacts } = useQuery({
     queryKey: ["contacts"],
@@ -68,16 +72,80 @@ const LogInteraction = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  const handleRecord = () => {
-    if (isRecording) {
-      setIsRecording(false);
-      toast.info("Voice transcription coming soon — type your note for now.");
-    } else {
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        await transcribeAudio(blob);
+      };
+
+      mediaRecorder.start();
       setIsRecording(true);
+    } catch {
+      toast.error("Microphone access denied. Please type your note instead.");
     }
   };
 
-  const selectedContact = contacts?.find((c) => c.id === contactId);
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const transcribeAudio = async (blob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append("audio", blob, "audio.webm");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-audio`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Transcription failed");
+      }
+
+      const { summary } = await res.json();
+      if (summary) {
+        setNote(summary);
+        toast.success("Recording transcribed");
+      } else {
+        toast.info("No speech detected. Type your note instead.");
+      }
+    } catch (e) {
+      console.error("Transcription error:", e);
+      toast.error("Transcription failed — type your note manually.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleRecord = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
@@ -135,16 +203,29 @@ const LogInteraction = () => {
         <div className="flex items-center gap-3 mb-2">
           <button
             onClick={handleRecord}
+            disabled={isTranscribing}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              isRecording
+              isTranscribing
+                ? "bg-muted text-muted-foreground"
+                : isRecording
                 ? "bg-destructive text-destructive-foreground animate-pulse"
                 : "bg-secondary text-secondary-foreground"
             }`}
           >
-            {isRecording ? <Square size={16} /> : <Mic size={18} />}
+            {isTranscribing ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : isRecording ? (
+              <Square size={16} />
+            ) : (
+              <Mic size={18} />
+            )}
           </button>
           <span className="text-xs text-muted-foreground">
-            {isRecording ? "Recording... tap to stop" : "Tap to record, or type below"}
+            {isTranscribing
+              ? "Transcribing..."
+              : isRecording
+              ? "Recording... tap to stop"
+              : "Tap to record, or type below"}
           </span>
         </div>
         <Textarea
@@ -153,6 +234,7 @@ const LogInteraction = () => {
           onChange={(e) => setNote(e.target.value)}
           rows={3}
           className="bg-card"
+          disabled={isTranscribing}
         />
       </div>
 
