@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus, X, UserPlus, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -12,7 +12,9 @@ const Contacts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showImportMenu, setShowImportMenu] = useState(false);
   const [form, setForm] = useState({ name: "", company: "", phone: "", email: "" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["contacts"],
@@ -27,14 +29,15 @@ const Contacts = () => {
   });
 
   const addContact = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (contactData?: { name: string; company: string; phone: string; email: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      const d = contactData || form;
       const { error } = await supabase.from("contacts").insert({
-        name: form.name,
-        company: form.company || null,
-        phone: form.phone || null,
-        email: form.email || null,
+        name: d.name,
+        company: d.company || null,
+        phone: d.phone || null,
+        email: d.email || null,
         user_id: user.id,
       });
       if (error) throw error;
@@ -47,6 +50,151 @@ const Contacts = () => {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const bulkAddContacts = useMutation({
+    mutationFn: async (rows: { name: string; company: string; phone: string; email: string }[]) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const insertData = rows.map((r) => ({
+        name: r.name,
+        company: r.company || null,
+        phone: r.phone || null,
+        email: r.email || null,
+        user_id: user.id,
+      }));
+      const { error } = await supabase.from("contacts").insert(insertData);
+      if (error) throw error;
+      return rows.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success(`${count} contact${count !== 1 ? "s" : ""} imported`);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handlePickFromPhone = async () => {
+    setShowImportMenu(false);
+    // Use the Contact Picker API if available
+    if ("contacts" in navigator && "ContactsManager" in window) {
+      try {
+        const props = ["name", "email", "tel"];
+        const opts = { multiple: false };
+        // @ts-ignore - Contact Picker API not yet in TS types
+        const pickedContacts = await navigator.contacts.select(props, opts);
+        if (pickedContacts && pickedContacts.length > 0) {
+          const picked = pickedContacts[0];
+          const contactData = {
+            name: picked.name?.[0] || "Unknown",
+            company: "",
+            phone: picked.tel?.[0] || "",
+            email: picked.email?.[0] || "",
+          };
+          addContact.mutate(contactData);
+        }
+      } catch (e: any) {
+        if (e.name !== "InvalidStateError" && e.name !== "NotAllowedError") {
+          toast.error("Could not access contacts");
+        }
+      }
+    } else {
+      toast.info("Contact Picker is not supported on this device. Try importing from a CSV file instead.");
+    }
+  };
+
+  const handleFileImport = () => {
+    setShowImportMenu(false);
+    fileInputRef.current?.click();
+  };
+
+  const parseCSV = (text: string) => {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) return [];
+
+    const headerLine = lines[0].toLowerCase();
+    const headers = headerLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+
+    const nameIdx = headers.findIndex((h) => h.includes("name") && !h.includes("company"));
+    const companyIdx = headers.findIndex((h) => h.includes("company") || h.includes("organization") || h.includes("org"));
+    const phoneIdx = headers.findIndex((h) => h.includes("phone") || h.includes("tel") || h.includes("mobile"));
+    const emailIdx = headers.findIndex((h) => h.includes("email") || h.includes("e-mail"));
+
+    if (nameIdx === -1) {
+      toast.error("CSV must have a 'name' column");
+      return [];
+    }
+
+    const rows: { name: string; company: string; phone: string; email: string }[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      // Simple CSV parse (handles quoted fields)
+      const vals = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) =>
+        v.trim().replace(/^"|"$/g, "")
+      ) || lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+
+      const name = vals[nameIdx]?.trim();
+      if (!name) continue;
+
+      rows.push({
+        name,
+        company: companyIdx >= 0 ? vals[companyIdx]?.trim() || "" : "",
+        phone: phoneIdx >= 0 ? vals[phoneIdx]?.trim() || "" : "",
+        email: emailIdx >= 0 ? vals[emailIdx]?.trim() || "" : "",
+      });
+    }
+
+    return rows;
+  };
+
+  const parseVCard = (text: string) => {
+    const cards = text.split("BEGIN:VCARD").filter((c) => c.trim());
+    const rows: { name: string; company: string; phone: string; email: string }[] = [];
+
+    for (const card of cards) {
+      const getField = (prefix: string) => {
+        const match = card.match(new RegExp(`${prefix}[^:]*:(.+)`, "i"));
+        return match ? match[1].trim() : "";
+      };
+
+      const fn = getField("FN");
+      if (!fn) continue;
+
+      rows.push({
+        name: fn,
+        company: getField("ORG").split(";")[0],
+        phone: getField("TEL"),
+        email: getField("EMAIL"),
+      });
+    }
+
+    return rows;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      let rows: { name: string; company: string; phone: string; email: string }[] = [];
+
+      if (file.name.endsWith(".vcf") || file.name.endsWith(".vcard")) {
+        rows = parseVCard(text);
+      } else {
+        rows = parseCSV(text);
+      }
+
+      if (rows.length === 0) {
+        toast.error("No contacts found in file. Check format (CSV with name column, or vCard).");
+        return;
+      }
+
+      bulkAddContacts.mutate(rows);
+    };
+    reader.readAsText(file);
+  };
 
   const filtered = contacts?.filter(
     (c) =>
@@ -67,6 +215,35 @@ const Contacts = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 h-11 bg-card"
+        />
+      </div>
+
+      {/* Import actions */}
+      <div className="flex gap-2 mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1.5 text-xs"
+          onClick={handlePickFromPhone}
+        >
+          <UserPlus size={14} />
+          From Phone
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1.5 text-xs"
+          onClick={handleFileImport}
+        >
+          <Upload size={14} />
+          Import File
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,.vcf,.vcard"
+          className="hidden"
+          onChange={handleFileChange}
         />
       </div>
 
@@ -105,7 +282,7 @@ const Contacts = () => {
               className="bg-background"
             />
             <Button
-              onClick={() => addContact.mutate()}
+              onClick={() => addContact.mutate(form)}
               disabled={!form.name || addContact.isPending}
               className="w-full"
             >
