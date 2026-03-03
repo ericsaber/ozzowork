@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Mic, Square, Phone, Mail, Voicemail, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, Mic, Square, Phone, Mail, Voicemail, MessageSquare, Loader2, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, addWeeks, format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,10 @@ const LogInteraction = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
+  // Quick-add contact state
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickForm, setQuickForm] = useState({ name: "", company: "", phone: "", email: "" });
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -40,6 +44,30 @@ const LogInteraction = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const quickAddContact = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { data, error } = await supabase.from("contacts").insert({
+        name: quickForm.name,
+        company: quickForm.company || null,
+        phone: quickForm.phone || null,
+        email: quickForm.email || null,
+        user_id: user.id,
+      }).select("id").single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      setContactId(data.id);
+      setShowQuickAdd(false);
+      setQuickForm({ name: "", company: "", phone: "", email: "" });
+      toast.success("Contact created & selected");
+    },
+    onError: (e) => toast.error(e.message),
   });
 
   const dateChips = [
@@ -162,18 +190,72 @@ const LogInteraction = () => {
       {/* Contact selector */}
       <div className="mb-5">
         <label className="text-sm font-medium text-foreground mb-1.5 block">Contact</label>
-        <select
-          value={contactId}
-          onChange={(e) => setContactId(e.target.value)}
-          className="w-full h-11 rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="">Select a contact...</option>
-          {contacts?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} {c.company ? `— ${c.company}` : ""}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={contactId}
+            onChange={(e) => setContactId(e.target.value)}
+            className="flex-1 h-11 rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Select a contact...</option>
+            {contacts?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.company ? `— ${c.company}` : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setShowQuickAdd(!showQuickAdd)}
+            className="w-11 h-11 rounded-lg border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            title="Add new contact"
+          >
+            {showQuickAdd ? <X size={16} /> : <Plus size={16} />}
+          </button>
+        </div>
+
+        {/* Quick-add contact form */}
+        {showQuickAdd && (
+          <div className="mt-3 p-3 rounded-lg border border-border bg-card animate-fade-in">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Quick-add contact</p>
+            <div className="space-y-2">
+              <Input
+                placeholder="Name *"
+                value={quickForm.name}
+                onChange={(e) => setQuickForm({ ...quickForm, name: e.target.value })}
+                className="h-9 text-sm bg-background"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Company"
+                  value={quickForm.company}
+                  onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })}
+                  className="h-9 text-sm bg-background"
+                />
+                <Input
+                  placeholder="Phone"
+                  value={quickForm.phone}
+                  onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })}
+                  className="h-9 text-sm bg-background"
+                />
+              </div>
+              <Input
+                placeholder="Email"
+                type="email"
+                value={quickForm.email}
+                onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })}
+                className="h-9 text-sm bg-background"
+              />
+              <Button
+                size="sm"
+                onClick={() => quickAddContact.mutate()}
+                disabled={!quickForm.name || quickAddContact.isPending}
+                className="w-full"
+              >
+                {quickAddContact.isPending ? "Creating..." : "Create & Select"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Type selector */}
