@@ -13,6 +13,7 @@ import LogInteraction from "./pages/LogInteraction";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
+import PasswordGate from "./components/PasswordGate";
 
 const queryClient = new QueryClient();
 
@@ -67,9 +68,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <PasswordGate>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </PasswordGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
