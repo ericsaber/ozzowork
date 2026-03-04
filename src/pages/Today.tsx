@@ -48,6 +48,7 @@ const Today = () => {
           {followups.map((item: any) => (
             <FollowupCard
               key={item.id}
+              interactionId={item.id}
               contactId={item.contact_id}
               name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
               company={item.contacts?.company}
