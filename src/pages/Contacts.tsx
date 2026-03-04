@@ -237,7 +237,7 @@ const Contacts = () => {
           <Plus size={14} /> New Contact
         </Button>
         <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handlePickFromPhone}>
-          <UserPlus size={14} /> New contact from phone
+          <UserPlus size={14} /> From Phone
         </Button>
         <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handleFileImport}>
           <Upload size={14} /> Import CSV
