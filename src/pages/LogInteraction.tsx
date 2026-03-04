@@ -40,7 +40,7 @@ const LogInteraction = () => {
   const { data: contacts } = useQuery({
     queryKey: ["contacts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("contacts").select("*").order("name");
+      const { data, error } = await supabase.from("contacts").select("*").order("first_name");
       if (error) throw error;
       return data;
     },
@@ -50,8 +50,10 @@ const LogInteraction = () => {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      const parts = quickForm.name.split(" ");
       const { data, error } = await supabase.from("contacts").insert({
-        name: quickForm.name,
+        first_name: parts[0] || quickForm.name,
+        last_name: parts.slice(1).join(" ") || "",
         company: quickForm.company || null,
         phone: quickForm.phone || null,
         email: quickForm.email || null,
@@ -199,7 +201,7 @@ const LogInteraction = () => {
             <option value="">Select a contact...</option>
             {contacts?.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} {c.company ? `— ${c.company}` : ""}
+                {`${c.first_name} ${c.last_name}`.trim()} {c.company ? `— ${c.company}` : ""}
               </option>
             ))}
           </select>

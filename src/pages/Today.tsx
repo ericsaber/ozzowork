@@ -49,7 +49,7 @@ const Today = () => {
             <FollowupCard
               key={item.id}
               contactId={item.contact_id}
-              name={item.contacts?.name || "Unknown"}
+              name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
               company={item.contacts?.company}
               lastNote={item.note}
               followUpDate={item.follow_up_date}
