@@ -45,6 +45,24 @@ serve(async (req) => {
       });
     }
 
+    // Validate file size (25MB Whisper limit)
+    const MAX_FILE_SIZE = 25 * 1024 * 1024;
+    if (audioFile.size > MAX_FILE_SIZE) {
+      return new Response(JSON.stringify({ error: 'File too large. Maximum 25MB.' }), {
+        status: 413,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate MIME type
+    const ALLOWED_TYPES = ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/ogg', 'audio/mp4'];
+    if (audioFile.type && !ALLOWED_TYPES.includes(audioFile.type)) {
+      return new Response(JSON.stringify({ error: 'Invalid file type. Use audio formats only.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY not configured');
