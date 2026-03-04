@@ -118,7 +118,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error('send-followup-reminders error:', e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: 'Failed to send reminders' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
