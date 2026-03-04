@@ -19,8 +19,9 @@ export type Database = {
           company: string | null
           created_at: string
           email: string | null
+          first_name: string
           id: string
-          name: string
+          last_name: string
           phone: string | null
           updated_at: string
           user_id: string
@@ -29,8 +30,9 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string
           id?: string
-          name: string
+          last_name?: string
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -39,8 +41,9 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string
           id?: string
-          name?: string
+          last_name?: string
           phone?: string | null
           updated_at?: string
           user_id?: string

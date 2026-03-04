@@ -1,10 +1,12 @@
-import { Phone, Mail, Voicemail, MessageSquare } from "lucide-react";
+import { Phone, Mail, Voicemail, MessageSquare, ChevronRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface InteractionItemProps {
   date: string;
   type: string;
   note: string | null;
+  followUpDate?: string | null;
+  onClick?: () => void;
 }
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -21,9 +23,14 @@ const typeLabels: Record<string, string> = {
   note: "Note",
 };
 
-const InteractionItem = ({ date, type, note }: InteractionItemProps) => {
+const InteractionItem = ({ date, type, note, followUpDate, onClick }: InteractionItemProps) => {
+  const Wrapper = onClick ? "button" : "div";
+
   return (
-    <div className="flex gap-3 py-3 animate-fade-in">
+    <Wrapper
+      onClick={onClick}
+      className={`flex gap-3 py-3 animate-fade-in w-full text-left ${onClick ? "hover:bg-secondary/50 rounded-lg px-2 -mx-2 cursor-pointer active:scale-[0.98] transition-all" : ""}`}
+    >
       <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0 text-muted-foreground">
         {typeIcons[type] || <MessageSquare size={16} />}
       </div>
@@ -37,8 +44,16 @@ const InteractionItem = ({ date, type, note }: InteractionItemProps) => {
           </span>
         </div>
         {note && <p className="text-sm text-muted-foreground mt-0.5">{note}</p>}
+        {followUpDate && (
+          <p className="text-xs text-primary mt-0.5">
+            Follow-up: {format(parseISO(followUpDate), "MMM d, yyyy")}
+          </p>
+        )}
       </div>
-    </div>
+      {onClick && (
+        <ChevronRight size={16} className="text-muted-foreground shrink-0 self-center" />
+      )}
+    </Wrapper>
   );
 };
 

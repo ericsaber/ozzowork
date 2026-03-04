@@ -12,8 +12,7 @@ const Contacts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [showImportMenu, setShowImportMenu] = useState(false);
-  const [form, setForm] = useState({ name: "", company: "", phone: "", email: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: contacts, isLoading } = useQuery({
@@ -22,19 +21,20 @@ const Contacts = () => {
       const { data, error } = await supabase
         .from("contacts")
         .select("*")
-        .order("name");
+        .order("first_name");
       if (error) throw error;
       return data;
     },
   });
 
   const addContact = useMutation({
-    mutationFn: async (contactData?: { name: string; company: string; phone: string; email: string }) => {
+    mutationFn: async (contactData?: { first_name: string; last_name: string; company: string; phone: string; email: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const d = contactData || form;
       const { error } = await supabase.from("contacts").insert({
-        name: d.name,
+        first_name: d.first_name,
+        last_name: d.last_name,
         company: d.company || null,
         phone: d.phone || null,
         email: d.email || null,
@@ -45,18 +45,19 @@ const Contacts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowAdd(false);
-      setForm({ name: "", company: "", phone: "", email: "" });
+      setForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       toast.success("Contact added");
     },
     onError: (e) => toast.error(e.message),
   });
 
   const bulkAddContacts = useMutation({
-    mutationFn: async (rows: { name: string; company: string; phone: string; email: string }[]) => {
+    mutationFn: async (rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const insertData = rows.map((r) => ({
-        name: r.name,
+        first_name: r.first_name,
+        last_name: r.last_name,
         company: r.company || null,
         phone: r.phone || null,
         email: r.email || null,
@@ -74,18 +75,19 @@ const Contacts = () => {
   });
 
   const handlePickFromPhone = async () => {
-    setShowImportMenu(false);
-    // Use the Contact Picker API if available
     if ("contacts" in navigator && "ContactsManager" in window) {
       try {
         const props = ["name", "email", "tel"];
         const opts = { multiple: false };
-        // @ts-ignore - Contact Picker API not yet in TS types
+        // @ts-ignore
         const pickedContacts = await navigator.contacts.select(props, opts);
         if (pickedContacts && pickedContacts.length > 0) {
           const picked = pickedContacts[0];
+          const fullName = picked.name?.[0] || "Unknown";
+          const parts = fullName.split(" ");
           const contactData = {
-            name: picked.name?.[0] || "Unknown",
+            first_name: parts[0] || "Unknown",
+            last_name: parts.slice(1).join(" ") || "",
             company: "",
             phone: picked.tel?.[0] || "",
             email: picked.email?.[0] || "",
@@ -103,7 +105,6 @@ const Contacts = () => {
   };
 
   const handleFileImport = () => {
-    setShowImportMenu(false);
     fileInputRef.current?.click();
   };
 
@@ -114,29 +115,43 @@ const Contacts = () => {
     const headerLine = lines[0].toLowerCase();
     const headers = headerLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
 
-    const nameIdx = headers.findIndex((h) => h.includes("name") && !h.includes("company"));
+    const firstNameIdx = headers.findIndex((h) => h === "first name" || h === "first_name" || h === "firstname");
+    const lastNameIdx = headers.findIndex((h) => h === "last name" || h === "last_name" || h === "lastname");
+    const nameIdx = headers.findIndex((h) => h === "name" || h === "full name" || h === "fullname");
     const companyIdx = headers.findIndex((h) => h.includes("company") || h.includes("organization") || h.includes("org"));
     const phoneIdx = headers.findIndex((h) => h.includes("phone") || h.includes("tel") || h.includes("mobile"));
     const emailIdx = headers.findIndex((h) => h.includes("email") || h.includes("e-mail"));
 
-    if (nameIdx === -1) {
-      toast.error("CSV must have a 'name' column");
+    if (firstNameIdx === -1 && nameIdx === -1) {
+      toast.error("CSV must have a 'First Name' or 'Name' column");
       return [];
     }
 
-    const rows: { name: string; company: string; phone: string; email: string }[] = [];
+    const rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      // Simple CSV parse (handles quoted fields)
       const vals = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) =>
         v.trim().replace(/^"|"$/g, "")
       ) || lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
 
-      const name = vals[nameIdx]?.trim();
-      if (!name) continue;
+      let firstName = "";
+      let lastName = "";
+
+      if (firstNameIdx >= 0) {
+        firstName = vals[firstNameIdx]?.trim() || "";
+        lastName = lastNameIdx >= 0 ? vals[lastNameIdx]?.trim() || "" : "";
+      } else if (nameIdx >= 0) {
+        const full = vals[nameIdx]?.trim() || "";
+        const parts = full.split(" ");
+        firstName = parts[0] || "";
+        lastName = parts.slice(1).join(" ") || "";
+      }
+
+      if (!firstName) continue;
 
       rows.push({
-        name,
+        first_name: firstName,
+        last_name: lastName,
         company: companyIdx >= 0 ? vals[companyIdx]?.trim() || "" : "",
         phone: phoneIdx >= 0 ? vals[phoneIdx]?.trim() || "" : "",
         email: emailIdx >= 0 ? vals[emailIdx]?.trim() || "" : "",
@@ -148,7 +163,7 @@ const Contacts = () => {
 
   const parseVCard = (text: string) => {
     const cards = text.split("BEGIN:VCARD").filter((c) => c.trim());
-    const rows: { name: string; company: string; phone: string; email: string }[] = [];
+    const rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[] = [];
 
     for (const card of cards) {
       const getField = (prefix: string) => {
@@ -158,9 +173,11 @@ const Contacts = () => {
 
       const fn = getField("FN");
       if (!fn) continue;
+      const parts = fn.split(" ");
 
       rows.push({
-        name: fn,
+        first_name: parts[0] || "",
+        last_name: parts.slice(1).join(" ") || "",
         company: getField("ORG").split(";")[0],
         phone: getField("TEL"),
         email: getField("EMAIL"),
@@ -178,7 +195,7 @@ const Contacts = () => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
-      let rows: { name: string; company: string; phone: string; email: string }[] = [];
+      let rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[] = [];
 
       if (file.name.endsWith(".vcf") || file.name.endsWith(".vcard")) {
         rows = parseVCard(text);
@@ -187,7 +204,7 @@ const Contacts = () => {
       }
 
       if (rows.length === 0) {
-        toast.error("No contacts found in file. Check format (CSV with name column, or vCard).");
+        toast.error("No contacts found in file.");
         return;
       }
 
@@ -197,9 +214,11 @@ const Contacts = () => {
   };
 
   const filtered = contacts?.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.company && c.company.toLowerCase().includes(search.toLowerCase()))
+    (c) => {
+      const fullName = `${c.first_name} ${c.last_name}`.toLowerCase();
+      const q = search.toLowerCase();
+      return fullName.includes(q) || (c.company && c.company.toLowerCase().includes(q));
+    }
   );
 
   return (
@@ -210,82 +229,34 @@ const Contacts = () => {
 
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search contacts..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 h-11 bg-card"
-        />
+        <Input placeholder="Search contacts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-card" />
       </div>
 
-      {/* Import actions */}
       <div className="flex gap-2 mb-4">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1.5 text-xs"
-          onClick={handlePickFromPhone}
-        >
-          <UserPlus size={14} />
-          From Phone
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handlePickFromPhone}>
+          <UserPlus size={14} /> From Phone
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1.5 text-xs"
-          onClick={handleFileImport}
-        >
-          <Upload size={14} />
-          Import File
+        <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handleFileImport}>
+          <Upload size={14} /> Import File
         </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,.vcf,.vcard"
-          className="hidden"
-          onChange={handleFileChange}
-        />
+        <input ref={fileInputRef} type="file" accept=".csv,.vcf,.vcard" className="hidden" onChange={handleFileChange} />
       </div>
 
       {showAdd && (
         <div className="bg-card rounded-lg border border-border p-4 mb-4 animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-foreground">New Contact</h3>
-            <button onClick={() => setShowAdd(false)} className="text-muted-foreground">
-              <X size={18} />
-            </button>
+            <button onClick={() => setShowAdd(false)} className="text-muted-foreground"><X size={18} /></button>
           </div>
           <div className="space-y-3">
-            <Input
-              placeholder="Name *"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="bg-background"
-            />
-            <Input
-              placeholder="Company"
-              value={form.company}
-              onChange={(e) => setForm({ ...form, company: e.target.value })}
-              className="bg-background"
-            />
-            <Input
-              placeholder="Phone"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="bg-background"
-            />
-            <Input
-              placeholder="Email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="bg-background"
-            />
-            <Button
-              onClick={() => addContact.mutate(form)}
-              disabled={!form.name || addContact.isPending}
-              className="w-full"
-            >
+            <div className="grid grid-cols-2 gap-3">
+              <Input placeholder="First Name *" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className="bg-background" />
+              <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
+            </div>
+            <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
+            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
+            <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
+            <Button onClick={() => addContact.mutate(form)} disabled={!form.first_name || addContact.isPending} className="w-full">
               {addContact.isPending ? "Adding..." : "Add Contact"}
             </Button>
           </div>
@@ -301,12 +272,8 @@ const Contacts = () => {
       ) : filtered && filtered.length > 0 ? (
         <div className="space-y-1">
           {filtered.map((contact) => {
-            const initials = contact.name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
+            const fullName = `${contact.first_name} ${contact.last_name}`.trim();
+            const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
             return (
               <button
                 key={contact.id}
@@ -317,10 +284,8 @@ const Contacts = () => {
                   <span className="text-xs font-semibold text-secondary-foreground">{initials}</span>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-foreground">{contact.name}</p>
-                  {contact.company && (
-                    <p className="text-xs text-muted-foreground">{contact.company}</p>
-                  )}
+                  <p className="text-sm font-medium text-foreground">{fullName}</p>
+                  {contact.company && <p className="text-xs text-muted-foreground">{contact.company}</p>}
                 </div>
               </button>
             );
