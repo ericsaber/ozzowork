@@ -1,34 +1,111 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
-import { format } from "date-fns";
+import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import { format, endOfWeek, parseISO } from "date-fns";
+import { ChevronRight } from "lucide-react";
+
+interface CompletingItem {
+  id: string;
+  contactId: string;
+  contactName: string;
+  interactionType: string;
+  userId: string;
+}
 
 const Today = () => {
-  const { data: followups, isLoading } = useQuery({
+  const navigate = useNavigate();
+  const today = format(new Date(), "yyyy-MM-dd");
+  const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+
+  const { data, isLoading } = useQuery({
     queryKey: ["followups-today"],
     queryFn: async () => {
-      // Get all interactions with a follow_up_date <= today, grouped by contact
-      const today = format(new Date(), "yyyy-MM-dd");
       const { data: interactions, error } = await supabase
         .from("interactions")
         .select("*, contacts(*)")
-        .lte("follow_up_date", today)
+        .not("follow_up_date", "is", null)
+        .lte("follow_up_date", weekEnd)
         .order("follow_up_date", { ascending: true });
 
       if (error) throw error;
 
-      // Dedupe by contact_id, keep the most recent follow_up
-      const contactMap = new Map<string, any>();
-      for (const interaction of interactions || []) {
-        const existing = contactMap.get(interaction.contact_id);
-        if (!existing || interaction.follow_up_date > existing.follow_up_date) {
-          contactMap.set(interaction.contact_id, interaction);
+      // Dedupe by contact_id per bucket
+      const overdue: any[] = [];
+      const dueToday: any[] = [];
+      const comingUp: any[] = [];
+      const seen = { overdue: new Set<string>(), today: new Set<string>(), coming: new Set<string>() };
+
+      for (const item of interactions || []) {
+        const d = item.follow_up_date!;
+        if (d < today) {
+          if (!seen.overdue.has(item.contact_id)) {
+            seen.overdue.add(item.contact_id);
+            overdue.push(item);
+          }
+        } else if (d === today) {
+          if (!seen.today.has(item.contact_id)) {
+            seen.today.add(item.contact_id);
+            dueToday.push(item);
+          }
+        } else {
+          if (!seen.coming.has(item.contact_id)) {
+            seen.coming.add(item.contact_id);
+            comingUp.push(item);
+          }
         }
       }
 
-      return Array.from(contactMap.values());
+      return { overdue, dueToday, comingUp };
     },
   });
+
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [sheetItem, setSheetItem] = useState<CompletingItem | null>(null);
+
+  const handleComplete = (item: any) => {
+    setCompletingId(item.id);
+    // After animation delay, open sheet
+    setTimeout(() => {
+      setSheetItem({
+        id: item.id,
+        contactId: item.contact_id,
+        contactName: item.contacts
+          ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim()
+          : "Unknown",
+        interactionType: item.type,
+        userId: item.user_id,
+      });
+    }, 600);
+  };
+
+  const handleSheetClose = (open: boolean) => {
+    if (!open) {
+      setSheetItem(null);
+      setCompletingId(null);
+    }
+  };
+
+  const { overdue = [], dueToday = [], comingUp = [] } = data || {};
+  const isEmpty = overdue.length === 0 && dueToday.length === 0 && comingUp.length === 0;
+
+  const renderCard = (item: any, variant: "overdue" | "today") => (
+    <FollowupCard
+      key={item.id}
+      interactionId={item.id}
+      contactId={item.contact_id}
+      name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
+      company={item.contacts?.company}
+      lastNote={item.note}
+      followUpDate={item.follow_up_date}
+      interactionType={item.type}
+      variant={variant}
+      isCompleting={completingId === item.id}
+      onComplete={() => handleComplete(item)}
+    />
+  );
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -43,21 +120,7 @@ const Today = () => {
             <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />
           ))}
         </div>
-      ) : followups && followups.length > 0 ? (
-        <div className="space-y-3">
-          {followups.map((item: any) => (
-            <FollowupCard
-              key={item.id}
-              interactionId={item.id}
-              contactId={item.contact_id}
-              name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
-              company={item.contacts?.company}
-              lastNote={item.note}
-              followUpDate={item.follow_up_date}
-            />
-          ))}
-        </div>
-      ) : (
+      ) : isEmpty ? (
         <div className="text-center py-16">
           <p className="text-muted-foreground text-lg font-heading italic">
             All clear for today
@@ -66,6 +129,52 @@ const Today = () => {
             No follow-ups due. Nice work.
           </p>
         </div>
+      ) : (
+        <div className="space-y-6">
+          {overdue.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-destructive mb-3">
+                Overdue
+              </h2>
+              <div className="space-y-3">
+                {overdue.map((item: any) => renderCard(item, "overdue"))}
+              </div>
+            </section>
+          )}
+
+          {dueToday.length > 0 && (
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-success mb-3">
+                Due Today
+              </h2>
+              <div className="space-y-3">
+                {dueToday.map((item: any) => renderCard(item, "today"))}
+              </div>
+            </section>
+          )}
+
+          {comingUp.length > 0 && (
+            <button
+              onClick={() => navigate("/upcoming")}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-secondary/50 text-sm text-muted-foreground hover:bg-secondary transition-colors"
+            >
+              <span>{comingUp.length} more this week</span>
+              <ChevronRight size={16} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {sheetItem && (
+        <CompleteFollowupSheet
+          open={!!sheetItem}
+          onOpenChange={handleSheetClose}
+          interactionId={sheetItem.id}
+          contactId={sheetItem.contactId}
+          contactName={sheetItem.contactName}
+          interactionType={sheetItem.interactionType}
+          userId={sheetItem.userId}
+        />
       )}
     </div>
   );
