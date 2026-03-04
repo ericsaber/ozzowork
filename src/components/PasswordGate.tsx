@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
-
-const SITE_PASSWORD = "ollo2026";
+import { Lock, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PasswordGateProps {
   children: React.ReactNode;
@@ -15,15 +14,28 @@ const PasswordGate = ({ children }: PasswordGateProps) => {
   });
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === SITE_PASSWORD) {
-      sessionStorage.setItem("site_unlocked", "true");
-      setUnlocked(true);
-      setError(false);
-    } else {
+    setLoading(true);
+    setError(false);
+
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('verify-site-password', {
+        body: { password },
+      });
+
+      if (fnError || !data?.valid) {
+        setError(true);
+      } else {
+        sessionStorage.setItem("site_unlocked", "true");
+        setUnlocked(true);
+      }
+    } catch {
       setError(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,7 +59,9 @@ const PasswordGate = ({ children }: PasswordGateProps) => {
           autoFocus
         />
         {error && <p className="text-destructive text-xs">Incorrect code. Try again.</p>}
-        <Button type="submit" className="w-full">Enter</Button>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enter"}
+        </Button>
       </form>
     </div>
   );
