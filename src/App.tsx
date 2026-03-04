@@ -10,6 +10,7 @@ import Today from "./pages/Today";
 import Contacts from "./pages/Contacts";
 import ContactHistory from "./pages/ContactHistory";
 import LogInteraction from "./pages/LogInteraction";
+import FollowupTask from "./pages/FollowupTask";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
@@ -56,6 +57,7 @@ const AppContent = () => {
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/contact/:id" element={<ContactHistory />} />
         <Route path="/log" element={<LogInteraction />} />
+        <Route path="/followup/:id" element={<FollowupTask />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BottomNav />
