@@ -82,7 +82,7 @@ serve(async (req) => {
     if (!whisperRes.ok) {
       const err = await whisperRes.text();
       console.error('Whisper error:', err);
-      return new Response(JSON.stringify({ error: 'Transcription failed', details: err }), {
+      return new Response(JSON.stringify({ error: 'Transcription failed' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
