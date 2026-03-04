@@ -12,6 +12,16 @@ serve(async (req) => {
   }
 
   try {
+    // Validate cron secret
+    const authToken = req.headers.get('authorization')?.replace('Bearer ', '');
+    const expectedToken = Deno.env.get('CRON_SECRET');
+    if (!authToken || authToken !== expectedToken) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured');
 
@@ -25,7 +35,7 @@ serve(async (req) => {
     // Query interactions with follow_up_date = today, joined with contacts
     const { data: interactions, error: queryError } = await supabase
       .from('interactions')
-      .select('id, note, type, follow_up_date, user_id, contact_id, contacts(name, company, email)')
+      .select('id, note, type, follow_up_date, user_id, contact_id, contacts(first_name, last_name, company, email)')
       .eq('follow_up_date', today);
 
     if (queryError) throw queryError;
@@ -56,7 +66,7 @@ serve(async (req) => {
       if (!userEmail) continue;
 
       const contact = interaction.contacts;
-      const contactName = contact?.name || 'Unknown';
+      const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : 'Unknown';
       const company = contact?.company ? ` (${contact.company})` : '';
       const lastNote = interaction.note || 'No notes recorded.';
       const deepLink = `${appUrl}/contacts/${interaction.contact_id}`;
@@ -77,7 +87,7 @@ serve(async (req) => {
     
     <a href="${deepLink}" style="display: inline-block; background: #c8622a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px;">View Contact</a>
     
-    <p style="color: #a0a0a0; font-size: 12px; margin: 24px 0 0;">Sent by Followup</p>
+    <p style="color: #a0a0a0; font-size: 12px; margin: 24px 0 0;">Sent by ollo</p>
   </div>
 </body>
 </html>`;
@@ -89,7 +99,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Followup <onboarding@resend.dev>',
+          from: 'ollo <onboarding@resend.dev>',
           to: [userEmail],
           subject: `Follow up with ${contactName} today`,
           html,
