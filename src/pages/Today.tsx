@@ -152,7 +152,7 @@ const Today = () => {
           {comingUp.length > 0 && (
             <button
               onClick={() => navigate("/upcoming")}
-              className="w-full mt-6 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+              className="w-full mt-8 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
             >
               <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0">
                 <Calendar size={16} className="text-[#bbb]" />
