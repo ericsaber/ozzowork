@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import { format, endOfWeek } from "date-fns";
+import { format, endOfWeek, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
 interface CompletingItem {
@@ -149,28 +149,47 @@ const Today = () => {
           )}
 
           {/* Coming Up strip */}
-          {comingUp.length > 0 && (
-            <button
-              onClick={() => navigate("/upcoming")}
-              className="w-full mt-10 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
-            >
-              <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0">
-                <Calendar size={16} className="text-[#bbb]" />
-              </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[14px] font-medium text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-                  Coming up
-                </p>
-                <p className="text-[12px] text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
-                  {comingUp.length} this week
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[12px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
-                <Eye size={12} />
-                See all
-              </span>
-            </button>
-          )}
+          {comingUp.length > 0 && (() => {
+            const sorted = [...comingUp].sort((a, b) => a.follow_up_date!.localeCompare(b.follow_up_date!));
+            const next = sorted[0];
+            const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
+            const nextDate = parseISO(next.follow_up_date!);
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const isTomorrow = format(nextDate, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
+            const dayLabel = isTomorrow ? "tomorrow" : format(nextDate, "EEEE");
+
+            return (
+              <>
+                <h2
+                  className="text-[12px] font-medium uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))] mt-10 mb-3"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  Coming Up
+                </h2>
+                <button
+                  onClick={() => navigate("/upcoming")}
+                  className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+                >
+                  <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0">
+                    <Calendar size={16} className="text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[14px] font-medium text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                      {comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""} this week
+                    </p>
+                    <p className="text-[12px] text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                      Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[12px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
+                    <Eye size={12} />
+                    See all
+                  </span>
+                </button>
+              </>
+            );
+          })()}
 
           {/* Overdue */}
           {overdue.length > 0 && (
