@@ -1,98 +1,47 @@
 
 
-## Redesign: Today Screen and Complete Flow
+## Visual Design Pass — Today Screen
 
-### Overview
+Pure styling changes, no functionality modifications.
 
-Rebuild the Today screen with three distinct sections (Overdue, Due Today, Coming Up strip) and replace the current simple "mark complete" with an animated card + bottom sheet workflow.
+### 1. FollowupCard.tsx — Restyle
 
-### Data Layer Changes
+**Check circle**: Replace `CheckCircle2` icon inside a `w-9 h-9` double-ring button with a custom 26×26px circle: `w-[26px] h-[26px]` with `border-[1.5px] border-[#e8e4de]`, containing a small `Check` icon (12px) in `stroke-[#ccc]`. On hover/press: border becomes `#c8622a`, background fills `#c8622a/10`.
 
-**Today.tsx query** — expand to also fetch items with `follow_up_date` within the current week (not just `<= today`). Split results into three buckets:
-- `overdue`: `follow_up_date < today`
-- `dueToday`: `follow_up_date == today`
-- `comingThisWeek`: `follow_up_date > today AND <= end of week`
+**Name**: Change from `font-semibold font-heading` to `font-body text-[14px] font-medium` (DM Sans 500).
 
-Keep the existing deduplication by contact_id within each bucket. Pass `interactionType` (the `type` field) to each card for the completion sheet default text.
+**Company**: Change to `text-[11px] font-normal text-[#999]`.
 
-### Today Screen Layout
+**Badge**: Replace separate Overdue/Today badges with a combined pill containing:
+- Inline type icon (Phone, Mail, Voicemail, MessageSquare) at 12px
+- Status text: "Today" (green) or "Due [date]" (red for overdue)
+- Today pill: `bg-[#f0f7f0] text-[#4a9e4a]`
+- Overdue pill: `bg-[#fdf2f0] text-[#d94f2e]`
 
-```text
-┌─────────────────────────┐
-│ Today                   │
-│ Wednesday, March 4      │
-│                         │
-│ ▸ OVERDUE (red label)   │
-│ ┌─ red border ─────────┐│
-│ │ ○  Name  Company [!] ││
-│ │    2-line note...     ││
-│ └───────────────────────┘│
-│                         │
-│ ▸ DUE TODAY (label)     │
-│ ┌─ green border ────────┐│
-│ │ ○  Name  Company [✓] ││
-│ │    2-line note...     ││
-│ └───────────────────────┘│
-│                         │
-│ ┌ light bg strip ───────┐│
-│ │  5 more this week  →  ││
-│ └───────────────────────┘│
-└─────────────────────────┘
-```
+**Note section**: After name+company, add a 1px divider in border color, then uppercase "LAST INTERACTION" label (`text-[9px] tracking-[0.1em] text-[#bbb] font-medium`), then the note in `text-[12px] text-[#777] line-clamp-2`.
 
-- **Overdue section**: red `OVERDUE` label, each card gets `border-l-[3px] border-l-[#d94f2e]`
-- **Due Today section**: cards get `border-l-[3px] border-l-[#4a9e4a]`
-- **Coming Up strip**: compact row with secondary background, count + arrow, taps to a future view (or just scrolls/navigates to a dedicated page later — for now links to `/upcoming`)
-- Empty state preserved when all three are empty
+New props needed: `followUpDate` (already passed but unused in render) for the overdue date display.
 
-### Card Component (FollowupCard) Redesign
+### 2. Today.tsx — Section Labels & Layout
 
-Each card shows:
-- Tappable check circle on the left (triggers completion flow)
-- Contact name (bold), company (muted), badge (Overdue red / Today green)
-- 2-line truncated note (`line-clamp-2`)
-- Clicking the card body navigates to `/followup/:id`
+**Section labels** ("DUE TODAY", "OVERDUE"): Change to `text-[11px] font-medium font-body uppercase tracking-[0.1em] text-[#bbb]`. Add `mt-8 mb-3` for spacing (more top padding).
 
-New props: `interactionType: string`, `onComplete: (item) => void` — the parent manages the bottom sheet state.
+**Section order**: Due Today first, then Coming Up strip, then Overdue (matching the screenshot).
 
-### Completion Animation + Bottom Sheet
+**Subtitle**: Add item count next to the date — e.g., "Wednesday, March 4 · 3 need attention" using total of overdue + dueToday.
 
-New component: `CompleteFollowupSheet.tsx` using vaul `Drawer` (already installed).
+**Coming Up strip**: Replace the current simple button with a card-style row matching follow-up card borders:
+- Same `bg-card rounded-lg border border-border` as cards
+- Left: 26×26px icon container with `Calendar` icon in `text-[#bbb]` 16px
+- Center: "Coming up" in `text-[14px] font-medium font-body`, "X this week" in `text-[11px] text-[#999]`
+- Right: pill badge `bg-[#fdf0e8] text-[#c8622a] text-[10px] font-medium rounded-[20px] px-2.5 py-1` with Eye icon + "See all"
 
-**Flow:**
-1. User taps check circle → parent sets card as "completing" (card gets `line-through`, `opacity-50`, checkmark icon, brief 600ms animation)
-2. After animation, bottom sheet opens with:
-   - Drag handle (built into vaul)
-   - Title: "Logged ✓"
-   - Subtitle: "Add a note and set your next follow-up with **[contact name]**."
-   - Pre-filled textarea: `"Completed: [interaction type]"` (editable)
-   - Date chips row: Tomorrow, 3 days, 1 week, 2 weeks (reuse same style as LogInteraction)
-   - Primary CTA button: "Save" by default, changes to "Save & set reminder" when a chip is selected
-3. On save:
-   - Clear `follow_up_date` on the original interaction (marks it done)
-   - Insert a new interaction with the note text and `type: "note"`
-   - If a date chip was selected, also set `follow_up_date` on the new interaction
-   - Invalidate queries, dismiss sheet, card fully removed from list
+### 3. Files to Edit
 
-### Routing
+| File | Changes |
+|------|---------|
+| `src/components/FollowupCard.tsx` | Restyle check circle, name, company, badge, add last interaction section |
+| `src/pages/Today.tsx` | Restyle section labels, reorder sections, update coming-up strip, add subtitle count |
 
-Add a placeholder `/upcoming` route (simple page listing items with `follow_up_date > today`) for the "Coming up" strip link.
-
-### Files to Create/Edit
-
-| File | Action |
-|------|--------|
-| `src/pages/Today.tsx` | Rewrite — three-section layout, manage completion state, render sheet |
-| `src/components/FollowupCard.tsx` | Redesign — colored left border, 2-line note, badge, completion animation state |
-| `src/components/CompleteFollowupSheet.tsx` | Create — vaul Drawer with note, date chips, save logic |
-| `src/pages/Upcoming.tsx` | Create — simple list of future follow-ups |
-| `src/App.tsx` | Add `/upcoming` route |
-
-### Technical Details
-
-- Use vaul `Drawer` (already in project) for the bottom sheet — it provides the native iOS-style drag handle and slide-up behavior
-- Card animation: CSS transition on opacity + transform + line-through on a `data-completing` attribute, controlled via useState in Today.tsx
-- The sheet's save mutation: two DB operations (update old interaction + insert new one) wrapped in a single mutationFn
-- Date chips array reused from LogInteraction pattern
-- `endOfWeek` from date-fns used to calculate the "coming this week" window
+No new files. No functionality changes.
 
