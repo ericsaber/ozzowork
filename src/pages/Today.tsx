@@ -195,7 +195,7 @@ const Today = () => {
           {overdue.length > 0 && (
             <section>
               <h2
-                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-8 mb-3"
+                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
                 Overdue
