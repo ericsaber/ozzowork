@@ -102,7 +102,7 @@ const FollowupCard = ({
         {lastNote && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
-            <p className="font-medium uppercase tracking-[0.1em] text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>
+            <p className="font-medium uppercase text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', letterSpacing: '0px' }}>
               Last Interaction
             </p>
             <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
