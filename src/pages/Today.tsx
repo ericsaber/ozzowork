@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import { format, endOfWeek, parseISO } from "date-fns";
-import { ChevronRight } from "lucide-react";
+import { format, endOfWeek } from "date-fns";
+import { Calendar, Eye } from "lucide-react";
 
 interface CompletingItem {
   id: string;
@@ -32,7 +32,6 @@ const Today = () => {
 
       if (error) throw error;
 
-      // Dedupe by contact_id per bucket
       const overdue: any[] = [];
       const dueToday: any[] = [];
       const comingUp: any[] = [];
@@ -67,7 +66,6 @@ const Today = () => {
 
   const handleComplete = (item: any) => {
     setCompletingId(item.id);
-    // After animation delay, open sheet
     setTimeout(() => {
       setSheetItem({
         id: item.id,
@@ -90,6 +88,7 @@ const Today = () => {
 
   const { overdue = [], dueToday = [], comingUp = [] } = data || {};
   const isEmpty = overdue.length === 0 && dueToday.length === 0 && comingUp.length === 0;
+  const attentionCount = overdue.length + dueToday.length;
 
   const renderCard = (item: any, variant: "overdue" | "today") => (
     <FollowupCard
@@ -110,8 +109,11 @@ const Today = () => {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
-      <p className="text-sm text-muted-foreground mb-6">
+      <p className="text-sm text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)' }}>
         {format(new Date(), "EEEE, MMMM d")}
+        {!isLoading && attentionCount > 0 && (
+          <span> · {attentionCount} need attention</span>
+        )}
       </p>
 
       {isLoading ? (
@@ -130,21 +132,14 @@ const Today = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {overdue.length > 0 && (
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-destructive mb-3">
-                Overdue
-              </h2>
-              <div className="space-y-3">
-                {overdue.map((item: any) => renderCard(item, "overdue"))}
-              </div>
-            </section>
-          )}
-
+        <div className="space-y-0">
+          {/* Due Today */}
           {dueToday.length > 0 && (
             <section>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-success mb-3">
+              <h2
+                className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
                 Due Today
               </h2>
               <div className="space-y-3">
@@ -153,14 +148,43 @@ const Today = () => {
             </section>
           )}
 
+          {/* Coming Up strip */}
           {comingUp.length > 0 && (
             <button
               onClick={() => navigate("/upcoming")}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-secondary/50 text-sm text-muted-foreground hover:bg-secondary transition-colors"
+              className="w-full mt-6 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
             >
-              <span>{comingUp.length} more this week</span>
-              <ChevronRight size={16} />
+              <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0">
+                <Calendar size={16} className="text-[#bbb]" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[14px] font-medium text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                  Coming up
+                </p>
+                <p className="text-[11px] text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
+                  {comingUp.length} this week
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[10px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
+                <Eye size={11} />
+                See all
+              </span>
             </button>
+          )}
+
+          {/* Overdue */}
+          {overdue.length > 0 && (
+            <section>
+              <h2
+                className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-8 mb-3"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                Overdue
+              </h2>
+              <div className="space-y-3">
+                {overdue.map((item: any) => renderCard(item, "overdue"))}
+              </div>
+            </section>
           )}
         </div>
       )}
