@@ -1,25 +1,22 @@
 
 
-## Quick Visual Fixes — Today Screen
+## Spacing & Font Size Fixes — Today Screen
 
-Four targeted style tweaks, no functionality changes.
+Three quick changes:
 
-### 1. FollowupCard — Pill font size revert
-Current pills use `text-[10px]`. Revert to `text-[12px] font-medium` to match the reference screenshot showing larger, more readable badge text.
+### 1. Coming Up strip — add top margin matching overdue gap
+The "Coming Up" strip has `mt-6` but it's visually crashing into the cards above. Change to `mt-8` to match the same gap used before the Overdue label (`mt-8 mb-3`).
 
-### 2. FollowupCard — Remove colored left borders, fix check hover
-Remove the `border-l-[3px] border-l-[hsl(...)]` classes entirely from the card container. Change the check circle hover color from `hover:border-primary hover:bg-primary/10` (burnt sienna) to green `hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10`, and the check icon hover from `group-hover:text-primary` to `group-hover:text-[hsl(142,60%,40%)]`. Same for the completing state.
+### 2. "Last Interaction" label — bump to 11px
+Currently `text-[9px]`. The section labels (Due Today, Overdue) are `text-[11px]`. Update the "LAST INTERACTION" label in FollowupCard to `text-[11px]` so it matches as the minimum font size on the screen.
 
-### 3. FollowupCard — Flush-right pills
-Change the name+badge row from `flex items-center gap-2` to `flex items-center justify-between gap-2` so the pill always aligns to the right edge, consistent with the "See all" pill on the Coming Up strip.
-
-### 4. Today.tsx — Coming Up strip spacing
-The Coming Up strip currently has `mt-6`. Change to `mt-6 mb-2` or wrap sections with consistent spacing. The Overdue section below already has `mt-8` which should be enough, but adding a small bottom margin on the strip ensures visual separation. Alternatively, just ensure the strip has `mt-6` and the Overdue label keeps `mt-8`.
+### 3. Match fonts to task page
+The FollowupTask page uses `text-xs` (12px) for its uppercase labels and `text-sm` (14px) for values. The card's company text at `11px` and note at `12px` are close enough. The "LAST INTERACTION" label going from 9px→11px aligns it with the section labels. No other font changes needed.
 
 ### Files
 
-| File | Changes |
-|------|---------|
-| `src/components/FollowupCard.tsx` | Revert pill to `text-[12px]`, remove left border, green hover on check, justify-between on name row |
-| `src/pages/Today.tsx` | No changes needed (spacing already looks correct with mt-6/mt-8) |
+| File | Change |
+|------|--------|
+| `src/components/FollowupCard.tsx` | Line 105: `text-[9px]` → `text-[11px]` |
+| `src/pages/Today.tsx` | Line 155: `mt-6` → `mt-8` on Coming Up strip |
 
