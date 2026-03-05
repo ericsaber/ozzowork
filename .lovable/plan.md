@@ -1,16 +1,20 @@
 
 
-## Fix: Unequal section gaps on Today screen
+## Update pill font size and properties
 
-### Root cause
+Based on the screenshots, the user wants two font specs applied:
 
-The parent `div` uses `space-y-0`, which applies `margin-top: 0` to all direct children via `> :not([hidden]) ~ :not([hidden])`. This selector competes with the explicit `mt-10` on section headers. Because the Coming Up content renders as a React fragment (its `h2` and `button` become direct children of the parent), the `space-y-0` rule can interfere with the `mt-10` differently than it does for the Overdue `<section>` wrapper.
+- **14px**: weight 500, line-height 20px
+- **12px**: weight 500, line-height 16px
 
-### Fix
+The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
 
-Remove `space-y-0` from the parent wrapper div (line ~130). The sections already manage their own spacing via `mt-10` and `mb-3` — the `space-y-0` is unnecessary and is the source of the conflict.
+Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
 
-| File | Change |
-|------|--------|
-| `src/pages/Today.tsx` | Line ~130: `className="space-y-0"` → remove `space-y-0` (just use empty or no class) |
+While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
+
+| File | Lines | Change |
+|------|-------|--------|
+| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
+| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
 
