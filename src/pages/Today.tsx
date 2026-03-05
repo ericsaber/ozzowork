@@ -162,7 +162,7 @@ const Today = () => {
             return (
               <>
                 <h2
-                  className="text-[12px] font-medium uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))] mt-10 mb-3"
+                  className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
                   style={{ fontFamily: 'var(--font-body)' }}
                 >
                   Coming Up
