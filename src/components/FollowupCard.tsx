@@ -75,16 +75,16 @@ const FollowupCard = ({
       <div className="flex-1 min-w-0">
         {/* Name + badge row */}
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-[14px] font-medium leading-[20px] text-foreground truncate" style={{ fontFamily: 'var(--font-body)' }}>
+          <h3 className="font-medium text-foreground truncate" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
             {name}
           </h3>
           {variant === "overdue" ? (
-            <span className="inline-flex items-center gap-1 text-[14px] font-medium leading-[20px] px-2 py-0.5 rounded-full bg-[hsl(8,85%,97%)] text-[hsl(8,72%,51%)] shrink-0">
+            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full bg-[hsl(8,85%,97%)] text-[hsl(8,72%,51%)] shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
               <TypeIcon size={12} />
               {badgeLabel}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[14px] font-medium leading-[20px] px-2 py-0.5 rounded-full bg-[hsl(142,40%,95%)] text-[hsl(142,35%,46%)] shrink-0">
+            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full bg-[hsl(142,40%,95%)] text-[hsl(142,35%,46%)] shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
               <TypeIcon size={12} />
               {badgeLabel}
             </span>
@@ -93,7 +93,7 @@ const FollowupCard = ({
 
         {/* Company */}
         {company && (
-          <p className="text-[12px] font-normal leading-[16px] text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="font-normal text-[#999]" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>
             {company}
           </p>
         )}
@@ -102,10 +102,10 @@ const FollowupCard = ({
         {lastNote && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
-            <p className="text-[12px] font-medium leading-[16px] uppercase tracking-[0.1em] text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="font-medium uppercase tracking-[0.1em] text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>
               Last Interaction
             </p>
-            <p className="text-[14px] leading-[20px] text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
               {lastNote}
             </p>
           </div>
