@@ -182,7 +182,7 @@ const Today = () => {
                       Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[12px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
+                  <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[14px] font-medium leading-[20px] rounded-[20px] px-2.5 py-1 shrink-0">
                     <Eye size={12} />
                     See all
                   </span>
