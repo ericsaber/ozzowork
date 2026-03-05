@@ -80,12 +80,12 @@ const FollowupCard = ({
           </h3>
           {variant === "overdue" ? (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full bg-[hsl(8,85%,97%)] text-[hsl(8,72%,51%)] shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
-              <TypeIcon size={14} />
+              <TypeIcon size={16} />
               {badgeLabel}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full bg-[hsl(142,40%,95%)] text-[hsl(142,35%,46%)] shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
-              <TypeIcon size={14} />
+              <TypeIcon size={16} />
               {badgeLabel}
             </span>
           )}
