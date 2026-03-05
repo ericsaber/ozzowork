@@ -137,7 +137,7 @@ const Today = () => {
           {dueToday.length > 0 && (
             <section>
               <h2
-                className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3"
+                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
                 Due Today
@@ -152,7 +152,7 @@ const Today = () => {
           {comingUp.length > 0 && (
             <button
               onClick={() => navigate("/upcoming")}
-              className="w-full mt-8 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
+              className="w-full mt-10 bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors"
             >
               <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0">
                 <Calendar size={16} className="text-[#bbb]" />
@@ -161,12 +161,12 @@ const Today = () => {
                 <p className="text-[14px] font-medium text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
                   Coming up
                 </p>
-                <p className="text-[11px] text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
+                <p className="text-[12px] text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
                   {comingUp.length} this week
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[10px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
-                <Eye size={11} />
+              <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary text-[12px] font-medium rounded-[20px] px-2.5 py-1 shrink-0">
+                <Eye size={12} />
                 See all
               </span>
             </button>
@@ -176,7 +176,7 @@ const Today = () => {
           {overdue.length > 0 && (
             <section>
               <h2
-                className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-8 mb-3"
+                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-8 mb-3"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
                 Overdue
