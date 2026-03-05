@@ -93,7 +93,7 @@ const FollowupCard = ({
 
         {/* Company */}
         {company && (
-          <p className="text-[11px] font-normal text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
+          <p className="text-[12px] font-normal text-[#999]" style={{ fontFamily: 'var(--font-body)' }}>
             {company}
           </p>
         )}
@@ -102,10 +102,10 @@ const FollowupCard = ({
         {lastNote && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
-            <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)' }}>
               Last Interaction
             </p>
-            <p className="text-[12px] text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-[14px] text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)' }}>
               {lastNote}
             </p>
           </div>
