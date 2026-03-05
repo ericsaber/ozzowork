@@ -1,47 +1,25 @@
 
 
-## Visual Design Pass — Today Screen
+## Quick Visual Fixes — Today Screen
 
-Pure styling changes, no functionality modifications.
+Four targeted style tweaks, no functionality changes.
 
-### 1. FollowupCard.tsx — Restyle
+### 1. FollowupCard — Pill font size revert
+Current pills use `text-[10px]`. Revert to `text-[12px] font-medium` to match the reference screenshot showing larger, more readable badge text.
 
-**Check circle**: Replace `CheckCircle2` icon inside a `w-9 h-9` double-ring button with a custom 26×26px circle: `w-[26px] h-[26px]` with `border-[1.5px] border-[#e8e4de]`, containing a small `Check` icon (12px) in `stroke-[#ccc]`. On hover/press: border becomes `#c8622a`, background fills `#c8622a/10`.
+### 2. FollowupCard — Remove colored left borders, fix check hover
+Remove the `border-l-[3px] border-l-[hsl(...)]` classes entirely from the card container. Change the check circle hover color from `hover:border-primary hover:bg-primary/10` (burnt sienna) to green `hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10`, and the check icon hover from `group-hover:text-primary` to `group-hover:text-[hsl(142,60%,40%)]`. Same for the completing state.
 
-**Name**: Change from `font-semibold font-heading` to `font-body text-[14px] font-medium` (DM Sans 500).
+### 3. FollowupCard — Flush-right pills
+Change the name+badge row from `flex items-center gap-2` to `flex items-center justify-between gap-2` so the pill always aligns to the right edge, consistent with the "See all" pill on the Coming Up strip.
 
-**Company**: Change to `text-[11px] font-normal text-[#999]`.
+### 4. Today.tsx — Coming Up strip spacing
+The Coming Up strip currently has `mt-6`. Change to `mt-6 mb-2` or wrap sections with consistent spacing. The Overdue section below already has `mt-8` which should be enough, but adding a small bottom margin on the strip ensures visual separation. Alternatively, just ensure the strip has `mt-6` and the Overdue label keeps `mt-8`.
 
-**Badge**: Replace separate Overdue/Today badges with a combined pill containing:
-- Inline type icon (Phone, Mail, Voicemail, MessageSquare) at 12px
-- Status text: "Today" (green) or "Due [date]" (red for overdue)
-- Today pill: `bg-[#f0f7f0] text-[#4a9e4a]`
-- Overdue pill: `bg-[#fdf2f0] text-[#d94f2e]`
-
-**Note section**: After name+company, add a 1px divider in border color, then uppercase "LAST INTERACTION" label (`text-[9px] tracking-[0.1em] text-[#bbb] font-medium`), then the note in `text-[12px] text-[#777] line-clamp-2`.
-
-New props needed: `followUpDate` (already passed but unused in render) for the overdue date display.
-
-### 2. Today.tsx — Section Labels & Layout
-
-**Section labels** ("DUE TODAY", "OVERDUE"): Change to `text-[11px] font-medium font-body uppercase tracking-[0.1em] text-[#bbb]`. Add `mt-8 mb-3` for spacing (more top padding).
-
-**Section order**: Due Today first, then Coming Up strip, then Overdue (matching the screenshot).
-
-**Subtitle**: Add item count next to the date — e.g., "Wednesday, March 4 · 3 need attention" using total of overdue + dueToday.
-
-**Coming Up strip**: Replace the current simple button with a card-style row matching follow-up card borders:
-- Same `bg-card rounded-lg border border-border` as cards
-- Left: 26×26px icon container with `Calendar` icon in `text-[#bbb]` 16px
-- Center: "Coming up" in `text-[14px] font-medium font-body`, "X this week" in `text-[11px] text-[#999]`
-- Right: pill badge `bg-[#fdf0e8] text-[#c8622a] text-[10px] font-medium rounded-[20px] px-2.5 py-1` with Eye icon + "See all"
-
-### 3. Files to Edit
+### Files
 
 | File | Changes |
 |------|---------|
-| `src/components/FollowupCard.tsx` | Restyle check circle, name, company, badge, add last interaction section |
-| `src/pages/Today.tsx` | Restyle section labels, reorder sections, update coming-up strip, add subtitle count |
-
-No new files. No functionality changes.
+| `src/components/FollowupCard.tsx` | Revert pill to `text-[12px]`, remove left border, green hover on check, justify-between on name row |
+| `src/pages/Today.tsx` | No changes needed (spacing already looks correct with mt-6/mt-8) |
 
