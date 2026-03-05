@@ -183,7 +183,7 @@ const Today = () => {
                     </p>
                   </div>
                   <span className="inline-flex items-center gap-1 bg-[hsl(21,90%,96%)] text-primary font-medium rounded-[20px] px-2.5 py-1 shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
-                    <Eye size={12} />
+                    <Eye size={16} />
                     See all
                   </span>
                 </button>
