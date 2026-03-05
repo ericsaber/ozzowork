@@ -1,22 +1,24 @@
 
 
-## Spacing & Font Size Fixes — Today Screen
+## Font Size & Spacing Fixes
 
-Three quick changes:
+### Changes
 
-### 1. Coming Up strip — add top margin matching overdue gap
-The "Coming Up" strip has `mt-6` but it's visually crashing into the cards above. Change to `mt-8` to match the same gap used before the Overdue label (`mt-8 mb-3`).
+**1. FollowupCard.tsx — Bump minimum font to 12px, body to 14px**
+- Company name: `text-[11px]` → `text-[12px]`
+- "LAST INTERACTION" label: `text-[11px]` → `text-[12px]`
+- Note text: `text-[12px]` → `text-[14px]` (body default)
 
-### 2. "Last Interaction" label — bump to 11px
-Currently `text-[9px]`. The section labels (Due Today, Overdue) are `text-[11px]`. Update the "LAST INTERACTION" label in FollowupCard to `text-[11px]` so it matches as the minimum font size on the screen.
-
-### 3. Match fonts to task page
-The FollowupTask page uses `text-xs` (12px) for its uppercase labels and `text-sm` (14px) for values. The card's company text at `11px` and note at `12px` are close enough. The "LAST INTERACTION" label going from 9px→11px aligns it with the section labels. No other font changes needed.
+**2. Today.tsx — Section labels to 12px, Coming Up strip spacing & pill size**
+- "DUE TODAY" / "OVERDUE" labels: `text-[11px]` → `text-[12px]`
+- "See all" pill: `text-[10px]` → `text-[12px]`, Eye icon `11` → `12`
+- "X this week" text: `text-[11px]` → `text-[12px]`
+- Coming Up strip: add `space-y-3` wrapper or change parent from `space-y-0` to allow natural flow — actually the simplest fix is to wrap sections with consistent gaps. The "Coming Up" button sits inside the same `space-y-0` div so `mt-8` should work but since the previous section's last card has no bottom margin, the gap is only from `mt-8`. The screenshot shows it's still too tight, so bump to `mt-10` to give more breathing room equivalent to the Overdue gap below it.
 
 ### Files
 
-| File | Change |
-|------|--------|
-| `src/components/FollowupCard.tsx` | Line 105: `text-[9px]` → `text-[11px]` |
-| `src/pages/Today.tsx` | Line 155: `mt-6` → `mt-8` on Coming Up strip |
+| File | Changes |
+|------|---------|
+| `src/components/FollowupCard.tsx` | Company `12px`, label `12px`, note `14px` |
+| `src/pages/Today.tsx` | Section labels `12px`, pill `12px`, strip sub-text `12px`, strip margin `mt-10` |
 
