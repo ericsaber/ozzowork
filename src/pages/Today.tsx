@@ -109,7 +109,7 @@ const Today = () => {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
-      <p className="text-sm text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+      <p className="text-[14px] leading-[20px] text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)' }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && (
           <span> · {attentionCount} need attention</span>
@@ -137,7 +137,7 @@ const Today = () => {
           {dueToday.length > 0 && (
             <section>
               <h2
-                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3"
+                className="text-[12px] font-medium leading-[16px] uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
                 Due Today
@@ -162,7 +162,7 @@ const Today = () => {
             return (
               <>
                 <h2
-                  className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
+                  className="text-[12px] font-medium leading-[16px] uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
                   style={{ fontFamily: 'var(--font-body)' }}
                 >
                   Coming Up
@@ -175,10 +175,10 @@ const Today = () => {
                     <Calendar size={16} className="text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <p className="text-[14px] font-medium text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[14px] font-medium leading-[20px] text-foreground" style={{ fontFamily: 'var(--font-body)' }}>
                       {comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""} this week
                     </p>
-                    <p className="text-[12px] text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[12px] leading-[16px] text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
                       Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}
                     </p>
                   </div>
@@ -195,7 +195,7 @@ const Today = () => {
           {overdue.length > 0 && (
             <section>
               <h2
-                className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
+                className="text-[12px] font-medium leading-[16px] uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3"
                 style={{ fontFamily: 'var(--font-body)' }}
               >
                 Overdue
