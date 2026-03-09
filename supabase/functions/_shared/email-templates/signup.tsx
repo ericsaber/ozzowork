@@ -54,7 +54,7 @@ export const SignupEmail = ({
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>

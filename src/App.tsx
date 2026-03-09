@@ -42,7 +42,7 @@ const AppContent = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground font-heading text-xl italic">ollo</div>
+        <div className="text-muted-foreground font-heading text-xl italic">ozzo</div>
       </div>
     );
   }

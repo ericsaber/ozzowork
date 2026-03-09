@@ -38,7 +38,7 @@ export const RecoveryEmail = ({
         <Text style={footer}>
           If you didn't request this, you can safely ignore this email. Your password won't change.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>

@@ -46,7 +46,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           If you didn't request this, please secure your account immediately.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>
