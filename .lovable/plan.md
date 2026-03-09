@@ -1,20 +1,28 @@
 
 
-## Update pill font size and properties
+## Plan: Set Up New ozzo Email Domain
 
-Based on the screenshots, the user wants two font specs applied:
+You have a new ozzo domain you'd like to use for sending emails. Here's the plan:
 
-- **14px**: weight 500, line-height 20px
-- **12px**: weight 500, line-height 16px
+### Step 1: Set up the new email domain
+You'll need to configure DNS records for your new ozzo domain through the email setup dialog. This will guide you through adding the required DNS records at your domain registrar.
 
-The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
+### Step 2: Scaffold and brand email templates
+Once the domain is added, I'll re-scaffold the auth email templates to use the new ozzo domain and redeploy the `auth-email-hook` edge function.
 
-Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
+### Step 3: Update the follow-up reminder function
+The `send-followup-reminders` edge function also references the old domain in the app URL. I'll update that to point to the correct ozzo URL.
 
-While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
+### Technical Details
+- The verified email domain is currently `app.ollo.work` — this will be replaced by your new ozzo domain
+- `auth-email-hook/index.ts` constants (`SENDER_DOMAIN`, `ROOT_DOMAIN`, `FROM_DOMAIN`) will be updated to the new domain
+- `send-followup-reminders/index.ts` app URL will be updated
+- Both edge functions will be redeployed
 
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
-| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
+### First Step: Add Your Domain
+Let's start by setting up your new sender domain. Click below to begin:
+
+<lov-actions>
+<lov-open-email-setup>Set up email domain</lov-open-email-setup>
+</lov-actions>
 
