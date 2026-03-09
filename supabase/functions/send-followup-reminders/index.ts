@@ -61,7 +61,7 @@ serve(async (req) => {
       }
     }
 
-    const appUrl = 'https://id-preview--443409a3-80c7-4166-a5c4-38d2e02eca03.lovable.app';
+    const appUrl = 'https://app.ozzo.work';
     let sent = 0;
 
     for (const interaction of interactions as any[]) {
