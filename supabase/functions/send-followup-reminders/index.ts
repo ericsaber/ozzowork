@@ -87,7 +87,7 @@ serve(async (req) => {
     
     <a href="${deepLink}" style="display: inline-block; background: #c8622a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px;">View Contact</a>
     
-    <p style="color: #a0a0a0; font-size: 12px; margin: 24px 0 0;">Sent by ollo</p>
+    <p style="color: #a0a0a0; font-size: 12px; margin: 24px 0 0;">Sent by ozzo</p>
   </div>
 </body>
 </html>`;
