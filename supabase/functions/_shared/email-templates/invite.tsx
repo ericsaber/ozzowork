@@ -27,15 +27,15 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to ollo</Preview>
+    <Preview>You've been invited to ozzo</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>ollo</Text>
+        <Text style={brand}>ozzo</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           Someone invited you to{' '}
           <Link href={siteUrl} style={link}>
-            <strong>ollo</strong>
+            <strong>ozzo</strong>
           </Link>
           — a calm place to keep track of your contacts and follow-ups.
         </Text>
@@ -45,7 +45,7 @@ export const InviteEmail = ({
         <Text style={footer}>
           If you weren't expecting this, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>

@@ -29,13 +29,13 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change for ollo</Preview>
+    <Preview>Confirm your email change for ozzo</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>ollo</Text>
+        <Text style={brand}>ozzo</Text>
         <Heading style={h1}>Confirm your new email</Heading>
         <Text style={text}>
-          You requested to change your ollo email from{' '}
+          You requested to change your ozzo email from{' '}
           <Link href={`mailto:${email}`} style={link}>{email}</Link>{' '}
           to{' '}
           <Link href={`mailto:${newEmail}`} style={link}>{newEmail}</Link>.
@@ -46,7 +46,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           If you didn't request this, please secure your account immediately.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>

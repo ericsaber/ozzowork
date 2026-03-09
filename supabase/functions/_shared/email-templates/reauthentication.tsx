@@ -19,17 +19,17 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code for ollo</Preview>
+    <Preview>Your verification code for ozzo</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>ollo</Text>
+        <Text style={brand}>ozzo</Text>
         <Heading style={h1}>Verify your identity</Heading>
         <Text style={text}>Use the code below to confirm it's you:</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
           This code will expire shortly. If you didn't request this, you can safely ignore it.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>

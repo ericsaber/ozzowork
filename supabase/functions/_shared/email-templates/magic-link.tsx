@@ -24,13 +24,13 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your magic link for ollo</Preview>
+    <Preview>Your magic link for ozzo</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brand}>ollo</Text>
+        <Text style={brand}>ozzo</Text>
         <Heading style={h1}>Your magic link</Heading>
         <Text style={text}>
-          Tap the button below to sign in to ollo. This link will expire shortly.
+          Tap the button below to sign in to ozzo. This link will expire shortly.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Sign In
@@ -38,7 +38,7 @@ export const MagicLinkEmail = ({
         <Text style={footer}>
           If you didn't request this link, you can safely ignore this email.
         </Text>
-        <Text style={footerBrand}>Sent by ollo</Text>
+        <Text style={footerBrand}>Sent by ozzo</Text>
       </Container>
     </Body>
   </Html>
