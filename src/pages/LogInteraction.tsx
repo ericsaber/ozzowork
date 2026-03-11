@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
+import ContactCombobox from "@/components/ContactCombobox";
 
 const LogInteraction = () => {
   const navigate = useNavigate();
