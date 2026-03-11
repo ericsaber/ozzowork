@@ -1,4 +1,4 @@
-import { Phone, Mail, Voicemail, MessageSquare, ChevronRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, ChevronRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface InteractionItemProps {
