@@ -20,7 +20,7 @@ const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
   voicemail: "Voicemail",
-  note: "Note",
+  text: "Text",
 };
 
 const InteractionItem = ({ date, type, note, followUpDate, onClick }: InteractionItemProps) => {

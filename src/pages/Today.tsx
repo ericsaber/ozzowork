@@ -99,7 +99,7 @@ const Today = () => {
       company={item.contacts?.company}
       lastNote={item.note}
       followUpDate={item.follow_up_date}
-      interactionType={item.type}
+      interactionType={item.planned_follow_up_type}
       variant={variant}
       isCompleting={completingId === item.id}
       onComplete={() => handleComplete(item)}

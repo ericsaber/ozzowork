@@ -87,7 +87,8 @@ const LogInteraction = () => {
       const { error } = await supabase.from("interactions").insert({
         contact_id: contactId,
         user_id: user.id,
-        type,
+        planned_follow_up_type: type,
+        connect_type: type,
         note: note || null,
         follow_up_date: followUpDate || customDate || null,
       });

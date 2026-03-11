@@ -105,9 +105,9 @@ const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditIn
               {typeOptions.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => setType(t.value)}
+                  onClick={() => { setPlannedType(t.value); setConnectType(t.value); }}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    type === t.value
+                    plannedType === t.value
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-secondary-foreground"
                   }`}

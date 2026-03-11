@@ -67,7 +67,8 @@ const CompleteFollowupSheet = ({
       const { error: insertErr } = await supabase.from("interactions").insert({
         contact_id: contactId,
         user_id: userId,
-        type: "note",
+        planned_follow_up_type: followUpDate ? "call" : "text",
+        connect_type: "text",
         note: note || null,
         follow_up_date: followUpDate,
       });
