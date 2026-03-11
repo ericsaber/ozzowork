@@ -73,7 +73,7 @@ const Today = () => {
         contactName: item.contacts
           ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim()
           : "Unknown",
-        interactionType: item.type,
+        interactionType: item.planned_follow_up_type,
         userId: item.user_id,
       });
     }, 600);
