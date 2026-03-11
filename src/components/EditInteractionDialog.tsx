@@ -59,7 +59,8 @@ const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditIn
       const { error } = await supabase
         .from("interactions")
         .update({
-          type,
+          planned_follow_up_type: plannedType,
+          connect_type: connectType,
           note: note || null,
           date: new Date(date).toISOString(),
           follow_up_date: followUpDate || null,
