@@ -100,6 +100,8 @@ const Today = () => {
       lastNote={item.note}
       followUpDate={item.follow_up_date}
       interactionType={item.planned_follow_up_type}
+      connectType={item.connect_type}
+      interactionDate={item.date}
       variant={variant}
       isCompleting={completingId === item.id}
       onComplete={() => handleComplete(item)}

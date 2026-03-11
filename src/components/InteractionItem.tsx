@@ -1,4 +1,4 @@
-import { Phone, Mail, Voicemail, MessageSquare, ChevronRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, ChevronRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface InteractionItemProps {
@@ -12,15 +12,17 @@ interface InteractionItemProps {
 const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone size={16} />,
   email: <Mail size={16} />,
-  voicemail: <Voicemail size={16} />,
-  note: <MessageSquare size={16} />,
+  text: <MessageSquare size={16} />,
+  meet: <Users size={16} />,
+  video: <Video size={16} />,
 };
 
 const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
-  voicemail: "Voicemail",
   text: "Text",
+  meet: "Meet",
+  video: "Video",
 };
 
 const InteractionItem = ({ date, type, note, followUpDate, onClick }: InteractionItemProps) => {

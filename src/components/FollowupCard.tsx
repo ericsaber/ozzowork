@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Check, Phone, Mail, Voicemail, MessageSquare } from "lucide-react";
+import { Check, Phone, Mail, MessageSquare, Users, Video } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
@@ -10,6 +10,8 @@ interface FollowupCardProps {
   lastNote: string | null;
   followUpDate: string;
   interactionType: string;
+  connectType: string | null;
+  interactionDate: string;
   variant: "overdue" | "today";
   isCompleting?: boolean;
   onComplete: () => void;
@@ -18,8 +20,17 @@ interface FollowupCardProps {
 const typeIcon: Record<string, React.ElementType> = {
   call: Phone,
   email: Mail,
-  voicemail: Voicemail,
   text: MessageSquare,
+  meet: Users,
+  video: Video,
+};
+
+const pastVerb: Record<string, string> = {
+  call: "Called",
+  email: "Emailed",
+  text: "Texted",
+  meet: "Met",
+  video: "Video called",
 };
 
 const FollowupCard = ({
@@ -30,14 +41,16 @@ const FollowupCard = ({
   followUpDate,
   variant,
   interactionType,
+  connectType,
+  interactionDate,
   isCompleting,
   onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
 
-  const borderClass = "";
-
   const TypeIcon = typeIcon[interactionType?.toLowerCase()] || MessageSquare;
+  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
+  const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
 
   const badgeLabel =
     variant === "today"
@@ -53,7 +66,7 @@ const FollowupCard = ({
     <button
       onClick={() => navigate(`/followup/${interactionId}`)}
       data-completing={isCompleting || undefined}
-      className={`w-full text-left bg-card rounded-lg border border-border ${borderClass} p-4 flex items-start gap-3 active:scale-[0.98] transition-all duration-500 animate-fade-in data-[completing]:opacity-40 data-[completing]:line-through`}
+      className="w-full text-left bg-card rounded-lg border border-border p-4 flex items-start gap-3 active:scale-[0.98] transition-all duration-500 animate-fade-in data-[completing]:opacity-40 data-[completing]:line-through"
     >
       {/* Check circle */}
       <button
@@ -98,16 +111,34 @@ const FollowupCard = ({
           </p>
         )}
 
-        {/* Last interaction section */}
-        {lastNote && (
+        {/* Last connect section */}
+        {(connectType || lastNote) && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
-            <p className="font-medium uppercase text-[#bbb] mb-0.5" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', letterSpacing: '0px' }}>
-              Last Interaction
+            <p className="font-medium uppercase text-[#bbb] mb-1" style={{ fontFamily: 'var(--font-body)', fontSize: '9px', lineHeight: '16px', letterSpacing: '0.1em' }}>
+              Last connect
             </p>
-            <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
-              {lastNote}
-            </p>
+            {connectType && ConnectIcon && (
+              <span
+                className="inline-flex items-center gap-1 mb-1"
+                style={{
+                  background: '#e8e4de',
+                  color: '#666',
+                  borderRadius: '20px',
+                  padding: '3px 9px',
+                  fontSize: '10px',
+                  fontWeight: 500,
+                }}
+              >
+                <ConnectIcon size={10} />
+                {connectVerb} · {format(parseISO(interactionDate), "MMM d")}
+              </span>
+            )}
+            {lastNote && (
+              <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px' }}>
+                {lastNote}
+              </p>
+            )}
           </div>
         )}
       </div>

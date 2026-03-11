@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Phone, Mail, Voicemail, MessageSquare, CheckCircle2, User, Calendar, FileText } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MessageSquare, Users, Video, CheckCircle2, User, Calendar, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, isToday, isPast } from "date-fns";
 import { toast } from "sonner";
@@ -9,15 +9,17 @@ import { toast } from "sonner";
 const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone size={18} />,
   email: <Mail size={18} />,
-  voicemail: <Voicemail size={18} />,
   text: <MessageSquare size={18} />,
+  meet: <Users size={18} />,
+  video: <Video size={18} />,
 };
 
 const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
-  voicemail: "Voicemail",
   text: "Text",
+  meet: "Meet",
+  video: "Video",
 };
 
 const FollowupTask = () => {
