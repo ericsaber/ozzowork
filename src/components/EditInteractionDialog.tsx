@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Phone, Mail, Voicemail, MessageSquare, Trash2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
