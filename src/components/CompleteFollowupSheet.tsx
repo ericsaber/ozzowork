@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Check } from "lucide-react";
+import CelebrationHeader from "@/components/CelebrationHeader";
 import {
   Drawer,
   DrawerContent,
@@ -119,21 +119,7 @@ const CompleteFollowupSheet = ({
       <DrawerContent className="max-h-[90vh]">
         {/* Drag handle is built into DrawerContent */}
 
-        {/* Celebration header */}
-        <div className="px-5 pt-4 pb-2 text-center">
-          <div className="w-10 h-10 rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center mx-auto mb-2">
-            <Check size={20} className="text-white" strokeWidth={2.5} />
-          </div>
-          <h2
-            className="text-[20px] text-foreground"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            Nice work.
-          </h2>
-          <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-            Logging with <strong>{contactName}</strong>
-          </p>
-        </div>
+        <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
 
         <StepIndicator currentStep={step} />
 
