@@ -9,15 +9,17 @@ import { toast } from "sonner";
 const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone size={18} />,
   email: <Mail size={18} />,
-  voicemail: <Voicemail size={18} />,
   text: <MessageSquare size={18} />,
+  meet: <Users size={18} />,
+  video: <Video size={18} />,
 };
 
 const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
-  voicemail: "Voicemail",
   text: "Text",
+  meet: "Meet",
+  video: "Video",
 };
 
 const FollowupTask = () => {

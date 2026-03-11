@@ -28,8 +28,9 @@ import { format, parseISO } from "date-fns";
 const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
   { value: "email", icon: Mail, label: "Email" },
-  { value: "voicemail", icon: Voicemail, label: "VM" },
   { value: "text", icon: MessageSquare, label: "Text" },
+  { value: "meet", icon: Users, label: "Meet" },
+  { value: "video", icon: Video, label: "Video" },
 ];
 
 interface EditInteractionDialogProps {
