@@ -36,7 +36,8 @@ interface EditInteractionDialogProps {
   interaction: {
     id: string;
     date: string;
-    type: string;
+    planned_follow_up_type: string;
+    connect_type: string | null;
     note: string | null;
     follow_up_date: string | null;
   };
