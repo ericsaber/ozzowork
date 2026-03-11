@@ -149,29 +149,12 @@ const LogInteraction = () => {
         <div className="space-y-5">
           {/* Contact picker */}
           <div>
-            <div className="flex gap-2">
-              <select
-                value={contactId}
-                onChange={(e) => setContactId(e.target.value)}
-                className="flex-1 h-11 rounded-[12px] border border-border bg-secondary px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                <option value="">Select a contact…</option>
-                {contacts?.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {`${c.first_name} ${c.last_name}`.trim()} {c.company ? `— ${c.company}` : ""}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowQuickAdd(!showQuickAdd)}
-                className="w-11 h-11 rounded-[12px] border border-border bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Add new contact"
-              >
-                {showQuickAdd ? <X size={16} /> : <Plus size={16} />}
-              </button>
-            </div>
+            <ContactCombobox
+              contacts={contacts}
+              contactId={contactId}
+              onSelect={setContactId}
+              onAddNew={() => setShowQuickAdd(true)}
+            />
 
             {/* Quick-add form */}
             {showQuickAdd && (
