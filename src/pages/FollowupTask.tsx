@@ -10,14 +10,14 @@ const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone size={18} />,
   email: <Mail size={18} />,
   voicemail: <Voicemail size={18} />,
-  note: <MessageSquare size={18} />,
+  text: <MessageSquare size={18} />,
 };
 
 const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
   voicemail: "Voicemail",
-  note: "Note",
+  text: "Text",
 };
 
 const FollowupTask = () => {
