@@ -2,17 +2,15 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { addDays, addWeeks, format } from "date-fns";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { Check } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
 } from "@/components/ui/drawer";
+import StepIndicator from "@/components/StepIndicator";
+import LogStep1 from "@/components/LogStep1";
+import LogStep2 from "@/components/LogStep2";
 
 interface CompleteFollowupSheetProps {
   open: boolean;
@@ -24,13 +22,6 @@ interface CompleteFollowupSheetProps {
   userId: string;
 }
 
-const dateChips = [
-  { label: "Tomorrow", days: 1 },
-  { label: "3 days", days: 3 },
-  { label: "1 week", days: 7 },
-  { label: "2 weeks", days: 14 },
-];
-
 const CompleteFollowupSheet = ({
   open,
   onOpenChange,
@@ -41,111 +32,134 @@ const CompleteFollowupSheet = ({
   userId,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
-  const [note, setNote] = useState(`Completed: ${interactionType}`);
-  const [selectedChip, setSelectedChip] = useState<number | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [connectType, setConnectType] = useState(interactionType || "");
+  const [note, setNote] = useState("");
+  const [savedInteractionId, setSavedInteractionId] = useState<string | null>(null);
 
-  const getFollowUpDate = () => {
-    if (selectedChip === null) return null;
-    const chip = dateChips[selectedChip];
-    return format(
-      chip.days <= 7 ? addDays(new Date(), chip.days) : addWeeks(new Date(), chip.days / 7),
-      "yyyy-MM-dd"
-    );
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["followups-today"] });
+    queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["interactions"] });
   };
 
-  const saveMutation = useMutation({
+  // Step 1: Log the interaction
+  const logMutation = useMutation({
     mutationFn: async () => {
-      // 1. Clear follow_up_date on original interaction
+      // Clear follow_up_date on original interaction
       const { error: updateErr } = await supabase
         .from("interactions")
         .update({ follow_up_date: null })
         .eq("id", interactionId);
       if (updateErr) throw updateErr;
 
-      // 2. Insert new logged interaction
-      const followUpDate = getFollowUpDate();
-      const { error: insertErr } = await supabase.from("interactions").insert({
-        contact_id: contactId,
-        user_id: userId,
-        planned_follow_up_type: followUpDate ? "call" : "text",
-        connect_type: "text",
-        note: note || null,
-        follow_up_date: followUpDate,
-      });
-      if (insertErr) throw insertErr;
+      // Insert new logged interaction
+      const { data, error } = await supabase
+        .from("interactions")
+        .insert({
+          contact_id: contactId,
+          user_id: userId,
+          connect_type: connectType || null,
+          note: note || null,
+          planned_follow_up_type: "call", // default, will be updated in step 2
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      queryClient.invalidateQueries({ queryKey: ["interactions"] });
-      toast.success("Follow-up completed");
-      onOpenChange(false);
-      // Reset state
-      setSelectedChip(null);
+    onSuccess: (data) => {
+      setSavedInteractionId(data.id);
+      invalidateAll();
+      setStep(2);
     },
     onError: (e) => toast.error(e.message),
   });
 
-  const handleOpen = (isOpen: boolean) => {
-    if (!isOpen) {
-      setSelectedChip(null);
-      setNote(`Completed: ${interactionType}`);
-    }
-    onOpenChange(isOpen);
+  // Step 2: Update with follow-up
+  const followupMutation = useMutation({
+    mutationFn: async ({ type, date }: { type: string; date: string }) => {
+      if (!savedInteractionId) throw new Error("No interaction to update");
+      const { error } = await supabase
+        .from("interactions")
+        .update({
+          planned_follow_up_type: type,
+          follow_up_date: date,
+        })
+        .eq("id", savedInteractionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAll();
+      toast.success("Follow-up set");
+      handleClose();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Reset after animation
+    setTimeout(() => {
+      setStep(1);
+      setConnectType(interactionType || "");
+      setNote("");
+      setSavedInteractionId(null);
+    }, 300);
+  };
+
+  const handleSkip = () => {
+    invalidateAll();
+    toast.success("Interaction logged");
+    handleClose();
   };
 
   return (
-    <Drawer open={open} onOpenChange={handleOpen}>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle className="font-heading text-xl">Logged ✓</DrawerTitle>
-          <DrawerDescription>
-            Add a note and set your next follow-up with <strong>{contactName}</strong>.
-          </DrawerDescription>
-        </DrawerHeader>
+    <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      <DrawerContent className="max-h-[90vh]">
+        {/* Drag handle is built into DrawerContent */}
 
-        <div className="px-4 space-y-4">
-          <Textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            rows={3}
-            className="bg-card"
-            placeholder="Add a note..."
-          />
-
-          <div>
-            <p className="text-sm font-medium text-foreground mb-2">Next follow-up</p>
-            <div className="flex flex-wrap gap-2">
-              {dateChips.map((chip, i) => (
-                <button
-                  key={chip.label}
-                  onClick={() => setSelectedChip(selectedChip === i ? null : i)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    selectedChip === i
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground"
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
+        {/* Celebration header */}
+        <div className="px-5 pt-4 pb-2 text-center">
+          <div className="w-10 h-10 rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center mx-auto mb-2">
+            <Check size={20} className="text-white" strokeWidth={2.5} />
           </div>
+          <h2
+            className="text-[20px] text-foreground"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            Nice work.
+          </h2>
+          <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+            Logging with <strong>{contactName}</strong>
+          </p>
         </div>
 
-        <DrawerFooter>
-          <Button
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-            className="w-full h-12 font-medium"
-          >
-            {saveMutation.isPending
-              ? "Saving..."
-              : selectedChip !== null
-              ? "Save & set reminder"
-              : "Save"}
-          </Button>
-        </DrawerFooter>
+        <StepIndicator currentStep={step} />
+
+        <div className="px-5 pb-6 overflow-y-auto">
+          {step === 1 ? (
+            <LogStep1
+              connectType={connectType}
+              setConnectType={setConnectType}
+              note={note}
+              setNote={setNote}
+              onSubmit={() => logMutation.mutate()}
+              isSubmitting={logMutation.isPending}
+            />
+          ) : (
+            <LogStep2
+              connectType={connectType}
+              contactName={contactName}
+              note={note}
+              logDate={format(new Date(), "MMM d, yyyy")}
+              onBack={() => setStep(1)}
+              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+              onSkip={handleSkip}
+              isSaving={followupMutation.isPending}
+            />
+          )}
+        </div>
       </DrawerContent>
     </Drawer>
   );
