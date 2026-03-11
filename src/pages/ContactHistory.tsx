@@ -227,7 +227,7 @@ const ContactHistory = () => {
                   <InteractionItem
                     key={item.id}
                     date={item.date}
-                    type={item.type}
+                    type={item.connect_type || item.planned_follow_up_type}
                     note={item.note}
                     followUpDate={item.follow_up_date}
                     onClick={() => setEditingInteraction(item)}
@@ -251,7 +251,7 @@ const ContactHistory = () => {
                   <InteractionItem
                     key={item.id}
                     date={item.date}
-                    type={item.type}
+                    type={item.connect_type || item.planned_follow_up_type}
                     note={item.note}
                     followUpDate={item.follow_up_date}
                   />

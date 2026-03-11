@@ -10,14 +10,14 @@ const typeIcons: Record<string, React.ReactNode> = {
   call: <Phone size={18} />,
   email: <Mail size={18} />,
   voicemail: <Voicemail size={18} />,
-  note: <MessageSquare size={18} />,
+  text: <MessageSquare size={18} />,
 };
 
 const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
   voicemail: "Voicemail",
-  note: "Note",
+  text: "Text",
 };
 
 const FollowupTask = () => {
@@ -150,12 +150,12 @@ const FollowupTask = () => {
         {/* Interaction type */}
         <div className="flex items-center gap-3 p-4">
           <div className="text-muted-foreground shrink-0">
-            {typeIcons[interaction.type] || <MessageSquare size={18} />}
+            {typeIcons[interaction.planned_follow_up_type] || <MessageSquare size={18} />}
           </div>
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Interaction Type</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Planned Follow-up</p>
             <p className="text-sm font-medium text-foreground">
-              {typeLabels[interaction.type] || interaction.type}
+              {typeLabels[interaction.planned_follow_up_type] || interaction.planned_follow_up_type}
             </p>
           </div>
         </div>

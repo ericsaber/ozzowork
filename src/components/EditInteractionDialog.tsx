@@ -29,14 +29,15 @@ const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
   { value: "email", icon: Mail, label: "Email" },
   { value: "voicemail", icon: Voicemail, label: "VM" },
-  { value: "note", icon: MessageSquare, label: "Note" },
+  { value: "text", icon: MessageSquare, label: "Text" },
 ];
 
 interface EditInteractionDialogProps {
   interaction: {
     id: string;
     date: string;
-    type: string;
+    planned_follow_up_type: string;
+    connect_type: string | null;
     note: string | null;
     follow_up_date: string | null;
   };
@@ -47,7 +48,8 @@ interface EditInteractionDialogProps {
 
 const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditInteractionDialogProps) => {
   const queryClient = useQueryClient();
-  const [type, setType] = useState(interaction.type);
+  const [plannedType, setPlannedType] = useState(interaction.planned_follow_up_type);
+  const [connectType, setConnectType] = useState(interaction.connect_type || interaction.planned_follow_up_type);
   const [note, setNote] = useState(interaction.note || "");
   const [date, setDate] = useState(format(parseISO(interaction.date), "yyyy-MM-dd"));
   const [followUpDate, setFollowUpDate] = useState(interaction.follow_up_date || "");
@@ -57,7 +59,8 @@ const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditIn
       const { error } = await supabase
         .from("interactions")
         .update({
-          type,
+          planned_follow_up_type: plannedType,
+          connect_type: connectType,
           note: note || null,
           date: new Date(date).toISOString(),
           follow_up_date: followUpDate || null,
@@ -102,9 +105,9 @@ const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditIn
               {typeOptions.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => setType(t.value)}
+                  onClick={() => { setPlannedType(t.value); setConnectType(t.value); }}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    type === t.value
+                    plannedType === t.value
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-secondary-foreground"
                   }`}

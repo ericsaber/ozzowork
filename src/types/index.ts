@@ -15,7 +15,8 @@ export interface Interaction {
   user_id: string;
   contact_id: string;
   date: string;
-  type: string;
+  planned_follow_up_type: string;
+  connect_type: string | null;
   note: string | null;
   follow_up_date: string | null;
   created_at: string;
