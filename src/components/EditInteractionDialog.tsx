@@ -29,7 +29,7 @@ const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
   { value: "email", icon: Mail, label: "Email" },
   { value: "voicemail", icon: Voicemail, label: "VM" },
-  { value: "note", icon: MessageSquare, label: "Note" },
+  { value: "text", icon: MessageSquare, label: "Text" },
 ];
 
 interface EditInteractionDialogProps {
