@@ -48,7 +48,8 @@ interface EditInteractionDialogProps {
 
 const EditInteractionDialog = ({ interaction, open, onClose, contactId }: EditInteractionDialogProps) => {
   const queryClient = useQueryClient();
-  const [type, setType] = useState(interaction.type);
+  const [plannedType, setPlannedType] = useState(interaction.planned_follow_up_type);
+  const [connectType, setConnectType] = useState(interaction.connect_type || interaction.planned_follow_up_type);
   const [note, setNote] = useState(interaction.note || "");
   const [date, setDate] = useState(format(parseISO(interaction.date), "yyyy-MM-dd"));
   const [followUpDate, setFollowUpDate] = useState(interaction.follow_up_date || "");
