@@ -52,33 +52,36 @@ export type Database = {
       }
       interactions: {
         Row: {
+          connect_type: string | null
           contact_id: string
           created_at: string
           date: string
           follow_up_date: string | null
           id: string
           note: string | null
-          type: string
+          planned_follow_up_type: string
           user_id: string
         }
         Insert: {
+          connect_type?: string | null
           contact_id: string
           created_at?: string
           date?: string
           follow_up_date?: string | null
           id?: string
           note?: string | null
-          type?: string
+          planned_follow_up_type?: string
           user_id: string
         }
         Update: {
+          connect_type?: string | null
           contact_id?: string
           created_at?: string
           date?: string
           follow_up_date?: string | null
           id?: string
           note?: string | null
-          type?: string
+          planned_follow_up_type?: string
           user_id?: string
         }
         Relationships: [
