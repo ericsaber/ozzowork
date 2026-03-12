@@ -423,33 +423,6 @@ const ContactHistory = () => {
                   </div>
 
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
-
-                  {/* Interaction ··· menu */}
-                  <DropdownMenu
-                    open={openMenuId === `history-${item.id}`}
-                    onOpenChange={(o) => setOpenMenuId(o ? `history-${item.id}` : null)}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start"
-                      >
-                        <MoreHorizontal size={16} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="min-w-[160px]">
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setEditingInteraction(item); }}>
-                        <Pencil size={14} className="mr-2" /> Edit interaction
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setDeleteConfirmId(item.id); setDeleteConfirmType("interaction"); }}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 size={14} className="mr-2" /> Delete interaction
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </button>
               );
             })}
