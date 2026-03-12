@@ -25,6 +25,14 @@ const typeLabels: Record<string, string> = {
   video: "Video",
 };
 
+const pastVerb: Record<string, string> = {
+  call: "Called",
+  email: "Emailed",
+  text: "Texted",
+  meet: "Met",
+  video: "Video called",
+};
+
 interface ContactFollowupCardProps {
   interaction: {
     id: string;

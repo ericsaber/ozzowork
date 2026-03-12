@@ -219,33 +219,51 @@ const ContactHistory = () => {
             >
               <Plus size={14} /> Log
             </button>
-            {contact.phone && (
-              <a
-                href={`tel:${contact.phone}`}
-                className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                <Phone size={14} /> Call
-              </a>
-            )}
-            {contact.email && (
-              <a
-                href={`mailto:${contact.email}`}
-                className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                <Mail size={14} /> Email
-              </a>
-            )}
-            {contact.phone && (
-              <a
-                href={`sms:${contact.phone}`}
-                className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                <MessageSquare size={14} /> Text
-              </a>
-            )}
+            <button
+              onClick={() => {
+                if (contact.phone) {
+                  window.location.href = `tel:${contact.phone}`;
+                } else {
+                  toast("No phone number added. Would you like to add one?", {
+                    action: { label: "Add", onClick: startEditing },
+                  });
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              <Phone size={14} /> Call
+            </button>
+            <button
+              onClick={() => {
+                if (contact.email) {
+                  window.location.href = `mailto:${contact.email}`;
+                } else {
+                  toast("No email added. Would you like to add one?", {
+                    action: { label: "Add", onClick: startEditing },
+                  });
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              <Mail size={14} /> Email
+            </button>
+            <button
+              onClick={() => {
+                if (contact.phone) {
+                  window.location.href = `sms:${contact.phone}`;
+                } else {
+                  toast("No phone number added. Would you like to add one?", {
+                    action: { label: "Add", onClick: startEditing },
+                  });
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              <MessageSquare size={14} /> Text
+            </button>
           </div>
         </div>
       )}
