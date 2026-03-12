@@ -20,12 +20,14 @@ const BottomNav = () => {
           <span className="text-xs font-medium">Today</span>
         </button>
 
-        <button
-          onClick={() => navigate("/log")}
-          className="flex items-center justify-center w-12 h-12 -mt-4 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
-        >
-          <Plus size={24} />
-        </button>
+        <div className="flex flex-col items-center gap-1 px-4 py-2">
+          <button
+            onClick={() => navigate("/log")}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
+          >
+            <Plus size={22} />
+          </button>
+        </div>
 
         <button
           onClick={() => navigate("/contacts")}
