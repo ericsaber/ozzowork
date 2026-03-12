@@ -1,20 +1,14 @@
 
 
-## Update pill font size and properties
+## Fix: Contacts Action Buttons on One Line
 
-Based on the screenshots, the user wants two font specs applied:
+The preview is 390px wide (standard mobile). The three buttons overflow because of `flex-wrap`, `gap-2` (8px), and `px-3` padding inside each `size="sm"` button.
 
-- **14px**: weight 500, line-height 20px
-- **12px**: weight 500, line-height 16px
+### Change in `src/pages/Contacts.tsx` (line 235)
 
-The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
+- Remove `flex-wrap` from the container
+- Change `gap-2` → `gap-1.5` (6px)
+- On each button: change `gap-1.5` → `gap-1` and add slightly tighter horizontal padding via `px-2.5` instead of the default `px-3`
 
-Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
-
-While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
-| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
+This shaves ~12px total, enough to fit all three at 390px.
 
