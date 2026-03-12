@@ -32,7 +32,7 @@ const typeVerbs: Record<string, string> = {
   video: "Video called",
 };
 
-const typeIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const typeIcons: Record<string, typeof Phone> = {
   call: Phone,
   email: Mail,
   text: MessageSquare,

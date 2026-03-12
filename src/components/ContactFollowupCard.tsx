@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const typeIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const typeIcons: Record<string, typeof Phone> = {
   call: Phone,
   email: Mail,
   text: MessageSquare,
