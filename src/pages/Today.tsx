@@ -40,15 +40,9 @@ const Today = () => {
       for (const item of interactions || []) {
         const d = item.follow_up_date!;
         if (d < today) {
-          if (!seen.overdue.has(item.contact_id)) {
-            seen.overdue.add(item.contact_id);
-            overdue.push(item);
-          }
+          overdue.push(item);
         } else if (d === today) {
-          if (!seen.today.has(item.contact_id)) {
-            seen.today.add(item.contact_id);
-            dueToday.push(item);
-          }
+          dueToday.push(item);
         } else {
           if (!seen.coming.has(item.contact_id)) {
             seen.coming.add(item.contact_id);
