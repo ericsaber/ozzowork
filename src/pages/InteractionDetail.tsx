@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
   MoreHorizontal, Pencil, Trash2, ChevronDown, ChevronUp,
-  CalendarIcon, X,
+  CalendarIcon, X, Check,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isPast } from "date-fns";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,7 +54,6 @@ const InteractionDetail = () => {
   const [deleteInteractionOpen, setDeleteInteractionOpen] = useState(false);
   const [followUpRemoved, setFollowUpRemoved] = useState(false);
 
-  // Fetch interaction
   const { data: interaction, isLoading } = useQuery({
     queryKey: ["interaction-detail", id],
     queryFn: async () => {
@@ -69,7 +68,6 @@ const InteractionDetail = () => {
     enabled: !!id,
   });
 
-  // Fetch linked follow-up
   const { data: followUp } = useQuery({
     queryKey: ["followup-for-interaction", id],
     queryFn: async () => {
@@ -85,7 +83,6 @@ const InteractionDetail = () => {
     enabled: !!id,
   });
 
-  // Edit history for the linked follow-up
   const { data: editHistory } = useQuery({
     queryKey: ["follow-up-edits-for-interaction", followUp?.id],
     queryFn: async () => {
@@ -109,29 +106,22 @@ const InteractionDetail = () => {
     queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
   };
 
-  // Save edits
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Update interaction
       const { error: intErr } = await supabase
         .from("interactions")
-        .update({
-          connect_type: editConnectType || null,
-          note: editNote || null,
-        })
+        .update({ connect_type: editConnectType || null, note: editNote || null })
         .eq("id", id!);
       if (intErr) throw intErr;
 
-      // Handle follow-up
       if (followUp) {
         if (followUpRemoved) {
           const { error } = await supabase.from("follow_ups").delete().eq("id", followUp.id);
           if (error) throw error;
         } else if (editFollowUpType !== followUp.follow_up_type || editFollowUpDate !== followUp.due_date) {
-          // Write edit history
           const { error: editErr } = await supabase.from("follow_up_edits").insert({
             follow_up_id: followUp.id,
             previous_type: followUp.follow_up_type,
@@ -148,25 +138,29 @@ const InteractionDetail = () => {
         }
       }
     },
-    onSuccess: () => {
-      invalidateAll();
-      toast.success("Changes saved");
-      setIsEditing(false);
-    },
+    onSuccess: () => { invalidateAll(); toast.success("Changes saved"); setIsEditing(false); },
     onError: (e) => toast.error(e.message),
   });
 
-  // Delete interaction
   const deleteInteractionMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("interactions").delete().eq("id", id!);
       if (error) throw error;
     },
-    onSuccess: () => {
-      invalidateAll();
-      toast.success("Interaction deleted");
-      navigate(-1);
+    onSuccess: () => { invalidateAll(); toast.success("Interaction deleted"); navigate(-1); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: async () => {
+      if (!followUp) throw new Error("No follow-up");
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({ completed: true, completed_at: new Date().toISOString() })
+        .eq("id", followUp.id);
+      if (error) throw error;
     },
+    onSuccess: () => { invalidateAll(); toast.success("Follow-up completed"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -206,7 +200,12 @@ const InteractionDetail = () => {
   const contact = interaction.contacts as any;
   const connectType = interaction.connect_type;
   const ConnectIcon = connectType ? typeIcons[connectType] : null;
-  const FollowUpIcon = followUp ? typeIcons[followUp.follow_up_type] : null;
+  const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
+
+  const dueDate = followUp ? parseISO(followUp.due_date) : null;
+  const overdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
+  const isDueToday = dueDate ? isToday(dueDate) : false;
+  const FollowUpTypeIcon = followUp ? typeIcons[followUp.follow_up_type] : null;
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
@@ -253,23 +252,28 @@ const InteractionDetail = () => {
         )}
       </div>
 
-      {/* Interaction card */}
+      {/* INTERACTION card */}
+      <p className="font-medium uppercase text-muted-foreground mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
+        Interaction
+      </p>
       <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
+          {/* Header: date left, type pill right */}
           <div className="flex items-center justify-between mb-2">
-            <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "16px", lineHeight: "22px" }}>
-              {contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown"}
+            <p style={{ fontFamily: "'Instrument Serif', serif", fontSize: "18px", lineHeight: "24px" }} className="text-foreground">
+              {format(parseISO(interaction.date), "EEEE, MMM d")}
             </p>
             {connectType && ConnectIcon && !isEditing && (
               <span
-                className="inline-flex items-center gap-1"
-                style={{ background: "#e8e4de", color: "#666", borderRadius: "20px", padding: "3px 9px", fontSize: "10px", fontWeight: 500 }}
+                className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
+                style={{ background: "#fdf0e8", color: "#c8622a", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
               >
                 <ConnectIcon size={10} />
-                {pastVerb[connectType] || connectType} · {format(parseISO(interaction.date), "MMM d")}
+                {pastVerb[connectType] || connectType}
               </span>
             )}
           </div>
+
           {isEditing ? (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
@@ -321,20 +325,25 @@ const InteractionDetail = () => {
         )}
       </div>
 
-      {/* Follow-up card */}
-      {(followUp || (isEditing && !followUpRemoved)) && (
+      {/* FOLLOW-UP card */}
+      <p className="font-medium uppercase text-muted-foreground mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
+        Follow-up
+      </p>
+      {followUp && !followUpRemoved ? (
         <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
-          <div className="px-4 py-3">
-            <p className="font-medium uppercase text-[#bbb] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
-              Follow-up
-            </p>
-            {isEditing ? (
-              followUpRemoved ? (
-                <div className="py-2">
-                  <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
-                  <button onClick={() => setFollowUpRemoved(false)} className="text-[12px] text-primary mt-1" style={{ fontFamily: "var(--font-body)" }}>+ Add</button>
-                </div>
-              ) : (
+          <div className="flex items-start gap-3 p-4">
+            {!isEditing && (
+              <button
+                onClick={() => completeMutation.mutate()}
+                disabled={completeMutation.isPending}
+                className="w-[26px] h-[26px] rounded-full border-[1.5px] border-[#e8e4de] flex items-center justify-center shrink-0 transition-colors hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10 group mt-0.5"
+              >
+                <Check size={12} strokeWidth={2.5} className="text-[#ccc] group-hover:text-[hsl(142,60%,40%)] transition-colors" />
+              </button>
+            )}
+
+            <div className="flex-1 min-w-0">
+              {isEditing ? (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     {typeOptions.map((t) => {
@@ -385,30 +394,63 @@ const InteractionDetail = () => {
                     <X size={12} /> Remove follow-up
                   </button>
                 </div>
-              )
-            ) : followUp ? (
-              <div className="flex items-center justify-between">
-                <span
-                  className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
-                  style={{ background: "#fdf0e8", color: "#c8622a", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
-                >
-                  {FollowUpIcon && <FollowUpIcon size={10} />}
-                  {typeLabels[followUp.follow_up_type] || followUp.follow_up_type} planned
-                </span>
-                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  Due {format(parseISO(followUp.due_date), "MMM d")}
-                </span>
-              </div>
-            ) : null}
+              ) : (
+                <>
+                  <button
+                    onClick={() => contact && navigate(`/contact/${contact.id}`)}
+                    className="font-medium text-foreground hover:underline text-left"
+                    style={{ fontFamily: "var(--font-body)", fontSize: "16px", lineHeight: "22px" }}
+                  >
+                    {contactName}
+                  </button>
+                  {contact?.company && (
+                    <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                      {contact.company}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
+
+          {/* Footer strip */}
+          {!isEditing && (
+            <div className="flex items-center justify-between border-t border-border px-4 py-2">
+              <span
+                className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
+                style={{ background: "#fdf0e8", color: "#c8622a", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
+              >
+                {FollowUpTypeIcon && <FollowUpTypeIcon size={10} />}
+                {typeLabels[followUp.follow_up_type] || followUp.follow_up_type} planned
+              </span>
+              <span
+                className="text-[12px] font-medium"
+                style={{
+                  color: overdue ? "hsl(8,72%,51%)" : isDueToday ? "hsl(142,60%,40%)" : "hsl(var(--muted-foreground))",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {overdue ? "Overdue" : isDueToday ? "Due today" : `Due ${format(dueDate!, "MMM d")}`}
+              </span>
+            </div>
+          )}
         </div>
-      )}
+      ) : isEditing && followUpRemoved ? (
+        <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4 px-4 py-3" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
+          <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
+          <button onClick={() => setFollowUpRemoved(false)} className="text-[12px] text-primary mt-1" style={{ fontFamily: "var(--font-body)" }}>+ Add</button>
+        </div>
+      ) : !followUp && !isEditing ? (
+        <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4 px-4 py-3" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
+          <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>No follow-up</p>
+        </div>
+      ) : null}
 
       {/* Edit history */}
       {editHistory && editHistory.length > 0 && followUp && !isEditing && (
         <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
           <button onClick={() => setHistoryOpen(!historyOpen)} className="w-full flex items-center justify-between px-4 py-3">
-            <p className="font-medium uppercase text-[#bbb]" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
+            <p className="font-medium uppercase text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
               Follow-up edit history
             </p>
             {historyOpen ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}

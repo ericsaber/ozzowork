@@ -290,6 +290,10 @@ const FollowupTask = () => {
         )}
       </div>
 
+      <p className="font-medium uppercase text-muted-foreground mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
+        Follow-up Task
+      </p>
+
       {/* Follow-up card */}
       <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="flex items-start gap-3 p-4">
