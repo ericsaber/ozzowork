@@ -88,9 +88,13 @@ const FollowupCard = ({
       <div className="flex-1 min-w-0">
         {/* Name + badge row */}
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-medium text-foreground truncate" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
+          <span
+            onClick={(e) => { e.stopPropagation(); navigate(`/contacts/${contactId}`); }}
+            className="font-medium text-foreground truncate hover:underline cursor-pointer"
+            style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}
+          >
             {name}
-          </h3>
+          </span>
           {variant === "overdue" ? (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full bg-[hsl(8,85%,97%)] text-[hsl(8,72%,51%)] shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}>
               <TypeIcon size={16} />
