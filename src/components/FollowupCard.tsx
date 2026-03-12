@@ -35,6 +35,7 @@ const pastVerb: Record<string, string> = {
 
 const FollowupCard = ({
   followUpId,
+  contactId,
   name,
   company,
   lastNote,
