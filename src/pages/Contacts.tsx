@@ -232,14 +232,14 @@ const Contacts = () => {
         <Input placeholder="Search contacts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-card" />
       </div>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={() => setShowAdd(true)}>
+      <div className="flex gap-1.5 mb-4">
+        <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs px-2.5" onClick={() => setShowAdd(true)}>
           <Plus size={14} /> New Contact
         </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handlePickFromPhone}>
+        <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs px-2.5" onClick={handlePickFromPhone}>
           <UserPlus size={14} /> From Phone
         </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handleFileImport}>
+        <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs px-2.5" onClick={handleFileImport}>
           <Upload size={14} /> From CSV
         </Button>
         <input ref={fileInputRef} type="file" accept=".csv,.vcf,.vcard" className="hidden" onChange={handleFileChange} />
