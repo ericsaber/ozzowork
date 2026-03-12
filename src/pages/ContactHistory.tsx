@@ -347,7 +347,7 @@ const ContactHistory = () => {
       {!isLoading && allInteractions.length > 0 && (
         <div className="mb-5">
           <p
-            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2"
+            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Interaction history
