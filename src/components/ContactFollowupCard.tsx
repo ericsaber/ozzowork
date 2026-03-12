@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, Calendar, Check, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Calendar, Check, MoreHorizontal, Pencil, Trash2, Clock } from "lucide-react";
 import { format, parseISO, differenceInDays, isToday, isTomorrow } from "date-fns";
 import {
   DropdownMenu,
@@ -26,36 +26,35 @@ const typeLabels: Record<string, string> = {
 };
 
 interface ContactFollowupCardProps {
-  interaction: {
+  followUp: {
     id: string;
-    date: string;
-    planned_follow_up_type: string;
-    connect_type: string | null;
-    note: string | null;
-    follow_up_date: string | null;
+    follow_up_type: string;
+    due_date: string;
+    created_at: string;
+    contact_id: string;
   };
   variant: "upcoming" | "overdue";
   onLogIt: () => void;
   onReschedule?: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEditFollowup: () => void;
+  onRemoveFollowup: () => void;
   menuOpen: boolean;
   onMenuOpenChange: (open: boolean) => void;
 }
 
 const ContactFollowupCard = ({
-  interaction,
+  followUp,
   variant,
   onLogIt,
   onReschedule,
-  onEdit,
-  onDelete,
+  onEditFollowup,
+  onRemoveFollowup,
   menuOpen,
   onMenuOpenChange,
 }: ContactFollowupCardProps) => {
   const [checkHovered, setCheckHovered] = useState(false);
-  const followUpDate = interaction.follow_up_date ? parseISO(interaction.follow_up_date) : new Date();
-  const plannedType = interaction.planned_follow_up_type;
+  const followUpDate = parseISO(followUp.due_date);
+  const plannedType = followUp.follow_up_type;
   const TypeIcon = typeIcons[plannedType] || MessageSquare;
   const isUpcoming = variant === "upcoming";
 
@@ -120,7 +119,7 @@ const ContactFollowupCard = ({
           )}
         </div>
 
-        {/* Dots menu */}
+        {/* Dots menu - scoped to follow-up actions */}
         <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
           <DropdownMenuTrigger asChild>
             <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0">
@@ -128,12 +127,17 @@ const ContactFollowupCard = ({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[160px]">
-            <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuItem onClick={onEditFollowup}>
               <Pencil size={14} className="mr-2" /> Edit follow-up
             </DropdownMenuItem>
+            {!isUpcoming && onReschedule && (
+              <DropdownMenuItem onClick={onReschedule}>
+                <Clock size={14} className="mr-2" /> Reschedule
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 size={14} className="mr-2" /> Delete
+            <DropdownMenuItem onClick={onRemoveFollowup} className="text-destructive focus:text-destructive">
+              <Trash2 size={14} className="mr-2" /> Remove follow-up
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -15,25 +15,25 @@ import LogStep2 from "@/components/LogStep2";
 interface CompleteFollowupSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  interactionId: string;
+  followUpId: string;
   contactId: string;
   contactName: string;
-  interactionType: string;
+  followUpType: string;
   userId: string;
 }
 
 const CompleteFollowupSheet = ({
   open,
   onOpenChange,
-  interactionId,
+  followUpId,
   contactId,
   contactName,
-  interactionType,
+  followUpType,
   userId,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
-  const [connectType, setConnectType] = useState(interactionType || "");
+  const [connectType, setConnectType] = useState(followUpType || "");
   const [note, setNote] = useState("");
   const [savedInteractionId, setSavedInteractionId] = useState<string | null>(null);
 
@@ -41,17 +41,18 @@ const CompleteFollowupSheet = ({
     queryClient.invalidateQueries({ queryKey: ["followups-today"] });
     queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
     queryClient.invalidateQueries({ queryKey: ["interactions"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
   };
 
-  // Step 1: Log the interaction
+  // Step 1: Mark follow-up complete and log new interaction
   const logMutation = useMutation({
     mutationFn: async () => {
-      // Clear follow_up_date on original interaction
-      const { error: updateErr } = await supabase
-        .from("interactions")
-        .update({ follow_up_date: null })
-        .eq("id", interactionId);
-      if (updateErr) throw updateErr;
+      // Mark the follow-up as completed
+      const { error: completeErr } = await supabase
+        .from("follow_ups")
+        .update({ completed: true, completed_at: new Date().toISOString() })
+        .eq("id", followUpId);
+      if (completeErr) throw completeErr;
 
       // Insert new logged interaction
       const { data, error } = await supabase
@@ -76,17 +77,19 @@ const CompleteFollowupSheet = ({
     onError: (e) => toast.error(e.message),
   });
 
-  // Step 2: Update with follow-up
+  // Step 2: Create a new follow-up linked to the new interaction
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      if (!savedInteractionId) throw new Error("No interaction to update");
+      if (!savedInteractionId) throw new Error("No interaction to link");
       const { error } = await supabase
-        .from("interactions")
-        .update({
-          planned_follow_up_type: type,
-          follow_up_date: date,
-        })
-        .eq("id", savedInteractionId);
+        .from("follow_ups")
+        .insert({
+          contact_id: contactId,
+          interaction_id: savedInteractionId,
+          follow_up_type: type,
+          due_date: date,
+          user_id: userId,
+        });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -99,10 +102,9 @@ const CompleteFollowupSheet = ({
 
   const handleClose = () => {
     onOpenChange(false);
-    // Reset after animation
     setTimeout(() => {
       setStep(1);
-      setConnectType(interactionType || "");
+      setConnectType(followUpType || "");
       setNote("");
       setSavedInteractionId(null);
     }, 300);
@@ -117,8 +119,6 @@ const CompleteFollowupSheet = ({
   return (
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
-        {/* Drag handle is built into DrawerContent */}
-
         <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
 
         <StepIndicator currentStep={step} />

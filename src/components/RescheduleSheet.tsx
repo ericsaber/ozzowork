@@ -27,7 +27,7 @@ const dateChips = [
 interface RescheduleSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  interactionId: string;
+  followUpId: string;
   contactName: string;
   currentType: string;
   dueDate: string;
@@ -37,7 +37,7 @@ interface RescheduleSheetProps {
 const RescheduleSheet = ({
   open,
   onOpenChange,
-  interactionId,
+  followUpId,
   contactName,
   currentType,
   dueDate,
@@ -53,16 +53,35 @@ const RescheduleSheet = ({
 
   const mutation = useMutation({
     mutationFn: async () => {
+      // Get current follow-up to record edit history
+      const { data: current, error: fetchErr } = await supabase
+        .from("follow_ups")
+        .select("follow_up_type, due_date, user_id")
+        .eq("id", followUpId)
+        .single();
+      if (fetchErr) throw fetchErr;
+
+      // Write edit history
+      const { error: editErr } = await supabase.from("follow_up_edits").insert({
+        follow_up_id: followUpId,
+        previous_type: current.follow_up_type,
+        previous_due_date: current.due_date,
+        user_id: current.user_id,
+      });
+      if (editErr) throw editErr;
+
+      // Update follow-up
       const { error } = await supabase
-        .from("interactions")
+        .from("follow_ups")
         .update({
-          planned_follow_up_type: followUpType,
-          follow_up_date: selectedDate,
+          follow_up_type: followUpType,
+          due_date: selectedDate,
         })
-        .eq("id", interactionId);
+        .eq("id", followUpId);
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
       queryClient.invalidateQueries({ queryKey: ["interactions", contactId] });
       queryClient.invalidateQueries({ queryKey: ["followups-today"] });
       queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
@@ -94,7 +113,6 @@ const RescheduleSheet = ({
   return (
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
-        {/* Header */}
         <div className="px-[18px] pt-[14px] pb-[12px] border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[8px] bg-[hsl(8,80%,96%)] flex items-center justify-center shrink-0">
@@ -111,14 +129,9 @@ const RescheduleSheet = ({
           </div>
         </div>
 
-        {/* Body */}
         <div className="px-[18px] py-[14px] pb-[24px] overflow-y-auto space-y-5">
-          {/* Type pills */}
           <div>
-            <p
-              className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
               How will you follow up?
             </p>
             <div className="flex flex-wrap gap-2">
@@ -143,12 +156,8 @@ const RescheduleSheet = ({
             </div>
           </div>
 
-          {/* Date chips */}
           <div>
-            <p
-              className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
               When?
             </p>
             <div className="flex flex-wrap gap-2">
@@ -203,7 +212,6 @@ const RescheduleSheet = ({
             </div>
           </div>
 
-          {/* CTA */}
           <button
             onClick={() => mutation.mutate()}
             disabled={!bothSelected || mutation.isPending}
@@ -213,7 +221,6 @@ const RescheduleSheet = ({
             {mutation.isPending ? "Saving..." : "Save new date"}
           </button>
 
-          {/* Cancel */}
           <button
             onClick={handleClose}
             disabled={mutation.isPending}

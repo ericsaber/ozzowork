@@ -12,15 +12,16 @@ const Upcoming = () => {
     queryKey: ["followups-upcoming"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("interactions")
+        .from("follow_ups")
         .select("*, contacts(*)")
-        .gt("follow_up_date", today)
-        .order("follow_up_date", { ascending: true });
+        .eq("completed", false)
+        .gt("due_date", today)
+        .order("due_date", { ascending: true });
       if (error) throw error;
 
       // Dedupe by contact
       const seen = new Set<string>();
-      return (data || []).filter((item) => {
+      return (data || []).filter((item: any) => {
         if (seen.has(item.contact_id)) return false;
         seen.add(item.contact_id);
         return true;
@@ -65,7 +66,7 @@ const Upcoming = () => {
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0 ml-3">
-                  {format(parseISO(item.follow_up_date!), "MMM d")}
+                  {format(parseISO(item.due_date), "MMM d")}
                 </span>
               </button>
             );
