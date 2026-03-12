@@ -26,7 +26,7 @@ const LogInteraction = () => {
 
   // Quick-add contact state
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickForm, setQuickForm] = useState({ name: "", company: "", phone: "", email: "" });
+  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
 
   const { data: contacts } = useQuery({
     queryKey: ["contacts"],
