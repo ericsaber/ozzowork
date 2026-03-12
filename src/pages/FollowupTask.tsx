@@ -319,7 +319,7 @@ const FollowupTask = () => {
             ) : (
               <>
                 <button
-                  onClick={() => contact && navigate(`/contacts/${contact.id}`)}
+                  onClick={() => contact && navigate(`/contact/${contact.id}`)}
                   className="font-medium text-foreground hover:underline text-left"
                   style={{ fontFamily: "var(--font-body)", fontSize: "16px", lineHeight: "22px" }}
                 >
