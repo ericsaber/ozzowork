@@ -46,10 +46,9 @@ const LogInteraction = () => {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const parts = quickForm.name.split(" ");
       const { data, error } = await supabase.from("contacts").insert({
-        first_name: parts[0] || quickForm.name,
-        last_name: parts.slice(1).join(" ") || "",
+        first_name: quickForm.first_name,
+        last_name: quickForm.last_name,
         company: quickForm.company || null,
         phone: quickForm.phone || null,
         email: quickForm.email || null,
@@ -62,7 +61,7 @@ const LogInteraction = () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setContactId(data.id);
       setShowQuickAdd(false);
-      setQuickForm({ name: "", company: "", phone: "", email: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       toast.success("Contact created & selected");
     },
     onError: (e) => toast.error(e.message),
