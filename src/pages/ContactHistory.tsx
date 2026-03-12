@@ -405,7 +405,7 @@ const ContactHistory = () => {
                     onOpenChange={(o) => setOpenMenuId(o ? `history-${item.id}` : null)}
                   >
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start opacity-0 group-hover:opacity-100 focus:opacity-100">
+                      <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start">
                         <MoreHorizontal size={16} />
                       </button>
                     </DropdownMenuTrigger>
