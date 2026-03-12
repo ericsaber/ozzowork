@@ -484,33 +484,59 @@ const FollowupTask = () => {
             {historyOpen ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
           </button>
           {historyOpen && (
-            <div className="border-t border-border px-4 py-2 space-y-2">
+            <div className="border-t border-border px-4 py-2 space-y-3">
               {/* Current */}
-              <div className="flex items-center justify-between py-1">
-                <span
-                  className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
-                  style={{ background: "#fdf0e8", color: "#c8622a", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
-                >
-                  {typeLabels[followUp.follow_up_type] || followUp.follow_up_type}
-                </span>
-                <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  {format(parseISO(followUp.due_date), "MMM d, yyyy")} · current
-                </span>
-              </div>
+              {(() => {
+                const CurrentIcon = typeIcons[followUp.follow_up_type] || MessageSquare;
+                const mostRecentEdit = editHistory[0];
+                return (
+                  <div className="flex items-start gap-3 py-1">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px] shrink-0 mt-0.5"
+                      style={{ background: "#fdf0e8", color: "#c8622a", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
+                    >
+                      <CurrentIcon size={10} />
+                      {typeLabels[followUp.follow_up_type] || followUp.follow_up_type}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-foreground" style={{ fontFamily: "var(--font-body)", fontWeight: 500, lineHeight: "16px" }}>
+                        {format(parseISO(followUp.due_date), "MMM d")} · current
+                      </p>
+                      <p className="text-[10px] text-muted-foreground" style={{ fontFamily: "var(--font-body)", lineHeight: "14px" }}>
+                        Changed {format(parseISO(mostRecentEdit.changed_at), "MMM d 'at' h:mma").toLowerCase().replace(/ at /, " at ")}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Previous edits */}
-              {editHistory.map((edit: any) => (
-                <div key={edit.id} className="flex items-center justify-between py-1">
-                  <span
-                    className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px] line-through"
-                    style={{ background: "#f0ede8", color: "#999", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
-                  >
-                    {typeLabels[edit.previous_type] || edit.previous_type}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    {format(parseISO(edit.previous_due_date), "MMM d, yyyy")} · {format(parseISO(edit.changed_at), "MMM d, h:mm a")}
-                  </span>
-                </div>
-              ))}
+              {editHistory.map((edit: any, index: number) => {
+                const isOriginal = index === editHistory.length - 1;
+                const label = isOriginal ? "original" : "revised";
+                const EditIcon = typeIcons[edit.previous_type] || MessageSquare;
+                return (
+                  <div key={edit.id} className="flex items-start gap-3 py-1">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px] shrink-0 mt-0.5"
+                      style={{ background: "#f0ede8", color: "#999", fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
+                    >
+                      <EditIcon size={10} />
+                      <span className="line-through">{typeLabels[edit.previous_type] || edit.previous_type}</span>
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontWeight: 500, lineHeight: "16px" }}>
+                        <span className="line-through">{format(parseISO(edit.previous_due_date), "MMM d")}</span> · {label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground" style={{ fontFamily: "var(--font-body)", lineHeight: "14px" }}>
+                        {isOriginal
+                          ? `Set when logged ${format(parseISO(interaction?.date || followUp.created_at), "MMM d")}`
+                          : `Changed ${format(parseISO(edit.changed_at), "MMM d 'at' h:mma").toLowerCase().replace(/ at /, " at ")}`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

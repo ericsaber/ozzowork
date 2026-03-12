@@ -362,6 +362,7 @@ const ContactHistory = () => {
                 key={fu.id}
                 followUp={fu}
                 variant="overdue"
+                onTap={() => navigate(`/followup/${fu.id}`)}
                 onLogIt={() => setLogItFollowup(fu)}
                 onReschedule={() => setRescheduleFollowup(fu)}
                 onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
