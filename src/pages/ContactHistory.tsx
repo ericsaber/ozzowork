@@ -389,7 +389,11 @@ const ContactHistory = () => {
               const linkedFollowUp = followUpByInteraction[item.id];
 
               return (
-                <div key={item.id} className="flex gap-3 py-3 group">
+                <button
+                  key={item.id}
+                  onClick={() => navigate(`/interaction/${item.id}`)}
+                  className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer"
+                >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
@@ -418,30 +422,35 @@ const ContactHistory = () => {
                     )}
                   </div>
 
+                  <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
+
                   {/* Interaction ··· menu */}
                   <DropdownMenu
                     open={openMenuId === `history-${item.id}`}
                     onOpenChange={(o) => setOpenMenuId(o ? `history-${item.id}` : null)}
                   >
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start">
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start"
+                      >
                         <MoreHorizontal size={16} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-[160px]">
-                      <DropdownMenuItem onClick={() => { setOpenMenuId(null); setEditingInteraction(item); }}>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setEditingInteraction(item); }}>
                         <Pencil size={14} className="mr-2" /> Edit interaction
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => { setOpenMenuId(null); setDeleteConfirmId(item.id); setDeleteConfirmType("interaction"); }}
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); setDeleteConfirmId(item.id); setDeleteConfirmType("interaction"); }}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 size={14} className="mr-2" /> Delete interaction
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
+                </button>
               );
             })}
           </div>
