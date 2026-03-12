@@ -380,7 +380,7 @@ const ContactHistory = () => {
                         {verb}
                       </span>
                       <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {format(parseISO(item.date), "MMM d, yyyy")}
+                        {format(parseISO(item.date), "MMM d")}
                       </span>
                     </div>
                     {item.note && (
