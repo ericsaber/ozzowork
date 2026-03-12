@@ -50,6 +50,92 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_up_edits: {
+        Row: {
+          changed_at: string
+          follow_up_id: string
+          id: string
+          previous_due_date: string
+          previous_type: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          follow_up_id: string
+          id?: string
+          previous_due_date: string
+          previous_type: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          follow_up_id?: string
+          id?: string
+          previous_due_date?: string
+          previous_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_edits_follow_up_id_fkey"
+            columns: ["follow_up_id"]
+            isOneToOne: false
+            referencedRelation: "follow_ups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_ups: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          contact_id: string
+          created_at: string
+          due_date: string
+          follow_up_type: string
+          id: string
+          interaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          contact_id: string
+          created_at?: string
+          due_date: string
+          follow_up_type: string
+          id?: string
+          interaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          contact_id?: string
+          created_at?: string
+          due_date?: string
+          follow_up_type?: string
+          id?: string
+          interaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_ups_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "interactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interactions: {
         Row: {
           connect_type: string | null
