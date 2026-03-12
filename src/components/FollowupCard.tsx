@@ -3,13 +3,13 @@ import { Check, Phone, Mail, MessageSquare, Users, Video } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
-  interactionId: string;
+  followUpId: string;
   contactId: string;
   name: string;
   company: string | null;
   lastNote: string | null;
-  followUpDate: string;
-  interactionType: string;
+  dueDate: string;
+  followUpType: string;
   connectType: string | null;
   interactionDate: string;
   variant: "overdue" | "today";
@@ -34,13 +34,13 @@ const pastVerb: Record<string, string> = {
 };
 
 const FollowupCard = ({
-  interactionId,
+  followUpId,
   name,
   company,
   lastNote,
-  followUpDate,
+  dueDate,
   variant,
-  interactionType,
+  followUpType,
   connectType,
   interactionDate,
   isCompleting,
@@ -48,14 +48,14 @@ const FollowupCard = ({
 }: FollowupCardProps) => {
   const navigate = useNavigate();
 
-  const TypeIcon = typeIcon[interactionType?.toLowerCase()] || MessageSquare;
+  const TypeIcon = typeIcon[followUpType?.toLowerCase()] || MessageSquare;
   const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
   const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
 
   const badgeLabel =
     variant === "today"
       ? "Today"
-      : `Due ${format(parseISO(followUpDate), "MMM d")}`;
+      : `Due ${format(parseISO(dueDate), "MMM d")}`;
 
   const handleCheck = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,7 +64,7 @@ const FollowupCard = ({
 
   return (
     <button
-      onClick={() => navigate(`/followup/${interactionId}`)}
+      onClick={() => navigate(`/followup/${followUpId}`)}
       data-completing={isCompleting || undefined}
       className="w-full text-left bg-card rounded-lg border border-border p-4 flex items-start gap-3 active:scale-[0.98] transition-all duration-500 animate-fade-in data-[completing]:opacity-40 data-[completing]:line-through"
     >

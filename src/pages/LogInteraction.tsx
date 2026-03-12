@@ -71,6 +71,7 @@ const LogInteraction = () => {
     queryClient.invalidateQueries({ queryKey: ["followups-today"] });
     queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
     queryClient.invalidateQueries({ queryKey: ["interactions"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
   };
 
   // Step 1: Save interaction
@@ -85,7 +86,7 @@ const LogInteraction = () => {
         user_id: user.id,
         connect_type: connectType || null,
         note: note || null,
-        planned_follow_up_type: "call", // default, updated in step 2
+        planned_follow_up_type: "call", // default, kept for backwards compat
       }).select("id").single();
       if (error) throw error;
       return data;
@@ -98,14 +99,20 @@ const LogInteraction = () => {
     onError: (e) => toast.error(e.message),
   });
 
-  // Step 2: Update with follow-up
+  // Step 2: Create a follow_up row linked to the interaction
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      if (!savedInteractionId) throw new Error("No interaction to update");
-      const { error } = await supabase
-        .from("interactions")
-        .update({ planned_follow_up_type: type, follow_up_date: date })
-        .eq("id", savedInteractionId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      if (!savedInteractionId) throw new Error("No interaction to link");
+
+      const { error } = await supabase.from("follow_ups").insert({
+        contact_id: contactId,
+        interaction_id: savedInteractionId,
+        follow_up_type: type,
+        due_date: date,
+        user_id: user.id,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -124,7 +131,6 @@ const LogInteraction = () => {
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-[13px] max-w-lg mx-auto">
-      {/* Back link */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-muted-foreground mb-4 text-[13px]"
@@ -134,7 +140,6 @@ const LogInteraction = () => {
         <span>Back</span>
       </button>
 
-      {/* Title */}
       <h1
         className="text-[24px] text-foreground mb-2"
         style={{ fontFamily: "var(--font-heading)" }}
@@ -146,7 +151,6 @@ const LogInteraction = () => {
 
       {step === 1 ? (
         <div className="space-y-5">
-          {/* Contact picker with + button */}
           <div>
             <div className="flex items-center gap-2">
               <div className="flex-1">
@@ -166,7 +170,6 @@ const LogInteraction = () => {
               </button>
             </div>
 
-            {/* Quick-add form */}
             {showQuickAdd && (
               <div className="mt-3 p-3 rounded-[12px] border border-border bg-card animate-fade-in">
                 <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>

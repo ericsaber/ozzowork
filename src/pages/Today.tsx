@@ -8,11 +8,12 @@ import { format, endOfWeek, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
 interface CompletingItem {
-  id: string;
+  followUpId: string;
   contactId: string;
   contactName: string;
-  interactionType: string;
+  followUpType: string;
   userId: string;
+  interactionId: string | null;
 }
 
 const Today = () => {
@@ -23,30 +24,53 @@ const Today = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["followups-today"],
     queryFn: async () => {
-      const { data: interactions, error } = await supabase
-        .from("interactions")
+      // Query follow_ups with contacts join
+      const { data: followUps, error } = await supabase
+        .from("follow_ups")
         .select("*, contacts(*)")
-        .not("follow_up_date", "is", null)
-        .lte("follow_up_date", weekEnd)
-        .order("follow_up_date", { ascending: true });
+        .eq("completed", false)
+        .lte("due_date", weekEnd)
+        .order("due_date", { ascending: true });
 
       if (error) throw error;
+
+      // For each follow-up with an interaction_id, fetch the interaction for "last connect" info
+      const interactionIds = (followUps || [])
+        .map((f: any) => f.interaction_id)
+        .filter(Boolean);
+
+      let interactionMap: Record<string, any> = {};
+      if (interactionIds.length > 0) {
+        const { data: interactions } = await supabase
+          .from("interactions")
+          .select("*")
+          .in("id", interactionIds);
+        if (interactions) {
+          for (const i of interactions) {
+            interactionMap[i.id] = i;
+          }
+        }
+      }
 
       const overdue: any[] = [];
       const dueToday: any[] = [];
       const comingUp: any[] = [];
-      const seen = { overdue: new Set<string>(), today: new Set<string>(), coming: new Set<string>() };
+      const seenComing = new Set<string>();
 
-      for (const item of interactions || []) {
-        const d = item.follow_up_date!;
+      for (const item of followUps || []) {
+        const enriched = {
+          ...item,
+          _interaction: item.interaction_id ? interactionMap[item.interaction_id] : null,
+        };
+        const d = item.due_date;
         if (d < today) {
-          overdue.push(item);
+          overdue.push(enriched);
         } else if (d === today) {
-          dueToday.push(item);
+          dueToday.push(enriched);
         } else {
-          if (!seen.coming.has(item.contact_id)) {
-            seen.coming.add(item.contact_id);
-            comingUp.push(item);
+          if (!seenComing.has(item.contact_id)) {
+            seenComing.add(item.contact_id);
+            comingUp.push(enriched);
           }
         }
       }
@@ -63,13 +87,14 @@ const Today = () => {
     setCompletingId(item.id);
     setTimeout(() => {
       setSheetItem({
-        id: item.id,
+        followUpId: item.id,
         contactId: item.contact_id,
         contactName: item.contacts
           ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim()
           : "Unknown",
-        interactionType: item.planned_follow_up_type,
+        followUpType: item.follow_up_type,
         userId: item.user_id,
+        interactionId: item.interaction_id,
       });
     }, 600);
   };
@@ -88,15 +113,15 @@ const Today = () => {
   const renderCard = (item: any, variant: "overdue" | "today") => (
     <FollowupCard
       key={item.id}
-      interactionId={item.id}
+      followUpId={item.id}
       contactId={item.contact_id}
       name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
       company={item.contacts?.company}
-      lastNote={item.note}
-      followUpDate={item.follow_up_date}
-      interactionType={item.planned_follow_up_type}
-      connectType={item.connect_type}
-      interactionDate={item.date}
+      lastNote={item._interaction?.note || null}
+      dueDate={item.due_date}
+      followUpType={item.follow_up_type}
+      connectType={item._interaction?.connect_type || null}
+      interactionDate={item._interaction?.date || item.created_at}
       variant={variant}
       isCompleting={completingId === item.id}
       onComplete={() => handleComplete(item)}
@@ -147,10 +172,10 @@ const Today = () => {
 
           {/* Coming Up strip */}
           {comingUp.length > 0 && (() => {
-            const sorted = [...comingUp].sort((a, b) => a.follow_up_date!.localeCompare(b.follow_up_date!));
+            const sorted = [...comingUp].sort((a, b) => a.due_date.localeCompare(b.due_date));
             const next = sorted[0];
             const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
-            const nextDate = parseISO(next.follow_up_date!);
+            const nextDate = parseISO(next.due_date);
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const isTomorrow = format(nextDate, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
@@ -209,10 +234,10 @@ const Today = () => {
         <CompleteFollowupSheet
           open={!!sheetItem}
           onOpenChange={handleSheetClose}
-          interactionId={sheetItem.id}
+          followUpId={sheetItem.followUpId}
           contactId={sheetItem.contactId}
           contactName={sheetItem.contactName}
-          interactionType={sheetItem.interactionType}
+          followUpType={sheetItem.followUpType}
           userId={sheetItem.userId}
         />
       )}
