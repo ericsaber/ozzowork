@@ -146,14 +146,25 @@ const LogInteraction = () => {
 
       {step === 1 ? (
         <div className="space-y-5">
-          {/* Contact picker */}
+          {/* Contact picker with + button */}
           <div>
-            <ContactCombobox
-              contacts={contacts}
-              contactId={contactId}
-              onSelect={setContactId}
-              onAddNew={() => setShowQuickAdd(true)}
-            />
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <ContactCombobox
+                  contacts={contacts}
+                  contactId={contactId}
+                  onSelect={setContactId}
+                  onAddNew={() => setShowQuickAdd(true)}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowQuickAdd((v) => !v)}
+                className="flex-shrink-0 w-[42px] h-[42px] rounded-[12px] border-[1.5px] border-[#e0dbd3] bg-[#f0ede8] flex items-center justify-center text-[#c8622a] hover:bg-[#fdf0e8] transition-colors"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
 
             {/* Quick-add form */}
             {showQuickAdd && (
@@ -162,13 +173,14 @@ const LogInteraction = () => {
                   Quick-add contact
                 </p>
                 <div className="space-y-2">
-                  <Input placeholder="Name *" value={quickForm.name} onChange={(e) => setQuickForm({ ...quickForm, name: e.target.value })} className="h-9 text-sm bg-background" />
                   <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                   </div>
+                  <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                  <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
                   <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
-                  <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.name || quickAddContact.isPending} className="w-full">
+                  <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
                     {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                   </Button>
                 </div>
