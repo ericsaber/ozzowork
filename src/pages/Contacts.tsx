@@ -240,7 +240,7 @@ const Contacts = () => {
           <UserPlus size={14} /> From Phone
         </Button>
         <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs" onClick={handleFileImport}>
-          <Upload size={14} /> Import CSV
+          <Upload size={14} /> From CSV
         </Button>
         <input ref={fileInputRef} type="file" accept=".csv,.vcf,.vcard" className="hidden" onChange={handleFileChange} />
       </div>
