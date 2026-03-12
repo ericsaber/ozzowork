@@ -34,6 +34,7 @@ interface ContactFollowupCardProps {
     contact_id: string;
   };
   variant: "upcoming" | "overdue";
+  onTap?: () => void;
   onLogIt: () => void;
   onReschedule?: () => void;
   onEditFollowup: () => void;
