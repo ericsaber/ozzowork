@@ -46,6 +46,7 @@ interface ContactFollowupCardProps {
 const ContactFollowupCard = ({
   followUp,
   variant,
+  onTap,
   onLogIt,
   onReschedule,
   onEditFollowup,
