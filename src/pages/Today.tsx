@@ -51,6 +51,7 @@ const Today = () => {
         }
       }
 
+      overdue.reverse();
       return { overdue, dueToday, comingUp };
     },
   });
