@@ -153,10 +153,10 @@ const ContactFollowupCard = ({
       <div className="flex gap-2">
         <button
           onClick={onLogIt}
-          className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] border px-3 py-[9px] text-[12px] font-medium transition-colors ${btnBg} ${btnBorder} ${btnText}`}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-border px-3 py-[9px] text-[12px] font-medium text-muted-foreground transition-colors"
           style={{ fontFamily: "var(--font-body)" }}
         >
-          <Check size={14} />
+          <Pencil size={14} />
           Log it
         </button>
         {!isUpcoming && onReschedule && (

@@ -177,29 +177,28 @@ const ContactHistory = () => {
       </button>
 
       {contact && !editing && (
-        <div className="text-center mb-6 animate-fade-in">
-          {/* Avatar */}
-          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
-            <span className="text-xl font-semibold text-secondary-foreground">{initials}</span>
-          </div>
-          {/* Name */}
-          <h1 className="text-2xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{fullName}</h1>
-          {contact.company && (
-            <p className="text-muted-foreground text-sm" style={{ fontFamily: "var(--font-body)" }}>{contact.company}</p>
-          )}
-
-          {/* ⋯ circle button */}
-          <div className="flex justify-center mt-3">
+        <div className="mb-6 animate-fade-in">
+          {/* Name row: avatar + text left, dots right */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shrink-0">
+              <span className="text-lg font-semibold text-secondary-foreground">{initials}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{fullName}</h1>
+              {contact.company && (
+                <p className="text-muted-foreground text-sm" style={{ fontFamily: "var(--font-body)" }}>{contact.company}</p>
+              )}
+            </div>
             <DropdownMenu open={openMenuId === "contact-menu"} onOpenChange={(o) => setOpenMenuId(o ? "contact-menu" : null)}>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border transition-colors"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border transition-colors shrink-0"
                   style={{ background: "#f0ede8" }}
                 >
                   <MoreHorizontal size={16} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="min-w-[160px]">
+              <DropdownMenuContent align="end" className="min-w-[160px]">
                 <DropdownMenuItem onClick={startEditing}>
                   <Pencil size={14} className="mr-2" /> Edit contact
                 </DropdownMenuItem>
