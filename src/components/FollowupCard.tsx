@@ -90,7 +90,7 @@ const FollowupCard = ({
         {/* Name + badge row */}
         <div className="flex items-center justify-between gap-2">
           <span
-            onClick={(e) => { e.stopPropagation(); navigate(`/contacts/${contactId}`); }}
+            onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
             className="font-medium text-foreground truncate hover:underline cursor-pointer"
             style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}
           >
