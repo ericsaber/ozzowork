@@ -7,7 +7,7 @@ const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
   { value: "email", icon: Mail, label: "Email" },
   { value: "text", icon: MessageSquare, label: "Text" },
-  { value: "meet", icon: Users, label: "Meet" },
+  { value: "meet", icon: Users, label: "Meeting" },
   { value: "video", icon: Video, label: "Video" },
 ];
 

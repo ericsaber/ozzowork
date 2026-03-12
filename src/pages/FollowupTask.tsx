@@ -18,7 +18,7 @@ const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
   text: "Text",
-  meet: "Meet",
+  meet: "Meeting",
   video: "Video",
 };
 

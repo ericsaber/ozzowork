@@ -44,7 +44,7 @@ const typeLabels: Record<string, string> = {
   call: "Call",
   email: "Email",
   text: "Text",
-  meet: "Meet",
+  meet: "Meeting",
   video: "Video",
 };
 
@@ -347,7 +347,7 @@ const ContactHistory = () => {
       {!isLoading && allInteractions.length > 0 && (
         <div className="mb-5">
           <p
-            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2"
+            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Interaction history
@@ -380,7 +380,7 @@ const ContactHistory = () => {
                         {verb}
                       </span>
                       <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {format(parseISO(item.date), "MMM d, yyyy")}
+                        {format(parseISO(item.date), "MMM d")}
                       </span>
                     </div>
                     {item.note && (
@@ -405,7 +405,7 @@ const ContactHistory = () => {
                     onOpenChange={(o) => setOpenMenuId(o ? `history-${item.id}` : null)}
                   >
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start opacity-0 group-hover:opacity-100 focus:opacity-100">
+                      <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0 self-start">
                         <MoreHorizontal size={16} />
                       </button>
                     </DropdownMenuTrigger>
