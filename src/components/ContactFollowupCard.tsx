@@ -34,6 +34,7 @@ interface ContactFollowupCardProps {
     contact_id: string;
   };
   variant: "upcoming" | "overdue";
+  onTap?: () => void;
   onLogIt: () => void;
   onReschedule?: () => void;
   onEditFollowup: () => void;
@@ -45,6 +46,7 @@ interface ContactFollowupCardProps {
 const ContactFollowupCard = ({
   followUp,
   variant,
+  onTap,
   onLogIt,
   onReschedule,
   onEditFollowup,
@@ -101,8 +103,8 @@ const ContactFollowupCard = ({
           />
         </button>
 
-        {/* Date text */}
-        <div className="flex-1 min-w-0 pt-0.5">
+        {/* Date text - tappable to navigate */}
+        <div className="flex-1 min-w-0 pt-0.5 cursor-pointer" onClick={onTap}>
           <p
             className="text-foreground"
             style={{ fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 500, lineHeight: "20px" }}

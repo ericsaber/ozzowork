@@ -338,6 +338,7 @@ const ContactHistory = () => {
                 key={fu.id}
                 followUp={fu}
                 variant="upcoming"
+                onTap={() => navigate(`/followup/${fu.id}`)}
                 onLogIt={() => setLogItFollowup(fu)}
                 onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
                 onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
@@ -361,6 +362,7 @@ const ContactHistory = () => {
                 key={fu.id}
                 followUp={fu}
                 variant="overdue"
+                onTap={() => navigate(`/followup/${fu.id}`)}
                 onLogIt={() => setLogItFollowup(fu)}
                 onReschedule={() => setRescheduleFollowup(fu)}
                 onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
