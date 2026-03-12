@@ -25,6 +25,14 @@ const typeLabels: Record<string, string> = {
   video: "Video",
 };
 
+const pastVerb: Record<string, string> = {
+  call: "Called",
+  email: "Emailed",
+  text: "Texted",
+  meet: "Met",
+  video: "Video called",
+};
+
 interface ContactFollowupCardProps {
   interaction: {
     id: string;
@@ -138,6 +146,29 @@ const ContactFollowupCard = ({
         >
           Last connect
         </p>
+        {interaction.connect_type && (
+          (() => {
+            const ConnectIcon = typeIcons[interaction.connect_type] || MessageSquare;
+            const verb = pastVerb[interaction.connect_type] || interaction.connect_type;
+            return (
+              <span
+                className="inline-flex items-center gap-1 mb-1"
+                style={{
+                  background: '#e8e4de',
+                  color: '#666',
+                  borderRadius: '20px',
+                  padding: '3px 9px',
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                <ConnectIcon size={10} />
+                {verb} · {format(parseISO(interaction.date), "MMM d")}
+              </span>
+            );
+          })()
+        )}
         {interaction.note ? (
           <p className="text-[11px] line-clamp-2" style={{ color: "#777", fontFamily: "var(--font-body)" }}>
             {interaction.note}

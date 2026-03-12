@@ -1,30 +1,20 @@
 
 
-## Plan: Contact Detail Page — Missing Info Prompts + Connect Pill on Cards
+## Update pill font size and properties
 
-### 1. Action Row: Always Show All 4 Buttons (`src/pages/ContactHistory.tsx`)
+Based on the screenshots, the user wants two font specs applied:
 
-Currently Call/Email/Text buttons are conditionally rendered only when `contact.phone` or `contact.email` exist. Change to:
+- **14px**: weight 500, line-height 20px
+- **12px**: weight 500, line-height 16px
 
-- **Always render** all 4 buttons (Log, Call, Email, Text)
-- If `contact.phone` is missing: Call and Text buttons show a toast/confirm prompt: "No phone number added. Would you like to add one?" — on confirm, call `startEditing()` to open the inline edit form
-- If `contact.email` is missing: Email button shows same pattern: "No email added. Would you like to add one?"
-- When info exists, keep existing `tel:`, `mailto:`, `sms:` link behavior
-- Change Call/Email/Text from `<a>` tags to `<button>` elements that conditionally either open the native link or show the prompt
+The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
 
-### 2. Connect Pill on Follow-up Cards (`src/components/ContactFollowupCard.tsx`)
+Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
 
-Add the gray connect pill (matching `FollowupCard.tsx` lines 121-136) to the "Last connect" section of `ContactFollowupCard`:
+While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
 
-- Between the "Last connect" label and the note text, render the pill when `connect_type` is not null
-- Pill style: `background: #e8e4de`, `color: #666`, `border-radius: 20px`, `padding: 3px 9px`, `font-size: 10px`, `font-weight: 500`
-- Content: connect type icon (10px) + past-tense verb + " · " + formatted date from `interaction.date`
-- Add `pastVerb` map (Called, Emailed, Texted, Met, Video called) to the component
-
-### Files
-
-| File | Change |
-|------|--------|
-| `src/pages/ContactHistory.tsx` | Always render action buttons; add missing-info prompt logic |
-| `src/components/ContactFollowupCard.tsx` | Add connect pill with icon + verb + date below "Last connect" label |
+| File | Lines | Change |
+|------|-------|--------|
+| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
+| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
 
