@@ -17,12 +17,13 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import EditInteractionDialog from "@/components/EditInteractionDialog";
+import EditInteractionSheet from "@/components/EditInteractionSheet";
+import EditFollowupSheet from "@/components/EditFollowupSheet";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
 import RescheduleSheet from "@/components/RescheduleSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { toast } from "sonner";
-import { format, parseISO, isBefore, startOfToday, isToday } from "date-fns";
+import { format, parseISO, startOfToday } from "date-fns";
 
 const typeVerbs: Record<string, string> = {
   call: "Called",
@@ -54,22 +55,23 @@ const ContactHistory = () => {
   const queryClient = useQueryClient();
   const today = startOfToday();
 
-  // State
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingInteraction, setEditingInteraction] = useState<any | null>(null);
+  const [editingFollowup, setEditingFollowup] = useState<any | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmType, setDeleteConfirmType] = useState<"interaction" | "followup">("interaction");
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
-  const [rescheduleInteraction, setRescheduleInteraction] = useState<any | null>(null);
-  const [logItInteraction, setLogItInteraction] = useState<any | null>(null);
+  const [rescheduleFollowup, setRescheduleFollowup] = useState<any | null>(null);
+  const [logItFollowup, setLogItFollowup] = useState<any | null>(null);
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
   }, []);
 
-  // Queries
+  // Contact query
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
     queryFn: async () => {
@@ -80,6 +82,23 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
+  // Follow-ups for this contact (active only)
+  const { data: followUps } = useQuery({
+    queryKey: ["follow-ups", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("follow_ups")
+        .select("*")
+        .eq("contact_id", id!)
+        .eq("completed", false)
+        .order("due_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Interactions (for history)
   const { data: interactions, isLoading } = useQuery({
     queryKey: ["interactions", id],
     queryFn: async () => {
@@ -93,6 +112,14 @@ const ContactHistory = () => {
     },
     enabled: !!id,
   });
+
+  // Build a map of interaction_id -> follow_up for the edit interaction sheet
+  const followUpByInteraction: Record<string, any> = {};
+  for (const fu of (followUps || [])) {
+    if (fu.interaction_id) {
+      followUpByInteraction[fu.interaction_id] = fu;
+    }
+  }
 
   // Mutations
   const updateContact = useMutation({
@@ -127,14 +154,31 @@ const ContactHistory = () => {
 
   const deleteInteraction = useMutation({
     mutationFn: async (interactionId: string) => {
+      // ON DELETE SET NULL will orphan any linked follow-up
       const { error } = await supabase.from("interactions").delete().eq("id", interactionId);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["interactions", id] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
       queryClient.invalidateQueries({ queryKey: ["followups-today"] });
       queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      toast.success("Deleted");
+      toast.success("Interaction deleted");
+      setDeleteConfirmId(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const removeFollowup = useMutation({
+    mutationFn: async (followUpId: string) => {
+      const { error } = await supabase.from("follow_ups").delete().eq("id", followUpId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
+      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
+      toast.success("Follow-up removed");
       setDeleteConfirmId(null);
     },
     onError: (e) => toast.error(e.message),
@@ -155,17 +199,10 @@ const ContactHistory = () => {
     ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
 
-  // Categorize interactions
+  // Categorize follow-ups
   const todayStr = format(today, "yyyy-MM-dd");
-  const upcomingFollowups = (interactions || []).filter(
-    (i) => i.follow_up_date && i.follow_up_date >= todayStr
-  ).sort((a, b) => a.follow_up_date!.localeCompare(b.follow_up_date!));
-
-  const overdueFollowups = (interactions || []).filter(
-    (i) => i.follow_up_date && i.follow_up_date < todayStr
-  ).sort((a, b) => a.follow_up_date!.localeCompare(b.follow_up_date!));
-
-  // All interactions for history, sorted newest first (already sorted from query)
+  const upcomingFollowups = (followUps || []).filter((f) => f.due_date >= todayStr);
+  const overdueFollowups = (followUps || []).filter((f) => f.due_date < todayStr);
   const allInteractions = interactions || [];
 
   return (
@@ -178,7 +215,6 @@ const ContactHistory = () => {
 
       {contact && !editing && (
         <div className="mb-6 animate-fade-in">
-          {/* Name row: avatar + text left, dots right */}
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shrink-0">
               <span className="text-lg font-semibold text-secondary-foreground">{initials}</span>
@@ -293,23 +329,20 @@ const ContactHistory = () => {
       {/* Next follow-up section */}
       {upcomingFollowups.length > 0 && (
         <div className="mb-5">
-          <p
-            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
             Next follow-up
           </p>
           <div className="space-y-3">
-            {upcomingFollowups.map((interaction) => (
+            {upcomingFollowups.map((fu) => (
               <ContactFollowupCard
-                key={interaction.id}
-                interaction={interaction}
+                key={fu.id}
+                followUp={fu}
                 variant="upcoming"
-                onLogIt={() => setLogItInteraction(interaction)}
-                onEdit={() => { setOpenMenuId(null); setEditingInteraction(interaction); }}
-                onDelete={() => { setOpenMenuId(null); setDeleteConfirmId(interaction.id); }}
-                menuOpen={openMenuId === `card-${interaction.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${interaction.id}` : null)}
+                onLogIt={() => setLogItFollowup(fu)}
+                onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
+                onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
+                menuOpen={openMenuId === `card-${fu.id}`}
+                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${fu.id}` : null)}
               />
             ))}
           </div>
@@ -319,24 +352,21 @@ const ContactHistory = () => {
       {/* Overdue section */}
       {overdueFollowups.length > 0 && (
         <div className="mb-5">
-          <p
-            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
             Overdue
           </p>
           <div className="space-y-3">
-            {overdueFollowups.map((interaction) => (
+            {overdueFollowups.map((fu) => (
               <ContactFollowupCard
-                key={interaction.id}
-                interaction={interaction}
+                key={fu.id}
+                followUp={fu}
                 variant="overdue"
-                onLogIt={() => setLogItInteraction(interaction)}
-                onReschedule={() => setRescheduleInteraction(interaction)}
-                onEdit={() => { setOpenMenuId(null); setEditingInteraction(interaction); }}
-                onDelete={() => { setOpenMenuId(null); setDeleteConfirmId(interaction.id); }}
-                menuOpen={openMenuId === `card-${interaction.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${interaction.id}` : null)}
+                onLogIt={() => setLogItFollowup(fu)}
+                onReschedule={() => setRescheduleFollowup(fu)}
+                onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
+                onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
+                menuOpen={openMenuId === `card-${fu.id}`}
+                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${fu.id}` : null)}
               />
             ))}
           </div>
@@ -346,10 +376,7 @@ const ContactHistory = () => {
       {/* Interaction history */}
       {!isLoading && allInteractions.length > 0 && (
         <div className="mb-5">
-          <p
-            className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>
             Interaction history
           </p>
           <div className="space-y-0">
@@ -357,23 +384,14 @@ const ContactHistory = () => {
               const type = item.connect_type || item.planned_follow_up_type;
               const TypeIcon = typeIcons[type] || MessageSquare;
               const verb = typeVerbs[type] || type;
-              const hasFollowUp = item.follow_up_date;
-              const isResolved = !item.follow_up_date;
-              // Show follow-up indicator if the interaction had a follow_up_date set at some point
-              // We can detect "was resolved" by checking if connect_type is set (meaning it was logged)
-              const showFollowUpIndicator = item.follow_up_date || item.connect_type;
+              const linkedFollowUp = followUpByInteraction[item.id];
 
               return (
                 <div key={item.id} className="flex gap-3 py-3 group">
-                  {/* Icon */}
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ background: "#f0ede8" }}
-                  >
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
@@ -388,18 +406,17 @@ const ContactHistory = () => {
                         {item.note}
                       </p>
                     )}
-                    {/* Follow-up indicator */}
-                    {hasFollowUp && (
+                    {linkedFollowUp && (
                       <div className="flex items-center gap-1 mt-1">
                         <ArrowRight size={10} className="text-primary" />
                         <span className="text-[10px] text-primary" style={{ fontFamily: "var(--font-body)" }}>
-                          Follow-up {format(parseISO(item.follow_up_date!), "MMM d")} · {typeLabels[item.planned_follow_up_type] || item.planned_follow_up_type}
+                          Follow-up {format(parseISO(linkedFollowUp.due_date), "MMM d")} · {typeLabels[linkedFollowUp.follow_up_type] || linkedFollowUp.follow_up_type}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Dots menu */}
+                  {/* Interaction ··· menu */}
                   <DropdownMenu
                     open={openMenuId === `history-${item.id}`}
                     onOpenChange={(o) => setOpenMenuId(o ? `history-${item.id}` : null)}
@@ -409,16 +426,16 @@ const ContactHistory = () => {
                         <MoreHorizontal size={16} />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="min-w-[140px]">
+                    <DropdownMenuContent align="end" className="min-w-[160px]">
                       <DropdownMenuItem onClick={() => { setOpenMenuId(null); setEditingInteraction(item); }}>
-                        <Pencil size={14} className="mr-2" /> Edit
+                        <Pencil size={14} className="mr-2" /> Edit interaction
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => { setOpenMenuId(null); setDeleteConfirmId(item.id); }}
+                        onClick={() => { setOpenMenuId(null); setDeleteConfirmId(item.id); setDeleteConfirmType("interaction"); }}
                         className="text-destructive focus:text-destructive"
                       >
-                        <Trash2 size={14} className="mr-2" /> Delete
+                        <Trash2 size={14} className="mr-2" /> Delete interaction
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -438,30 +455,54 @@ const ContactHistory = () => {
         </div>
       )}
 
-      {/* Edit interaction dialog */}
+      {/* Edit interaction sheet */}
       {editingInteraction && (
-        <EditInteractionDialog
-          interaction={editingInteraction}
+        <EditInteractionSheet
           open={!!editingInteraction}
           onClose={() => setEditingInteraction(null)}
+          interaction={editingInteraction}
+          followUp={followUpByInteraction[editingInteraction.id] || null}
           contactId={id!}
         />
       )}
 
-      {/* Delete interaction confirmation */}
+      {/* Edit follow-up sheet */}
+      {editingFollowup && (
+        <EditFollowupSheet
+          open={!!editingFollowup}
+          onOpenChange={(o) => { if (!o) setEditingFollowup(null); }}
+          followUp={editingFollowup}
+        />
+      )}
+
+      {/* Delete confirmation */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(o) => { if (!o) setDeleteConfirmId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete interaction?</AlertDialogTitle>
-            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>
+              {deleteConfirmType === "interaction" ? "Delete interaction?" : "Remove follow-up?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirmType === "interaction"
+                ? "This will permanently delete this interaction. Any linked follow-up will remain."
+                : "This will remove this follow-up. The linked interaction will remain intact."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteConfirmId && deleteInteraction.mutate(deleteConfirmId)}
+              onClick={() => {
+                if (deleteConfirmId) {
+                  if (deleteConfirmType === "interaction") {
+                    deleteInteraction.mutate(deleteConfirmId);
+                  } else {
+                    removeFollowup.mutate(deleteConfirmId);
+                  }
+                }
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteConfirmType === "interaction" ? "Delete" : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -489,27 +530,27 @@ const ContactHistory = () => {
       </AlertDialog>
 
       {/* Reschedule sheet */}
-      {rescheduleInteraction && contact && (
+      {rescheduleFollowup && contact && (
         <RescheduleSheet
-          open={!!rescheduleInteraction}
-          onOpenChange={(o) => { if (!o) setRescheduleInteraction(null); }}
-          interactionId={rescheduleInteraction.id}
+          open={!!rescheduleFollowup}
+          onOpenChange={(o) => { if (!o) setRescheduleFollowup(null); }}
+          followUpId={rescheduleFollowup.id}
           contactName={fullName}
-          currentType={rescheduleInteraction.planned_follow_up_type}
-          dueDate={rescheduleInteraction.follow_up_date || ""}
+          currentType={rescheduleFollowup.follow_up_type}
+          dueDate={rescheduleFollowup.due_date}
           contactId={id!}
         />
       )}
 
-      {/* Log it sheet */}
-      {logItInteraction && contact && session && (
+      {/* Log it (complete follow-up) sheet */}
+      {logItFollowup && contact && session && (
         <CompleteFollowupSheet
-          open={!!logItInteraction}
-          onOpenChange={(o) => { if (!o) setLogItInteraction(null); }}
-          interactionId={logItInteraction.id}
+          open={!!logItFollowup}
+          onOpenChange={(o) => { if (!o) setLogItFollowup(null); }}
+          followUpId={logItFollowup.id}
           contactId={id!}
           contactName={fullName}
-          interactionType={logItInteraction.planned_follow_up_type}
+          followUpType={logItFollowup.follow_up_type}
           userId={session.user.id}
         />
       )}
