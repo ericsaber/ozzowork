@@ -32,25 +32,29 @@ interface ContactFollowupCardProps {
     due_date: string;
     created_at: string;
     contact_id: string;
+    completed?: boolean;
+    completed_at?: string | null;
   };
-  variant: "upcoming" | "overdue";
+  variant: "upcoming" | "overdue" | "completed";
   onTap?: () => void;
-  onLogIt: () => void;
+  onComplete?: () => void;
   onReschedule?: () => void;
-  onEditFollowup: () => void;
-  onRemoveFollowup: () => void;
-  menuOpen: boolean;
-  onMenuOpenChange: (open: boolean) => void;
+  onEditFollowup?: () => void;
+  onRemoveFollowup?: () => void;
+  onLogIt?: () => void;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
 }
 
 const ContactFollowupCard = ({
   followUp,
   variant,
   onTap,
-  onLogIt,
+  onComplete,
   onReschedule,
   onEditFollowup,
   onRemoveFollowup,
+  onLogIt,
   menuOpen,
   onMenuOpenChange,
 }: ContactFollowupCardProps) => {
@@ -58,12 +62,17 @@ const ContactFollowupCard = ({
   const followUpDate = parseISO(followUp.due_date);
   const plannedType = followUp.follow_up_type;
   const TypeIcon = typeIcons[plannedType] || MessageSquare;
-  const isUpcoming = variant === "upcoming";
+  const isCompleted = variant === "completed" || followUp.completed;
 
   // Date display
   let datePrimary = "";
   let dateSecondary = "";
-  if (isUpcoming) {
+  if (isCompleted) {
+    datePrimary = `${typeLabels[plannedType] || plannedType} · ${format(followUpDate, "MMM d")}`;
+    dateSecondary = followUp.completed_at
+      ? `Completed ${format(parseISO(followUp.completed_at), "MMM d")}`
+      : "Completed";
+  } else if (variant === "upcoming") {
     if (isToday(followUpDate)) datePrimary = "Today";
     else if (isTomorrow(followUpDate)) datePrimary = "Tomorrow";
     else datePrimary = format(followUpDate, "EEE, MMM d");
@@ -74,8 +83,39 @@ const ContactFollowupCard = ({
   }
 
   // Pill colors
-  const pillBg = isUpcoming ? "#eef7ee" : "#fdf2f0";
-  const pillColor = isUpcoming ? "#3a7e3a" : "#b83e22";
+  const pillBg = isCompleted ? "#eef7ee" : variant === "upcoming" ? "#eef7ee" : "#fdf2f0";
+  const pillColor = isCompleted ? "#3a7e3a" : variant === "upcoming" ? "#3a7e3a" : "#b83e22";
+
+  if (isCompleted) {
+    return (
+      <div
+        className="rounded-[14px] bg-card overflow-hidden opacity-70"
+        style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
+      >
+        <div className="flex items-start gap-3" style={{ padding: "11px 12px" }}>
+          {/* Filled green check */}
+          <div className="w-[26px] h-[26px] rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
+            <Check size={12} strokeWidth={2.5} className="text-white" />
+          </div>
+
+          <div className="flex-1 min-w-0 pt-0.5 cursor-pointer" onClick={onTap}>
+            <p
+              className="text-foreground line-through"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 500, lineHeight: "20px" }}
+            >
+              {datePrimary}
+            </p>
+            <p
+              className="text-[hsl(142,60%,40%)]"
+              style={{ fontFamily: "var(--font-body)", fontSize: "10px", lineHeight: "14px" }}
+            >
+              {dateSecondary}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -86,7 +126,7 @@ const ContactFollowupCard = ({
       <div className="flex items-start gap-3" style={{ padding: "11px 12px" }}>
         {/* Checkmark circle */}
         <button
-          onClick={onLogIt}
+          onClick={onComplete || onLogIt}
           onMouseEnter={() => setCheckHovered(true)}
           onMouseLeave={() => setCheckHovered(false)}
           className="w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 transition-colors mt-0.5"
@@ -121,28 +161,36 @@ const ContactFollowupCard = ({
           )}
         </div>
 
-        {/* Dots menu - scoped to follow-up actions */}
-        <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
-          <DropdownMenuTrigger asChild>
-            <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0">
-              <MoreHorizontal size={16} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[160px]">
-            <DropdownMenuItem onClick={onEditFollowup}>
-              <Pencil size={14} className="mr-2" /> Edit follow-up
-            </DropdownMenuItem>
-            {!isUpcoming && onReschedule && (
-              <DropdownMenuItem onClick={onReschedule}>
-                <Clock size={14} className="mr-2" /> Reschedule
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onRemoveFollowup} className="text-destructive focus:text-destructive">
-              <Trash2 size={14} className="mr-2" /> Remove follow-up
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Dots menu */}
+        {onMenuOpenChange && (
+          <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0">
+                <MoreHorizontal size={16} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[160px]">
+              {onEditFollowup && (
+                <DropdownMenuItem onClick={onEditFollowup}>
+                  <Pencil size={14} className="mr-2" /> Edit follow-up
+                </DropdownMenuItem>
+              )}
+              {variant === "overdue" && onReschedule && (
+                <DropdownMenuItem onClick={onReschedule}>
+                  <Clock size={14} className="mr-2" /> Reschedule
+                </DropdownMenuItem>
+              )}
+              {onRemoveFollowup && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onRemoveFollowup} className="text-destructive focus:text-destructive">
+                    <Trash2 size={14} className="mr-2" /> Remove follow-up
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Bottom strip */}
@@ -166,7 +214,7 @@ const ContactFollowupCard = ({
         </span>
 
         {/* Reschedule button for overdue */}
-        {!isUpcoming && onReschedule && (
+        {variant === "overdue" && onReschedule && (
           <button
             onClick={onReschedule}
             className="inline-flex items-center gap-1 transition-colors"

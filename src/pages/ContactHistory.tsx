@@ -21,7 +21,7 @@ import EditInteractionSheet from "@/components/EditInteractionSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
 import RescheduleSheet from "@/components/RescheduleSheet";
-import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import { toast } from "sonner";
 import { format, parseISO, startOfToday } from "date-fns";
 
@@ -64,7 +64,7 @@ const ContactHistory = () => {
   const [deleteConfirmType, setDeleteConfirmType] = useState<"interaction" | "followup">("interaction");
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [rescheduleFollowup, setRescheduleFollowup] = useState<any | null>(null);
-  const [logItFollowup, setLogItFollowup] = useState<any | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
-  // Follow-ups for this contact (active only)
+  // Follow-ups for this contact (ALL - including completed)
   const { data: followUps } = useQuery({
     queryKey: ["follow-ups", id],
     queryFn: async () => {
@@ -90,7 +90,6 @@ const ContactHistory = () => {
         .from("follow_ups")
         .select("*")
         .eq("contact_id", id!)
-        .eq("completed", false)
         .order("due_date", { ascending: true });
       if (error) throw error;
       return data;
@@ -113,13 +112,39 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
-  // Build a map of interaction_id -> follow_up for the edit interaction sheet
+  // Categorize follow-ups
+  const todayStr = format(today, "yyyy-MM-dd");
+  const activeFollowups = (followUps || []).filter((f) => !f.completed);
+  const completedFollowups = (followUps || []).filter((f) => f.completed);
+  const upcomingFollowups = activeFollowups.filter((f) => f.due_date >= todayStr);
+  const overdueFollowups = activeFollowups.filter((f) => f.due_date < todayStr);
+  const hasActiveFollowups = activeFollowups.length > 0;
+
+  // Build a map of interaction_id -> follow_up for history indicators
   const followUpByInteraction: Record<string, any> = {};
-  for (const fu of (followUps || [])) {
+  for (const fu of activeFollowups) {
     if (fu.interaction_id) {
       followUpByInteraction[fu.interaction_id] = fu;
     }
   }
+
+  // Complete follow-up mutation (Bug 1 fix: just updates follow_ups, no interaction insert)
+  const completeFollowupMutation = useMutation({
+    mutationFn: async (followUpId: string) => {
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({ completed: true, completed_at: new Date().toISOString() })
+        .eq("id", followUpId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
+      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
+      toast.success("Follow-up completed");
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   // Mutations
   const updateContact = useMutation({
@@ -154,7 +179,6 @@ const ContactHistory = () => {
 
   const deleteInteraction = useMutation({
     mutationFn: async (interactionId: string) => {
-      // ON DELETE SET NULL will orphan any linked follow-up
       const { error } = await supabase.from("interactions").delete().eq("id", interactionId);
       if (error) throw error;
     },
@@ -199,10 +223,6 @@ const ContactHistory = () => {
     ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
 
-  // Categorize follow-ups
-  const todayStr = format(today, "yyyy-MM-dd");
-  const upcomingFollowups = (followUps || []).filter((f) => f.due_date >= todayStr);
-  const overdueFollowups = (followUps || []).filter((f) => f.due_date < todayStr);
   const allInteractions = interactions || [];
 
   return (
@@ -326,7 +346,28 @@ const ContactHistory = () => {
         </div>
       )}
 
-      {/* Next follow-up section */}
+      {/* Schedule CTA when no active follow-ups */}
+      {!hasActiveFollowups && contact && (
+        <div className="mb-5">
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            Next follow-up
+          </p>
+          <button
+            onClick={() => setScheduleOpen(true)}
+            className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors"
+            style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
+          >
+            <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>
+              No follow-up scheduled
+            </p>
+            <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>
+              + Schedule
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Next follow-up section (active upcoming) */}
       {upcomingFollowups.length > 0 && (
         <div className="mb-5">
           <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
@@ -339,7 +380,7 @@ const ContactHistory = () => {
                 followUp={fu}
                 variant="upcoming"
                 onTap={() => navigate(`/followup/${fu.id}`)}
-                onLogIt={() => setLogItFollowup(fu)}
+                onComplete={() => completeFollowupMutation.mutate(fu.id)}
                 onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
                 onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
                 menuOpen={openMenuId === `card-${fu.id}`}
@@ -363,12 +404,34 @@ const ContactHistory = () => {
                 followUp={fu}
                 variant="overdue"
                 onTap={() => navigate(`/followup/${fu.id}`)}
-                onLogIt={() => setLogItFollowup(fu)}
+                onComplete={() => completeFollowupMutation.mutate(fu.id)}
                 onReschedule={() => setRescheduleFollowup(fu)}
                 onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
                 onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
                 menuOpen={openMenuId === `card-${fu.id}`}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${fu.id}` : null)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Completed follow-ups */}
+      {completedFollowups.length > 0 && (
+        <div className="mb-5">
+          {hasActiveFollowups && (
+            <div className="border-t border-border my-3" />
+          )}
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            Completed
+          </p>
+          <div className="space-y-2">
+            {completedFollowups.map((fu) => (
+              <ContactFollowupCard
+                key={fu.id}
+                followUp={fu}
+                variant="completed"
+                onTap={() => navigate(`/followup/${fu.id}`)}
               />
             ))}
           </div>
@@ -459,6 +522,16 @@ const ContactHistory = () => {
         />
       )}
 
+      {/* Schedule follow-up sheet */}
+      {contact && (
+        <ScheduleFollowupSheet
+          open={scheduleOpen}
+          onOpenChange={setScheduleOpen}
+          contactId={id!}
+          contactName={fullName}
+        />
+      )}
+
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(o) => { if (!o) setDeleteConfirmId(null); }}>
         <AlertDialogContent>
@@ -523,19 +596,6 @@ const ContactHistory = () => {
           currentType={rescheduleFollowup.follow_up_type}
           dueDate={rescheduleFollowup.due_date}
           contactId={id!}
-        />
-      )}
-
-      {/* Log it (complete follow-up) sheet */}
-      {logItFollowup && contact && session && (
-        <CompleteFollowupSheet
-          open={!!logItFollowup}
-          onOpenChange={(o) => { if (!o) setLogItFollowup(null); }}
-          followUpId={logItFollowup.id}
-          contactId={id!}
-          contactName={fullName}
-          followUpType={logItFollowup.follow_up_type}
-          userId={session.user.id}
         />
       )}
     </div>
