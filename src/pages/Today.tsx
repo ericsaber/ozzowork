@@ -1,30 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
-import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { format, endOfWeek, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
-
-interface CompletingItem {
-  followUpId: string;
-  contactId: string;
-  contactName: string;
-  followUpType: string;
-  userId: string;
-  interactionId: string | null;
-}
+import { toast } from "sonner";
 
 const Today = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
   const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
   const { data, isLoading } = useQuery({
     queryKey: ["followups-today"],
     queryFn: async () => {
-      // Query follow_ups with contacts join
       const { data: followUps, error } = await supabase
         .from("follow_ups")
         .select("*, contacts(*)")
@@ -34,7 +25,6 @@ const Today = () => {
 
       if (error) throw error;
 
-      // For each follow-up with an interaction_id, fetch the interaction for "last connect" info
       const interactionIds = (followUps || [])
         .map((f: any) => f.interaction_id)
         .filter(Boolean);
@@ -81,29 +71,27 @@ const Today = () => {
   });
 
   const [completingId, setCompletingId] = useState<string | null>(null);
-  const [sheetItem, setSheetItem] = useState<CompletingItem | null>(null);
+
+  const completeMutation = useMutation({
+    mutationFn: async (followUpId: string) => {
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({ completed: true, completed_at: new Date().toISOString() })
+        .eq("id", followUpId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      toast.success("Follow-up completed");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const handleComplete = (item: any) => {
     setCompletingId(item.id);
-    setTimeout(() => {
-      setSheetItem({
-        followUpId: item.id,
-        contactId: item.contact_id,
-        contactName: item.contacts
-          ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim()
-          : "Unknown",
-        followUpType: item.follow_up_type,
-        userId: item.user_id,
-        interactionId: item.interaction_id,
-      });
-    }, 600);
-  };
-
-  const handleSheetClose = (open: boolean) => {
-    if (!open) {
-      setSheetItem(null);
-      setCompletingId(null);
-    }
+    completeMutation.mutate(item.id);
   };
 
   const { overdue = [], dueToday = [], comingUp = [] } = data || {};
@@ -228,18 +216,6 @@ const Today = () => {
             </section>
           )}
         </div>
-      )}
-
-      {sheetItem && (
-        <CompleteFollowupSheet
-          open={!!sheetItem}
-          onOpenChange={handleSheetClose}
-          followUpId={sheetItem.followUpId}
-          contactId={sheetItem.contactId}
-          contactName={sheetItem.contactName}
-          followUpType={sheetItem.followUpType}
-          userId={sheetItem.userId}
-        />
       )}
     </div>
   );

@@ -118,7 +118,6 @@ const FollowupTask = () => {
     onSuccess: () => {
       invalidateAll();
       toast.success("Follow-up completed");
-      navigate("/");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -299,13 +298,19 @@ const FollowupTask = () => {
         <div className="flex items-start gap-3 p-4">
           {/* Check circle */}
           {!isEditing && (
-            <button
-              onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending}
-              className="w-[26px] h-[26px] rounded-full border-[1.5px] border-[#e8e4de] flex items-center justify-center shrink-0 transition-colors hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10 group mt-0.5"
-            >
-              <Check size={12} strokeWidth={2.5} className="text-[#ccc] group-hover:text-[hsl(142,60%,40%)] transition-colors" />
-            </button>
+            followUp.completed ? (
+              <div className="w-[26px] h-[26px] rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
+                <Check size={12} strokeWidth={2.5} className="text-white" />
+              </div>
+            ) : (
+              <button
+                onClick={() => completeMutation.mutate()}
+                disabled={completeMutation.isPending}
+                className="w-[26px] h-[26px] rounded-full border-[1.5px] border-[#e8e4de] flex items-center justify-center shrink-0 transition-colors hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10 group mt-0.5"
+              >
+                <Check size={12} strokeWidth={2.5} className="text-[#ccc] group-hover:text-[hsl(142,60%,40%)] transition-colors" />
+              </button>
+            )
           )}
 
           <div className="flex-1 min-w-0">
@@ -397,26 +402,30 @@ const FollowupTask = () => {
         {!followUpRemoved && !isEditing && (
           <div className="flex items-center justify-between border-t border-border px-4 py-2">
             <span
-              className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
+              className={`inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px] ${followUp.completed ? 'line-through' : ''}`}
               style={{
-                background: "#fdf0e8",
-                color: "#c8622a",
+                background: followUp.completed ? "#eef7ee" : "#fdf0e8",
+                color: followUp.completed ? "#3a7e3a" : "#c8622a",
                 fontSize: "10px",
                 fontWeight: 500,
                 fontFamily: "var(--font-body)",
               }}
             >
               <TypeIcon size={10} />
-              {typeLabels[followUp.follow_up_type] || followUp.follow_up_type} planned
+              {typeLabels[followUp.follow_up_type] || followUp.follow_up_type} {followUp.completed ? '' : 'planned'}
             </span>
             <span
               className="text-[12px] font-medium"
               style={{
-                color: overdue ? "hsl(8,72%,51%)" : isDueToday ? "hsl(142,60%,40%)" : "hsl(var(--muted-foreground))",
+                color: followUp.completed
+                  ? "hsl(142,60%,40%)"
+                  : overdue ? "hsl(8,72%,51%)" : isDueToday ? "hsl(142,60%,40%)" : "hsl(var(--muted-foreground))",
                 fontFamily: "var(--font-body)",
               }}
             >
-              {overdue ? "Overdue" : isDueToday ? "Due today" : `Due ${format(dueDate, "MMM d")}`}
+              {followUp.completed
+                ? `Completed ${followUp.completed_at ? format(parseISO(followUp.completed_at), "MMM d") : ""}`
+                : overdue ? "Overdue" : isDueToday ? "Due today" : `Due ${format(dueDate, "MMM d")}`}
             </span>
           </div>
         )}

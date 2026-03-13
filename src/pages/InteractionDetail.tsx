@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
   MoreHorizontal, Pencil, Trash2, ChevronDown, ChevronUp,
-  CalendarIcon, X, Check,
+  CalendarIcon, X, Check, Plus,
 } from "lucide-react";
 import { format, parseISO, isToday, isPast } from "date-fns";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 
 const typeIcons: Record<string, typeof Phone> = {
   call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video,
@@ -53,6 +54,7 @@ const InteractionDetail = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteInteractionOpen, setDeleteInteractionOpen] = useState(false);
   const [followUpRemoved, setFollowUpRemoved] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const { data: interaction, isLoading } = useQuery({
     queryKey: ["interaction-detail", id],
@@ -68,6 +70,7 @@ const InteractionDetail = () => {
     enabled: !!id,
   });
 
+  // Query follow-up WITHOUT filtering by completed — show completed state too
   const { data: followUp } = useQuery({
     queryKey: ["followup-for-interaction", id],
     queryFn: async () => {
@@ -75,7 +78,8 @@ const InteractionDetail = () => {
         .from("follow_ups")
         .select("*")
         .eq("interaction_id", id!)
-        .eq("completed", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -117,7 +121,7 @@ const InteractionDetail = () => {
         .eq("id", id!);
       if (intErr) throw intErr;
 
-      if (followUp) {
+      if (followUp && !followUp.completed) {
         if (followUpRemoved) {
           const { error } = await supabase.from("follow_ups").delete().eq("id", followUp.id);
           if (error) throw error;
@@ -151,6 +155,7 @@ const InteractionDetail = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  // Complete follow-up (Bug 1 fix: just updates follow_ups, no interaction insert)
   const completeMutation = useMutation({
     mutationFn: async () => {
       if (!followUp) throw new Error("No follow-up");
@@ -202,9 +207,10 @@ const InteractionDetail = () => {
   const ConnectIcon = connectType ? typeIcons[connectType] : null;
   const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
 
+  const isFollowUpCompleted = followUp?.completed;
   const dueDate = followUp ? parseISO(followUp.due_date) : null;
-  const overdue = dueDate ? isPast(dueDate) && !isToday(dueDate) : false;
-  const isDueToday = dueDate ? isToday(dueDate) : false;
+  const overdue = dueDate && !isFollowUpCompleted ? isPast(dueDate) && !isToday(dueDate) : false;
+  const isDueToday = dueDate && !isFollowUpCompleted ? isToday(dueDate) : false;
   const FollowUpTypeIcon = followUp ? typeIcons[followUp.follow_up_type] : null;
 
   return (
@@ -258,7 +264,6 @@ const InteractionDetail = () => {
       </p>
       <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
-          {/* Header: date left, type pill right */}
           <div className="flex items-center justify-between mb-2">
             <p style={{ fontFamily: "'Instrument Serif', serif", fontSize: "18px", lineHeight: "24px" }} className="text-foreground">
               {format(parseISO(interaction.date), "EEEE, MMM d")}
@@ -329,7 +334,9 @@ const InteractionDetail = () => {
       <p className="font-medium uppercase text-muted-foreground mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "0.1em" }}>
         Follow-up
       </p>
-      {followUp && !followUpRemoved ? (
+
+      {/* Active follow-up */}
+      {followUp && !followUp.completed && !followUpRemoved ? (
         <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
           <div className="flex items-start gap-3 p-4">
             {!isEditing && (
@@ -435,15 +442,45 @@ const InteractionDetail = () => {
             </div>
           )}
         </div>
+
+      ) : followUp && followUp.completed ? (
+        /* Completed follow-up state */
+        <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4 opacity-70" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}>
+          <div className="flex items-start gap-3 p-4">
+            <div className="w-[26px] h-[26px] rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
+              <Check size={12} strokeWidth={2.5} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground line-through" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
+                {typeLabels[followUp.follow_up_type] || followUp.follow_up_type} · {format(parseISO(followUp.due_date), "MMM d")}
+              </p>
+              <p className="text-[hsl(142,60%,40%)]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", lineHeight: "16px" }}>
+                Completed {followUp.completed_at ? format(parseISO(followUp.completed_at), "MMM d") : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+
       ) : isEditing && followUpRemoved ? (
         <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4 px-4 py-3" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
           <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
           <button onClick={() => setFollowUpRemoved(false)} className="text-[12px] text-primary mt-1" style={{ fontFamily: "var(--font-body)" }}>+ Add</button>
         </div>
+
       ) : !followUp && !isEditing ? (
-        <div className="rounded-[14px] bg-card border border-border overflow-hidden mb-4 px-4 py-3" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
-          <p className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>No follow-up</p>
-        </div>
+        /* Dashed empty state with + Schedule CTA */
+        <button
+          onClick={() => setScheduleOpen(true)}
+          className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center mb-4 hover:border-primary/40 transition-colors"
+          style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
+        >
+          <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>
+            No follow-up scheduled
+          </p>
+          <span className="text-[12px] text-primary font-medium inline-flex items-center gap-1" style={{ fontFamily: "var(--font-body)" }}>
+            <Plus size={12} /> Schedule
+          </span>
+        </button>
       ) : null}
 
       {/* Edit history */}
@@ -478,6 +515,17 @@ const InteractionDetail = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Schedule follow-up sheet */}
+      {contact && (
+        <ScheduleFollowupSheet
+          open={scheduleOpen}
+          onOpenChange={setScheduleOpen}
+          contactId={contact.id}
+          contactName={contactName}
+          interactionId={id}
+        />
       )}
 
       {/* Delete interaction confirmation */}
