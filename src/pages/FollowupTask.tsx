@@ -298,13 +298,19 @@ const FollowupTask = () => {
         <div className="flex items-start gap-3 p-4">
           {/* Check circle */}
           {!isEditing && (
-            <button
-              onClick={() => completeMutation.mutate()}
-              disabled={completeMutation.isPending}
-              className="w-[26px] h-[26px] rounded-full border-[1.5px] border-[#e8e4de] flex items-center justify-center shrink-0 transition-colors hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10 group mt-0.5"
-            >
-              <Check size={12} strokeWidth={2.5} className="text-[#ccc] group-hover:text-[hsl(142,60%,40%)] transition-colors" />
-            </button>
+            followUp.completed ? (
+              <div className="w-[26px] h-[26px] rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
+                <Check size={12} strokeWidth={2.5} className="text-white" />
+              </div>
+            ) : (
+              <button
+                onClick={() => completeMutation.mutate()}
+                disabled={completeMutation.isPending}
+                className="w-[26px] h-[26px] rounded-full border-[1.5px] border-[#e8e4de] flex items-center justify-center shrink-0 transition-colors hover:border-[hsl(142,60%,40%)] hover:bg-[hsl(142,60%,40%)]/10 group mt-0.5"
+              >
+                <Check size={12} strokeWidth={2.5} className="text-[#ccc] group-hover:text-[hsl(142,60%,40%)] transition-colors" />
+              </button>
+            )
           )}
 
           <div className="flex-1 min-w-0">
