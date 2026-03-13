@@ -74,19 +74,30 @@ const LogInteraction = () => {
     queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
   };
 
-  // Step 1: Save interaction
+  // Step 1: Save or update interaction
   const logMutation = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
+      // If we already saved an interaction, update it instead of inserting
+      if (savedInteractionId) {
+        const { error } = await supabase.from("interactions").update({
+          contact_id: contactId,
+          connect_type: connectType || null,
+          note: note || null,
+        }).eq("id", savedInteractionId);
+        if (error) throw error;
+        return { id: savedInteractionId };
+      }
+
       const { data, error } = await supabase.from("interactions").insert({
         contact_id: contactId,
         user_id: user.id,
         connect_type: connectType || null,
         note: note || null,
-        planned_follow_up_type: "call", // default, kept for backwards compat
+        planned_follow_up_type: "call",
       }).select("id").single();
       if (error) throw error;
       return data;
