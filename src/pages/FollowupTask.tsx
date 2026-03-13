@@ -118,7 +118,6 @@ const FollowupTask = () => {
     onSuccess: () => {
       invalidateAll();
       toast.success("Follow-up completed");
-      navigate("/");
     },
     onError: (e) => toast.error(e.message),
   });
