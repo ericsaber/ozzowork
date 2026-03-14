@@ -42,6 +42,21 @@ const InteractionDetail = () => {
     enabled: !!id,
   });
 
+  const undoCompleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("task_records" as any)
+        .update({ status: "active", completed_at: null })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-records"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+    },
+  });
+
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
     onCompleted: () => {
       queryClient.invalidateQueries({ queryKey: ["task-record", id] });
