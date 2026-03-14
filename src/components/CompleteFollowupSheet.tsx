@@ -52,9 +52,6 @@ const CompleteFollowupSheet = ({
         .update({
           status: "completed",
           completed_at: new Date().toISOString(),
-          connect_type: connectType || null,
-          connect_date: new Date().toISOString(),
-          note: note || null,
         })
         .eq("id", taskRecordId);
       if (error) throw error;
