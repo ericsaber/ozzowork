@@ -90,7 +90,7 @@ const CompleteFollowupSheet = ({
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setStep(hasInteraction ? 2 : 1);
+      setStep(1);
       setConnectType(followUpType || "");
       setNote("");
       didMarkComplete.current = false;
