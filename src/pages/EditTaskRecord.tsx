@@ -43,6 +43,7 @@ const EditTaskRecord = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showConnectDatePicker, setShowConnectDatePicker] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const initialized = useRef(false);
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
