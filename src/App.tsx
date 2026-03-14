@@ -12,6 +12,7 @@ import ContactHistory from "./pages/ContactHistory";
 import LogInteraction from "./pages/LogInteraction";
 import FollowupTask from "./pages/FollowupTask";
 import InteractionDetail from "./pages/InteractionDetail";
+import EditTaskRecord from "./pages/EditTaskRecord";
 import Upcoming from "./pages/Upcoming";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -26,17 +27,9 @@ const AppContent = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setLoading(false);
-      }
+      (_event, session) => { setSession(session); setLoading(false); }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false); });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -48,9 +41,7 @@ const AppContent = () => {
     );
   }
 
-  if (!session) {
-    return <Auth />;
-  }
+  if (!session) return <Auth />;
 
   return (
     <>
@@ -61,6 +52,7 @@ const AppContent = () => {
         <Route path="/log" element={<LogInteraction />} />
         <Route path="/followup/:id" element={<FollowupTask />} />
         <Route path="/interaction/:id" element={<InteractionDetail />} />
+        <Route path="/edit-task/:id" element={<EditTaskRecord />} />
         <Route path="/upcoming" element={<Upcoming />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

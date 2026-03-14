@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600&family=Outfit:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -51,8 +51,8 @@
     --sidebar-border: 36 15% 85%;
     --sidebar-ring: 21 66% 47%;
 
-    --font-heading: 'Instrument Serif', serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-heading: 'Crimson Pro', serif;
+    --font-body: 'Outfit', sans-serif;
   }
 
   .dark {

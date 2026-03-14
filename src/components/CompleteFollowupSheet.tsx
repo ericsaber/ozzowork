@@ -1,13 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import CelebrationHeader from "@/components/CelebrationHeader";
-import {
-  Drawer,
-  DrawerContent,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
@@ -15,80 +12,87 @@ import LogStep2 from "@/components/LogStep2";
 interface CompleteFollowupSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  followUpId: string;
+  taskRecordId: string;
   contactId: string;
   contactName: string;
   followUpType: string;
   userId: string;
+  hasInteraction: boolean;
 }
 
 const CompleteFollowupSheet = ({
   open,
   onOpenChange,
-  followUpId,
+  taskRecordId,
   contactId,
   contactName,
   followUpType,
   userId,
+  hasInteraction,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(hasInteraction ? 2 : 1);
   const [connectType, setConnectType] = useState(followUpType || "");
   const [note, setNote] = useState("");
-  const [savedInteractionId, setSavedInteractionId] = useState<string | null>(null);
+  const didMarkComplete = useRef(false);
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-    queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-    queryClient.invalidateQueries({ queryKey: ["interactions"] });
-    queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+    queryClient.invalidateQueries({ queryKey: ["task-records"] });
+    queryClient.invalidateQueries({ queryKey: ["task-record"] });
+    queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+    queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
   };
 
-  // Step 1: Mark follow-up complete and log new interaction
+  // For hasInteraction: mark complete immediately on open
+  const markCompleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("task_records" as any)
+        .update({ status: "completed", completed_at: new Date().toISOString() })
+        .eq("id", taskRecordId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  useEffect(() => {
+    if (open && hasInteraction && !didMarkComplete.current) {
+      didMarkComplete.current = true;
+      markCompleteMutation.mutate();
+    }
+  }, [open, hasInteraction]);
+
+  // Step 1: Log interaction AND mark complete on same record
   const logMutation = useMutation({
     mutationFn: async () => {
-      // Mark the follow-up as completed
-      const { error: completeErr } = await supabase
-        .from("follow_ups")
-        .update({ completed: true, completed_at: new Date().toISOString() })
-        .eq("id", followUpId);
-      if (completeErr) throw completeErr;
-
-      // Insert new logged interaction
-      const { data, error } = await supabase
-        .from("interactions")
-        .insert({
-          contact_id: contactId,
-          user_id: userId,
+      const { error } = await supabase.from("task_records" as any)
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
           connect_type: connectType || null,
+          connect_date: new Date().toISOString(),
           note: note || null,
-          planned_follow_up_type: "call", // default, will be updated in step 2
         })
-        .select("id")
-        .single();
+        .eq("id", taskRecordId);
       if (error) throw error;
-      return data;
     },
-    onSuccess: (data) => {
-      setSavedInteractionId(data.id);
+    onSuccess: () => {
       invalidateAll();
       setStep(2);
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
-  // Step 2: Create a new follow-up linked to the new interaction
+  // Step 2: Create new tails-only task record for next follow-up
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      if (!savedInteractionId) throw new Error("No interaction to link");
-      const { error } = await supabase
-        .from("follow_ups")
+      const { error } = await supabase.from("task_records" as any)
         .insert({
           contact_id: contactId,
-          interaction_id: savedInteractionId,
-          follow_up_type: type,
-          due_date: date,
           user_id: userId,
+          planned_follow_up_type: type,
+          planned_follow_up_date: date,
+          status: "active",
         });
       if (error) throw error;
     },
@@ -97,22 +101,22 @@ const CompleteFollowupSheet = ({
       toast.success("Follow-up set");
       handleClose();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setStep(1);
+      setStep(hasInteraction ? 2 : 1);
       setConnectType(followUpType || "");
       setNote("");
-      setSavedInteractionId(null);
+      didMarkComplete.current = false;
     }, 300);
   };
 
   const handleSkip = () => {
     invalidateAll();
-    toast.success("Interaction logged");
+    toast.success("Marked complete");
     handleClose();
   };
 
@@ -120,9 +124,7 @@ const CompleteFollowupSheet = ({
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
-
-        <StepIndicator currentStep={step} />
-
+        {!hasInteraction && <StepIndicator currentStep={step} />}
         <div className="px-5 pb-6 overflow-y-auto">
           {step === 1 ? (
             <LogStep1
@@ -139,7 +141,7 @@ const CompleteFollowupSheet = ({
               contactName={contactName}
               note={note}
               logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={() => setStep(1)}
+              onBack={hasInteraction ? undefined : () => setStep(1)}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}

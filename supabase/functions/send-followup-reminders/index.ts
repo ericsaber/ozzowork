@@ -33,38 +33,21 @@ serve(async (req) => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Query follow_ups with due_date = today, joined with contacts
-    const { data: followUps, error: queryError } = await supabase
-      .from('follow_ups')
-      .select('id, follow_up_type, due_date, user_id, contact_id, interaction_id, contacts(first_name, last_name, company, email)')
-      .eq('due_date', today)
-      .eq('completed', false);
+    const { data: taskRecords, error: queryError } = await supabase
+      .from('task_records')
+      .select('id, planned_follow_up_type, planned_follow_up_date, user_id, contact_id, note, contacts(first_name, last_name, company, email)')
+      .eq('planned_follow_up_date', today)
+      .eq('status', 'active');
 
     if (queryError) throw queryError;
 
-    if (!followUps || followUps.length === 0) {
+    if (!taskRecords || taskRecords.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: 'No follow-ups due today' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Fetch linked interactions for notes
-    const interactionIds = followUps.map((f: any) => f.interaction_id).filter(Boolean);
-    let interactionMap: Record<string, any> = {};
-    if (interactionIds.length > 0) {
-      const { data: interactions } = await supabase
-        .from('interactions')
-        .select('id, note')
-        .in('id', interactionIds);
-      if (interactions) {
-        for (const i of interactions) {
-          interactionMap[i.id] = i;
-        }
-      }
-    }
-
-    // Get user emails
-    const userIds = [...new Set(followUps.map((f: any) => f.user_id))];
+    const userIds = [...new Set(taskRecords.map((r: any) => r.user_id))];
     const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
     if (usersError) throw usersError;
 
@@ -78,22 +61,21 @@ serve(async (req) => {
     const appUrl = 'https://app.ozzo.work';
     let sent = 0;
 
-    for (const fu of followUps as any[]) {
-      const userEmail = userEmailMap[fu.user_id];
+    for (const record of taskRecords as any[]) {
+      const userEmail = userEmailMap[record.user_id];
       if (!userEmail) continue;
 
-      const contact = fu.contacts;
+      const contact = record.contacts;
       const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : 'Unknown';
       const company = contact?.company ? ` (${contact.company})` : '';
-      const linkedInteraction = fu.interaction_id ? interactionMap[fu.interaction_id] : null;
-      const lastNote = linkedInteraction?.note || 'No notes recorded.';
-      const deepLink = `${appUrl}/followup/${fu.id}`;
+      const lastNote = record.note || 'No notes recorded.';
+      const deepLink = `${appUrl}/interaction/${record.id}`;
 
       const html = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
-<body style="font-family: 'DM Sans', Arial, sans-serif; background: #f5f2ec; padding: 40px 20px;">
+<body style="font-family: 'Outfit', Arial, sans-serif; background: #f5f2ec; padding: 40px 20px;">
   <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
     <h2 style="color: #18181a; margin: 0 0 8px; font-size: 20px;">Follow-up reminder</h2>
     <p style="color: #6b6b6b; margin: 0 0 24px; font-size: 14px;">You have a follow-up scheduled for today.</p>
@@ -124,14 +106,11 @@ serve(async (req) => {
         }),
       });
 
-      if (res.ok) {
-        sent++;
-      } else {
-        console.error(`Failed to send to ${userEmail}:`, await res.text());
-      }
+      if (res.ok) sent++;
+      else console.error(`Failed to send to ${userEmail}:`, await res.text());
     }
 
-    return new Response(JSON.stringify({ sent, total: followUps.length }), {
+    return new Response(JSON.stringify({ sent, total: taskRecords.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
