@@ -43,81 +43,100 @@ const ContactFollowupCard = ({
   const plannedType = taskRecord.planned_follow_up_type;
   const TypeIcon = typeIcons[plannedType] || MessageSquare;
 
-  let datePrimary = "";
-  let dateSecondary = "";
+  // Date label
+  let dateLabel = "";
+  if (isToday(followUpDate)) dateLabel = "Today";
+  else if (isTomorrow(followUpDate)) dateLabel = variant === "upcoming" ? "Tomorrow" : `Due ${format(followUpDate, "MMM d")}`;
+  else dateLabel = `Due ${format(followUpDate, "MMM d")}`;
+
+  // Relative time subtitle
+  let relativeTime = "";
   if (variant === "upcoming") {
-    if (isToday(followUpDate)) datePrimary = "Today";
-    else if (isTomorrow(followUpDate)) datePrimary = "Tomorrow";
-    else datePrimary = format(followUpDate, "EEE, MMM d");
-    if (isToday(followUpDate)) dateSecondary = "Due today";
+    if (isToday(followUpDate)) relativeTime = "Due today";
+    else {
+      const daysAhead = differenceInDays(followUpDate, new Date());
+      if (daysAhead === 1) relativeTime = "Tomorrow";
+      else if (daysAhead > 0) relativeTime = `In ${daysAhead} day${daysAhead !== 1 ? "s" : ""}`;
+    }
   } else {
-    datePrimary = `Due ${format(followUpDate, "MMM d")}`;
     const daysAgo = differenceInDays(new Date(), followUpDate);
-    dateSecondary = `${daysAgo} day${daysAgo !== 1 ? "s" : ""} ago`;
+    relativeTime = `${daysAgo} day${daysAgo !== 1 ? "s" : ""} ago`;
   }
 
   const pillBg = variant === "upcoming" ? "#e9f2eb" : "#fce8e8";
   const pillColor = variant === "upcoming" ? "#3d7a4a" : "#a32d2d";
 
   return (
-    <div className="rounded-[12px] bg-card overflow-hidden" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
-      <div className="flex items-start gap-3" style={{ padding: "11px 12px" }}>
+    <div
+      className="rounded-[12px] bg-card overflow-hidden cursor-pointer"
+      style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,.05)" }}
+      onClick={onTap}
+    >
+      <div className="flex items-center gap-3" style={{ padding: "14px 12px" }}>
         {/* Checkbox */}
         <button
-          onClick={onComplete}
+          onClick={(e) => { e.stopPropagation(); onComplete?.(); }}
           onMouseEnter={() => setCheckHovered(true)}
           onMouseLeave={() => setCheckHovered(false)}
-          className="w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0 transition-colors mt-0.5"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
           style={{
-            border: `1.5px solid ${checkHovered ? "#4a9e4a" : "#e8e4de"}`,
+            border: `1.5px solid ${checkHovered ? "#4a9e4a" : "#e8e6e3"}`,
             background: checkHovered ? "#eef7ee" : "transparent",
           }}
         >
-          <Check size={12} strokeWidth={2.5} className="transition-colors" style={{ color: checkHovered ? "#4a9e4a" : "#e8e4de" }} />
+          <Check size={14} strokeWidth={2.5} className="transition-colors" style={{ color: checkHovered ? "#4a9e4a" : "#c5c3be" }} />
         </button>
 
-        <div className="flex-1 min-w-0 pt-0.5 cursor-pointer" onClick={onTap}>
-          <p className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 500, lineHeight: "20px" }}>
-            {datePrimary}
-          </p>
-          {dateSecondary && (
-            <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "10px", lineHeight: "14px" }}>
-              {dateSecondary}
+        {/* Content block */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span
+              className="text-foreground"
+              style={{ fontFamily: "var(--font-body)", fontSize: "15px", fontWeight: 500, lineHeight: "20px" }}
+            >
+              {dateLabel}
+            </span>
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-[9px] py-[2px] shrink-0"
+              style={{ background: pillBg, color: pillColor, fontSize: "11px", fontWeight: 500, fontFamily: "var(--font-body)" }}
+            >
+              <TypeIcon size={11} />
+              {typeLabels[plannedType] || plannedType} planned
+            </span>
+          </div>
+          {relativeTime && (
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px", color: "#9e9e99", marginTop: "2px" }}>
+              {relativeTime}
             </p>
           )}
         </div>
 
+        {/* Three-dot menu */}
         {onMenuOpenChange && (
           <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 text-[#aaa] hover:text-[#666] transition-colors shrink-0">
-                <MoreHorizontal size={16} />
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="p-1.5 rounded-full transition-colors shrink-0"
+                style={{ color: "#b0ada8" }}
+              >
+                <MoreHorizontal size={18} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[160px]">
               {onEdit && (
-                <DropdownMenuItem onClick={onEdit}>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                   <Pencil size={14} className="mr-2" /> Edit
                 </DropdownMenuItem>
               )}
               {onReschedule && (
-                <DropdownMenuItem onClick={onReschedule}>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onReschedule(); }}>
                   <Clock size={14} className="mr-2" /> Reschedule
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
-
-      <div className="flex items-center justify-between" style={{ borderTop: "1px solid rgba(0,0,0,0.08)", padding: "8px 12px" }}>
-        <span
-          className="inline-flex items-center gap-1 rounded-[20px] px-[9px] py-[3px]"
-          style={{ background: pillBg, color: pillColor, fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)" }}
-        >
-          <TypeIcon size={10} />
-          {typeLabels[plannedType] || plannedType} planned
-        </span>
       </div>
     </div>
   );
