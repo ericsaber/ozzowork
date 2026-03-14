@@ -48,10 +48,13 @@ const CompleteFollowupSheet = ({
   // Step 1: Log interaction AND mark complete on same record
   const logMutation = useMutation({
     mutationFn: async () => {
+      const now = new Date().toISOString();
       const { error } = await supabase.from("task_records" as any)
         .update({
           status: "completed",
-          completed_at: new Date().toISOString(),
+          completed_at: now,
+          planned_follow_up_type: connectType || null,
+          planned_follow_up_date: now,
         })
         .eq("id", taskRecordId);
       if (error) throw error;

@@ -35,7 +35,9 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
 
   if (interactionCount === null) return null;
 
-  const isFirst = interactionCount <= 1;
+  // +1 because the current interaction being logged isn't in the DB yet
+  const displayCount = (interactionCount ?? 0) + 1;
+  const isFirst = displayCount <= 1;
 
   return (
     <>
@@ -123,7 +125,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             ) : (
               <>
                 <span className="text-foreground font-medium">{contactName}</span>
-                {" · "}{ordinal(interactionCount)} interaction
+                {" · "}{ordinal(displayCount)} interaction
               </>
             )}
           </p>
