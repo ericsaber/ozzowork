@@ -243,6 +243,14 @@ const EditTaskRecord = () => {
         </div>
       </div>
 
+      {bothOff && (
+        <div className="rounded-[12px] bg-destructive/10 border border-destructive/20 px-4 py-3 mb-4">
+          <p className="text-[13px] text-destructive font-medium" style={{ fontFamily: "var(--font-body)" }}>
+            Both sections are turned off. Saving will delete this record.
+          </p>
+        </div>
+      )}
+
       <button onClick={() => setDeleteOpen(true)} className="w-full text-center text-destructive underline text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
         Delete this interaction
       </button>
