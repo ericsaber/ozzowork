@@ -133,8 +133,8 @@ const EditTaskRecord = () => {
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate(-1)} className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>Cancel</button>
         <span className="text-[15px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>Edit interaction</span>
-        <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}>
-          {saveMutation.isPending ? "..." : "Save"}
+        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}>
+          {saveMutation.isPending ? "..." : bothOff ? "Delete" : "Save"}
         </button>
       </div>
 
