@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,7 @@ const EditTaskRecord = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showConnectDatePicker, setShowConnectDatePicker] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const initialized = useRef(false);
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
@@ -56,7 +57,8 @@ const EditTaskRecord = () => {
   });
 
   useEffect(() => {
-    if (task) {
+    if (task && !initialized.current) {
+      initialized.current = true;
       setInteractionOn(!!task.connect_type);
       setConnectType(task.connect_type || "");
       setConnectDate(task.connect_date ? format(parseISO(task.connect_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"));
