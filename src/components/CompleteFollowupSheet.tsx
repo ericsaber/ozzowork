@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ const CompleteFollowupSheet = ({
   hasInteraction,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<1 | 2>(hasInteraction ? 2 : 1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [connectType, setConnectType] = useState(followUpType || "");
   const [note, setNote] = useState("");
   const didMarkComplete = useRef(false);
@@ -43,24 +43,7 @@ const CompleteFollowupSheet = ({
     queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
   };
 
-  // For hasInteraction: mark complete immediately on open
-  const markCompleteMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("task_records" as any)
-        .update({ status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", taskRecordId);
-      if (error) throw error;
-    },
-    onSuccess: () => invalidateAll(),
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  useEffect(() => {
-    if (open && hasInteraction && !didMarkComplete.current) {
-      didMarkComplete.current = true;
-      markCompleteMutation.mutate();
-    }
-  }, [open, hasInteraction]);
+  // Removed: no longer auto-marking complete on open
 
   // Step 1: Log interaction AND mark complete on same record
   const logMutation = useMutation({
@@ -107,7 +90,7 @@ const CompleteFollowupSheet = ({
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setStep(hasInteraction ? 2 : 1);
+      setStep(1);
       setConnectType(followUpType || "");
       setNote("");
       didMarkComplete.current = false;
@@ -124,7 +107,7 @@ const CompleteFollowupSheet = ({
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
-        {!hasInteraction && <StepIndicator currentStep={step} />}
+        <StepIndicator currentStep={step} />
         <div className="px-5 pb-6 overflow-y-auto">
           {step === 1 ? (
             <LogStep1
