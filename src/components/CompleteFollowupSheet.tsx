@@ -31,7 +31,7 @@ const CompleteFollowupSheet = ({
   hasInteraction,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<1 | 2>(hasInteraction ? 2 : 1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [connectType, setConnectType] = useState(followUpType || "");
   const [note, setNote] = useState("");
   const didMarkComplete = useRef(false);
