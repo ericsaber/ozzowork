@@ -125,7 +125,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             ) : (
               <>
                 <span className="text-foreground font-medium">{contactName}</span>
-                {" · "}{ordinal(interactionCount)} interaction
+                {" · "}{ordinal(displayCount)} interaction
               </>
             )}
           </p>
