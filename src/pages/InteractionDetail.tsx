@@ -189,7 +189,7 @@ const InteractionDetail = () => {
                 </p>
                 {task.note && (
                   <p className="mt-1 italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "18px", color: "#6b6b67" }}>
-                    "{task.note}"
+                    {task.note}
                   </p>
                 )}
               </div>

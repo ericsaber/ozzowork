@@ -77,7 +77,18 @@ const EditTaskRecord = () => {
       const update: any = {};
       if (interactionOn) {
         update.connect_type = connectType || null;
-        update.connect_date = connectDate ? new Date(connectDate + "T12:00:00").toISOString() : null;
+        // Preserve the original connect_date timestamp if the date hasn't changed
+        if (task.connect_date) {
+          const originalDateStr = format(parseISO(task.connect_date), "yyyy-MM-dd");
+          if (connectDate === originalDateStr) {
+            // Date unchanged — keep the original timestamp
+            update.connect_date = task.connect_date;
+          } else {
+            update.connect_date = connectDate ? new Date(connectDate + "T12:00:00").toISOString() : null;
+          }
+        } else {
+          update.connect_date = connectDate ? new Date(connectDate + "T12:00:00").toISOString() : null;
+        }
         update.note = note || null;
       } else {
         update.connect_type = null; update.connect_date = null; update.note = null;
