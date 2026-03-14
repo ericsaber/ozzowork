@@ -43,24 +43,7 @@ const CompleteFollowupSheet = ({
     queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
   };
 
-  // For hasInteraction: mark complete immediately on open
-  const markCompleteMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("task_records" as any)
-        .update({ status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", taskRecordId);
-      if (error) throw error;
-    },
-    onSuccess: () => invalidateAll(),
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  useEffect(() => {
-    if (open && hasInteraction && !didMarkComplete.current) {
-      didMarkComplete.current = true;
-      markCompleteMutation.mutate();
-    }
-  }, [open, hasInteraction]);
+  // Removed: no longer auto-marking complete on open
 
   // Step 1: Log interaction AND mark complete on same record
   const logMutation = useMutation({
