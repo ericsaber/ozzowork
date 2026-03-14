@@ -247,7 +247,7 @@ const InteractionDetail = () => {
       {showBottomBar && (
         <div className="flex gap-3 mt-4">
           <button onClick={handleLogFollowUp} className="flex-1 rounded-[12px] py-[13px] text-[14px] font-semibold text-white shadow-md" style={{ background: overdue ? "#a32d2d" : "#c8622a", fontFamily: "var(--font-body)" }}>
-            Log follow-up
+            Complete follow-up
           </button>
           <button onClick={() => setRescheduleOpen(true)} className="rounded-[12px] border border-border px-5 py-[13px] text-[14px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
             Reschedule

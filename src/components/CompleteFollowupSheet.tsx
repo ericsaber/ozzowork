@@ -107,7 +107,7 @@ const CompleteFollowupSheet = ({
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
-        {!hasInteraction && <StepIndicator currentStep={step} />}
+        <StepIndicator currentStep={step} />
         <div className="px-5 pb-6 overflow-y-auto">
           {step === 1 ? (
             <LogStep1
