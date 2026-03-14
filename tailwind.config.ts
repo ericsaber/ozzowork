@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Instrument Serif', 'serif'],
+        heading: ['Crimson Pro', 'serif'],
         body: ['DM Sans', 'sans-serif'],
       },
       colors: {
