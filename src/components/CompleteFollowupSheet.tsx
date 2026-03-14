@@ -52,9 +52,6 @@ const CompleteFollowupSheet = ({
         .update({
           status: "completed",
           completed_at: new Date().toISOString(),
-          connect_type: connectType || null,
-          connect_date: new Date().toISOString(),
-          note: note || null,
         })
         .eq("id", taskRecordId);
       if (error) throw error;
@@ -100,9 +97,19 @@ const CompleteFollowupSheet = ({
     }, 300);
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    const { error } = await supabase.from("task_records" as any)
+      .insert({
+        contact_id: contactId,
+        user_id: userId,
+        connect_type: connectType || null,
+        connect_date: new Date().toISOString(),
+        note: note || null,
+        status: "active",
+      });
+    if (error) { toast.error(error.message); return; }
     invalidateAll();
-    toast.success("Marked complete");
+    toast.success("Interaction logged");
     handleClose();
   };
 

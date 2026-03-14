@@ -1,59 +1,20 @@
 
 
-## Bug: Completion flow overwrites original record's interaction data
+## Update pill font size and properties
 
-### Root Cause
+Based on the screenshots, the user wants two font specs applied:
 
-In `CompleteFollowupSheet.tsx`, the `logMutation` (lines 49-67) runs an UPDATE on the existing task record that overwrites `connect_type`, `connect_date`, and `note` with the NEW interaction data. This destroys the original interaction history.
+- **14px**: weight 500, line-height 20px
+- **12px**: weight 500, line-height 16px
 
-### Fix
+The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
 
-**`src/components/CompleteFollowupSheet.tsx`** — Change `logMutation` (Step 1) to do two things:
-1. **Only** update `status` and `completed_at` on the existing record (preserve all other fields)
-2. Store the new interaction data in component state only (it's already in `connectType`, `note`)
+Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
 
-Then in Step 2:
-- **followupMutation** (with follow-up): Creates a new record with the new interaction data + follow-up — already correct
-- **handleSkip** (no follow-up): Must now also create a new heads-only record with the interaction data, since the logMutation no longer writes it anywhere
+While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
 
-Concrete changes:
-
-**logMutation** — replace the update payload:
-```typescript
-// Before: overwrites connect_type, connect_date, note
-.update({
-  status: "completed",
-  completed_at: new Date().toISOString(),
-  connect_type: connectType || null,
-  connect_date: new Date().toISOString(),
-  note: note || null,
-})
-
-// After: only marks complete
-.update({
-  status: "completed",
-  completed_at: new Date().toISOString(),
-})
-```
-
-**handleSkip** — create a heads-only record instead of just closing:
-```typescript
-const handleSkip = async () => {
-  const { error } = await supabase.from("task_records" as any)
-    .insert({
-      contact_id: contactId,
-      user_id: userId,
-      connect_type: connectType || null,
-      connect_date: new Date().toISOString(),
-      note: note || null,
-      status: "active",
-    });
-  if (error) { toast.error(error.message); return; }
-  invalidateAll();
-  toast.success("Interaction logged");
-  handleClose();
-};
-```
-
-**followupMutation** — already correct (creates new record with interaction data + follow-up fields).
+| File | Lines | Change |
+|------|-------|--------|
+| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
+| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
 
