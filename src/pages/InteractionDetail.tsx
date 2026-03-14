@@ -116,25 +116,23 @@ const InteractionDetail = () => {
           <ArrowLeft size={18} />
           <span className="text-sm" style={{ fontFamily: "var(--font-body)" }}>Back</span>
         </button>
-        {!isCompleted && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border" style={{ background: "#f0ede8" }}>
-                <MoreHorizontal size={16} className="text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[160px]">
-              <DropdownMenuItem onClick={() => navigate(`/edit-task/${id}`)}>
-                <Pencil size={14} className="mr-2" /> Edit
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border" style={{ background: "#f0ede8" }}>
+              <MoreHorizontal size={16} className="text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[160px]">
+            <DropdownMenuItem onClick={() => navigate(`/edit-task/${id}`)}>
+              <Pencil size={14} className="mr-2" /> Edit
+            </DropdownMenuItem>
+            {hasFollowUp && !isCompleted && (
+              <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>
+                <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
-              {hasFollowUp && (
-                <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>
-                  <Clock size={14} className="mr-2" /> Reschedule
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Contact header */}
