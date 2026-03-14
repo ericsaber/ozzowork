@@ -44,6 +44,7 @@ const EditTaskRecord = () => {
   const [showConnectDatePicker, setShowConnectDatePicker] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const initialized = useRef(false);
+  const bothOff = !interactionOn && !followUpOn;
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
@@ -132,8 +133,8 @@ const EditTaskRecord = () => {
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate(-1)} className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>Cancel</button>
         <span className="text-[15px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>Edit interaction</span>
-        <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}>
-          {saveMutation.isPending ? "..." : "Save"}
+        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}>
+          {saveMutation.isPending ? "..." : bothOff ? "Delete" : "Save"}
         </button>
       </div>
 
@@ -241,6 +242,14 @@ const EditTaskRecord = () => {
           )}
         </div>
       </div>
+
+      {bothOff && (
+        <div className="rounded-[12px] bg-destructive/10 border border-destructive/20 px-4 py-3 mb-4">
+          <p className="text-[13px] text-destructive font-medium" style={{ fontFamily: "var(--font-body)" }}>
+            Both sections are turned off. Saving will delete this record.
+          </p>
+        </div>
+      )}
 
       <button onClick={() => setDeleteOpen(true)} className="w-full text-center text-destructive underline text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
         Delete this interaction
