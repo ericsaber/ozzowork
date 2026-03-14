@@ -25,13 +25,14 @@ const Today = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["task-records-today"],
     queryFn: async () => {
-      const { data: records, error } = await supabase.from("task_records" as any)
+      const { data, error } = await supabase.from("task_records" as any)
         .select("*, contacts(*)")
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
         .lte("planned_follow_up_date", weekEnd)
         .order("planned_follow_up_date", { ascending: true });
       if (error) throw error;
+      const records = data as any[];
 
       const overdue: any[] = [];
       const dueToday: any[] = [];
