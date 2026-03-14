@@ -1,20 +1,45 @@
 
 
-## Update pill font size and properties
+# Fix: New follow-up record must include interaction data
 
-Based on the screenshots, the user wants two font specs applied:
+## Problem
 
-- **14px**: weight 500, line-height 20px
-- **12px**: weight 500, line-height 16px
+When completing a follow-up task, the flow works in two steps:
+1. **Step 1** (logMutation): Marks the existing task record as completed AND writes interaction data (connect_type, connect_date, note) onto it
+2. **Step 2** (followupMutation): Creates a **new** task record but only includes follow-up fields (planned_follow_up_type, planned_follow_up_date)
 
-The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
+The new record is missing the interaction data from step 1. Per the unified task_records model, each record should be a combined heads+tails item: "what happened" (the interaction just logged) + "what's next" (the planned follow-up). The current code creates a tails-only record, so when you tap into the new follow-up task, the interaction section is empty.
 
-Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
+## Fix
 
-While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
+### `src/components/CompleteFollowupSheet.tsx`
 
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
-| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
+**followupMutation** (line 70-88): Include the interaction data from step 1 state in the new record's insert payload:
+
+```typescript
+// Current (tails-only):
+.insert({
+  contact_id: contactId,
+  user_id: userId,
+  planned_follow_up_type: type,
+  planned_follow_up_date: date,
+  status: "active",
+})
+
+// Fixed (combined heads+tails):
+.insert({
+  contact_id: contactId,
+  user_id: userId,
+  connect_type: connectType || null,
+  connect_date: new Date().toISOString(),
+  note: note || null,
+  planned_follow_up_type: type,
+  planned_follow_up_date: date,
+  status: "active",
+})
+```
+
+Similarly, **handleSkip** (line 100-104) currently just closes with "Marked complete" — the logMutation in step 1 already saved the interaction data on the *old* record before advancing to step 2. Skip means no new record is created, which is correct. No change needed there.
+
+This single change ensures the new task record mirrors the original logging pattern: interaction + follow-up on one record.
 
