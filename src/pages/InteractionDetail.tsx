@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
-  MoreHorizontal, Pencil, Clock, ArrowRight,
+  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isPast, isToday as isDateToday } from "date-fns";
 import {
@@ -40,6 +40,21 @@ const InteractionDetail = () => {
       return data as any;
     },
     enabled: !!id,
+  });
+
+  const undoCompleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("task_records" as any)
+        .update({ status: "active", completed_at: null })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-records"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+    },
   });
 
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
@@ -129,6 +144,11 @@ const InteractionDetail = () => {
             {hasFollowUp && !isCompleted && (
               <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>
                 <Clock size={14} className="mr-2" /> Reschedule
+              </DropdownMenuItem>
+            )}
+            {isCompleted && (
+              <DropdownMenuItem onClick={() => undoCompleteMutation.mutate()}>
+                <RotateCcw size={14} className="mr-2" /> Undo complete
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
