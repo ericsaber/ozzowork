@@ -146,6 +146,11 @@ const InteractionDetail = () => {
                 <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
             )}
+            {isCompleted && (
+              <DropdownMenuItem onClick={() => undoCompleteMutation.mutate()}>
+                <RotateCcw size={14} className="mr-2" /> Undo complete
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
