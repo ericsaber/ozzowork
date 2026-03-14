@@ -73,6 +73,9 @@ const CompleteFollowupSheet = ({
         .insert({
           contact_id: contactId,
           user_id: userId,
+          connect_type: connectType || null,
+          connect_date: new Date().toISOString(),
+          note: note || null,
           planned_follow_up_type: type,
           planned_follow_up_date: date,
           status: "active",
