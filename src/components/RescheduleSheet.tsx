@@ -27,7 +27,7 @@ const dateChips = [
 interface RescheduleSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  followUpId: string;
+  taskRecordId: string;
   contactName: string;
   currentType: string;
   dueDate: string;
@@ -37,7 +37,7 @@ interface RescheduleSheetProps {
 const RescheduleSheet = ({
   open,
   onOpenChange,
-  followUpId,
+  taskRecordId,
   contactName,
   currentType,
   dueDate,
@@ -53,42 +53,36 @@ const RescheduleSheet = ({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      // Get current follow-up to record edit history
-      const { data: current, error: fetchErr } = await supabase
-        .from("follow_ups")
-        .select("follow_up_type, due_date, user_id")
-        .eq("id", followUpId)
-        .single();
-      if (fetchErr) throw fetchErr;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
       // Write edit history
-      const { error: editErr } = await supabase.from("follow_up_edits").insert({
-        follow_up_id: followUpId,
-        previous_type: current.follow_up_type,
-        previous_due_date: current.due_date,
-        user_id: current.user_id,
+      await supabase.from("follow_up_edits" as any).insert({
+        follow_up_id: null,
+        task_record_id: taskRecordId,
+        previous_type: currentType,
+        previous_due_date: dueDate,
+        user_id: user.id,
       });
-      if (editErr) throw editErr;
 
-      // Update follow-up
-      const { error } = await supabase
-        .from("follow_ups")
+      // Update task record
+      const { error } = await supabase.from("task_records" as any)
         .update({
-          follow_up_type: followUpType,
-          due_date: selectedDate,
+          planned_follow_up_type: followUpType,
+          planned_follow_up_date: selectedDate,
         })
-        .eq("id", followUpId);
+        .eq("id", taskRecordId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
-      queryClient.invalidateQueries({ queryKey: ["interactions", contactId] });
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records"] });
+      queryClient.invalidateQueries({ queryKey: ["task-record"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
       toast.success("Follow-up rescheduled");
       handleClose();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const handleClose = () => {
@@ -97,15 +91,6 @@ const RescheduleSheet = ({
       setFollowUpType(currentType);
       setSelectedDate("");
     }, 300);
-  };
-
-  const handlePillClick = (value: string) => {
-    setFollowUpType(followUpType === value ? "" : value);
-  };
-
-  const handleChipClick = (chipDate: string) => {
-    setSelectedDate(selectedDate === chipDate ? "" : chipDate);
-    setShowDatePicker(false);
   };
 
   const bothSelected = followUpType && selectedDate;
@@ -140,10 +125,10 @@ const RescheduleSheet = ({
                 return (
                   <button
                     key={t.value}
-                    onClick={() => handlePillClick(t.value)}
+                    onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
                     className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
                       selected
-                        ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
+                        ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
                     }`}
                     style={{ fontFamily: "var(--font-body)" }}
@@ -167,10 +152,10 @@ const RescheduleSheet = ({
                 return (
                   <button
                     key={chip.label}
-                    onClick={() => handleChipClick(chipDate)}
+                    onClick={() => { setSelectedDate(selectedDate === chipDate ? "" : chipDate); setShowDatePicker(false); }}
                     className={`rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
                       selected
-                        ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
+                        ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
                     }`}
                     style={{ fontFamily: "var(--font-body)" }}
@@ -184,7 +169,7 @@ const RescheduleSheet = ({
                   <button
                     className={`rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors inline-flex items-center gap-1 ${
                       showDatePicker
-                        ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
+                        ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
                     }`}
                     style={{ fontFamily: "var(--font-body)" }}
@@ -197,12 +182,7 @@ const RescheduleSheet = ({
                   <Calendar
                     mode="single"
                     selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        setSelectedDate(format(date, "yyyy-MM-dd"));
-                        setShowDatePicker(false);
-                      }
-                    }}
+                    onSelect={(date) => { if (date) { setSelectedDate(format(date, "yyyy-MM-dd")); setShowDatePicker(false); } }}
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}

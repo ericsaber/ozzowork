@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
-  Plus, Pencil, Trash2, X, MoreHorizontal, Check, ArrowRight, ChevronRight,
+  Plus, Pencil, Trash2, X, MoreHorizontal, ArrowRight, ChevronRight, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,61 +17,38 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import EditInteractionSheet from "@/components/EditInteractionSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
 import RescheduleSheet from "@/components/RescheduleSheet";
 import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
+import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { toast } from "sonner";
-import { format, parseISO, startOfToday } from "date-fns";
+import { format, parseISO, startOfToday, isPast, isToday } from "date-fns";
 
-const typeVerbs: Record<string, string> = {
-  call: "Called",
-  email: "Emailed",
-  text: "Texted",
-  meet: "Met",
-  video: "Video called",
-};
-
-const typeIcons: Record<string, typeof Phone> = {
-  call: Phone,
-  email: Mail,
-  text: MessageSquare,
-  meet: Users,
-  video: Video,
-};
-
-const typeLabels: Record<string, string> = {
-  call: "Call",
-  email: "Email",
-  text: "Text",
-  meet: "Meeting",
-  video: "Video",
-};
+const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
+const typeIcons: Record<string, typeof Phone> = { call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video };
+const typeLabels: Record<string, string> = { call: "Call", email: "Email", text: "Text", meet: "Meeting", video: "Video" };
 
 const ContactHistory = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const today = startOfToday();
+  const todayStr = format(startOfToday(), "yyyy-MM-dd");
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [editingInteraction, setEditingInteraction] = useState<any | null>(null);
-  const [editingFollowup, setEditingFollowup] = useState<any | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [deleteConfirmType, setDeleteConfirmType] = useState<"interaction" | "followup">("interaction");
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
-  const [rescheduleFollowup, setRescheduleFollowup] = useState<any | null>(null);
+  const [rescheduleTask, setRescheduleTask] = useState<any | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [session, setSession] = useState<any>(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  }, []);
+  const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
+    onCompleted: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-records", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+    },
+  });
 
-  // Contact query
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
     queryFn: async () => {
@@ -82,69 +59,32 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
-  // Follow-ups for this contact (ALL - including completed)
-  const { data: followUps } = useQuery({
-    queryKey: ["follow-ups", id],
+  const { data: taskRecords, isLoading } = useQuery({
+    queryKey: ["task-records", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("follow_ups")
-        .select("*")
-        .eq("contact_id", id!)
-        .order("due_date", { ascending: true });
+      const { data, error } = await supabase.from("task_records" as any)
+        .select("*").eq("contact_id", id!).order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as any[];
     },
     enabled: !!id,
   });
 
-  // Interactions (for history)
-  const { data: interactions, isLoading } = useQuery({
-    queryKey: ["interactions", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("interactions")
-        .select("*")
-        .eq("contact_id", id!)
-        .order("date", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  // Categorize follow-ups
-  const todayStr = format(today, "yyyy-MM-dd");
-  const activeFollowups = (followUps || []).filter((f) => !f.completed);
-  const completedFollowups = (followUps || []).filter((f) => f.completed);
-  const upcomingFollowups = activeFollowups.filter((f) => f.due_date >= todayStr);
-  const overdueFollowups = activeFollowups.filter((f) => f.due_date < todayStr);
+  // Categorize
+  const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active");
+  const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
+  const overdueFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date < todayStr);
   const hasActiveFollowups = activeFollowups.length > 0;
 
-  // Build a map of interaction_id -> follow_up for history indicators
-  const followUpByInteraction: Record<string, any> = {};
-  for (const fu of activeFollowups) {
-    if (fu.interaction_id) {
-      followUpByInteraction[fu.interaction_id] = fu;
-    }
-  }
+  // History: records with connect_type
+  const historyRecords = (taskRecords || [])
+    .filter((r: any) => r.connect_type)
+    .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
-  // Complete follow-up mutation (Bug 1 fix: just updates follow_ups, no interaction insert)
-  const completeFollowupMutation = useMutation({
-    mutationFn: async (followUpId: string) => {
-      const { error } = await supabase
-        .from("follow_ups")
-        .update({ completed: true, completed_at: new Date().toISOString() })
-        .eq("id", followUpId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      toast.success("Follow-up completed");
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  const interactionCount = historyRecords.length;
+  const firstContactDate = historyRecords.length > 0
+    ? format(parseISO(historyRecords[historyRecords.length - 1].connect_date || historyRecords[historyRecords.length - 1].created_at), "MMM d")
+    : null;
 
   // Mutations
   const updateContact = useMutation({
@@ -155,82 +95,50 @@ const ContactHistory = () => {
       }).eq("id", id!);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contact", id] });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      setEditing(false);
-      toast.success("Contact updated");
-    },
-    onError: (e) => toast.error(e.message),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contact", id] }); queryClient.invalidateQueries({ queryKey: ["contacts"] }); setEditing(false); toast.success("Contact updated"); },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const deleteContact = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("contacts").delete().eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      toast.success("Contact deleted");
-      navigate("/contacts", { replace: true });
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const deleteInteraction = useMutation({
-    mutationFn: async (interactionId: string) => {
-      const { error } = await supabase.from("interactions").delete().eq("id", interactionId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interactions", id] });
-      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      toast.success("Interaction deleted");
-      setDeleteConfirmId(null);
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const removeFollowup = useMutation({
-    mutationFn: async (followUpId: string) => {
-      const { error } = await supabase.from("follow_ups").delete().eq("id", followUpId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["follow-ups", id] });
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      toast.success("Follow-up removed");
-      setDeleteConfirmId(null);
-    },
-    onError: (e) => toast.error(e.message),
+    mutationFn: async () => { const { error } = await supabase.from("contacts").delete().eq("id", id!); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); toast.success("Contact deleted"); navigate("/contacts", { replace: true }); },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const startEditing = () => {
     if (contact) {
-      setForm({
-        first_name: contact.first_name, last_name: contact.last_name,
-        company: contact.company || "", phone: contact.phone || "", email: contact.email || "",
-      });
+      setForm({ first_name: contact.first_name, last_name: contact.last_name, company: contact.company || "", phone: contact.phone || "", email: contact.email || "" });
       setEditing(true);
     }
   };
 
   const fullName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "";
-  const initials = fullName
-    ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-    : "?";
+  const initials = fullName ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "?";
 
-  const allInteractions = interactions || [];
+  const handleComplete = (item: any) => {
+    startComplete({
+      taskRecordId: item.id,
+      contactId: item.contact_id,
+      contactName: fullName,
+      followUpType: item.planned_follow_up_type || "",
+      userId: item.user_id,
+      hasInteraction: !!item.connect_type,
+    });
+  };
+
+  const getThreadLine = (record: any) => {
+    if (!record.planned_follow_up_type) return { text: "→ No follow-up", color: "#9e9e99" };
+    const typeLbl = typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type;
+    const dateStr = record.planned_follow_up_date ? format(parseISO(record.planned_follow_up_date), "MMM d") : "";
+    if (record.status === "completed") return { text: `→ ${typeLbl} ${dateStr} · Done`, color: "#3d7a4a" };
+    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) return { text: `→ ${typeLbl} ${dateStr} · Overdue`, color: "#a32d2d" };
+    return { text: `→ ${typeLbl} ${dateStr}`, color: "#c8622a" };
+  };
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
-      {/* Back */}
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
-        <ArrowLeft size={18} />
-        <span className="text-sm" style={{ fontFamily: "var(--font-body)" }}>Back</span>
+        <ArrowLeft size={18} /><span className="text-sm" style={{ fontFamily: "var(--font-body)" }}>Back</span>
       </button>
 
       {contact && !editing && (
@@ -241,90 +149,41 @@ const ContactHistory = () => {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{fullName}</h1>
-              {contact.company && (
-                <p className="text-muted-foreground text-sm" style={{ fontFamily: "var(--font-body)" }}>{contact.company}</p>
-              )}
+              {contact.company && <p className="text-muted-foreground text-sm" style={{ fontFamily: "var(--font-body)" }}>{contact.company}</p>}
             </div>
             <DropdownMenu open={openMenuId === "contact-menu"} onOpenChange={(o) => setOpenMenuId(o ? "contact-menu" : null)}>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border transition-colors shrink-0"
-                  style={{ background: "#f0ede8" }}
-                >
+                <button className="w-9 h-9 rounded-full flex items-center justify-center border-[1.5px] border-border transition-colors shrink-0" style={{ background: "#f0ede8" }}>
                   <MoreHorizontal size={16} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[160px]">
-                <DropdownMenuItem onClick={startEditing}>
-                  <Pencil size={14} className="mr-2" /> Edit contact
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={startEditing}><Pencil size={14} className="mr-2" /> Edit contact</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setDeleteContactOpen(true)} className="text-destructive focus:text-destructive">
-                  <Trash2 size={14} className="mr-2" /> Delete contact
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeleteContactOpen(true)} className="text-destructive focus:text-destructive"><Trash2 size={14} className="mr-2" /> Delete contact</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          {/* Action row */}
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <button
-              onClick={() => navigate(`/log?contact=${id}`)}
-              className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm"
-              style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}
-            >
+          {/* Action row — flush left */}
+          <div className="flex items-center justify-start gap-2 mt-4">
+            <button onClick={() => navigate(`/log?contact=${id}`)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
               <Plus size={14} /> Log
             </button>
-            <button
-              onClick={() => {
-                if (contact.phone) {
-                  window.location.href = `tel:${contact.phone}`;
-                } else {
-                  toast("No phone number added. Would you like to add one?", {
-                    action: { label: "Add", onClick: startEditing },
-                  });
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+            <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
               <Phone size={14} /> Call
             </button>
-            <button
-              onClick={() => {
-                if (contact.email) {
-                  window.location.href = `mailto:${contact.email}`;
-                } else {
-                  toast("No email added. Would you like to add one?", {
-                    action: { label: "Add", onClick: startEditing },
-                  });
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+            <button onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else toast("No email added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
               <Mail size={14} /> Email
             </button>
-            <button
-              onClick={() => {
-                if (contact.phone) {
-                  window.location.href = `sms:${contact.phone}`;
-                } else {
-                  toast("No phone number added. Would you like to add one?", {
-                    action: { label: "Add", onClick: startEditing },
-                  });
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
+            <button onClick={() => { if (contact.phone) window.location.href = `sms:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
               <MessageSquare size={14} /> Text
             </button>
           </div>
         </div>
       )}
 
-      {/* Inline edit form */}
+      {/* Edit form */}
       {contact && editing && (
         <div className="bg-card rounded-lg border border-border p-4 text-left mb-6 animate-fade-in">
           <div className="flex items-center justify-between mb-3">
@@ -349,142 +208,86 @@ const ContactHistory = () => {
       {/* Schedule CTA when no active follow-ups */}
       {!hasActiveFollowups && contact && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-            Next follow-up
-          </p>
-          <button
-            onClick={() => setScheduleOpen(true)}
-            className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors"
-            style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
-          >
-            <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>
-              No follow-up scheduled
-            </p>
-            <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>
-              + Schedule
-            </span>
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
+          <button onClick={() => setScheduleOpen(true)} className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}>
+            <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
+            <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>+ Schedule a follow-up</span>
           </button>
         </div>
       )}
 
-      {/* Next follow-up section (active upcoming) */}
+      {/* Next follow-up */}
       {upcomingFollowups.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-            Next follow-up
-          </p>
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
           <div className="space-y-3">
-            {upcomingFollowups.map((fu) => (
+            {upcomingFollowups.map((r: any) => (
               <ContactFollowupCard
-                key={fu.id}
-                followUp={fu}
+                key={r.id}
+                taskRecord={r}
                 variant="upcoming"
-                onTap={() => navigate(`/followup/${fu.id}`)}
-                onComplete={() => completeFollowupMutation.mutate(fu.id)}
-                onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
-                onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
-                menuOpen={openMenuId === `card-${fu.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${fu.id}` : null)}
+                onTap={() => navigate(`/interaction/${r.id}`)}
+                onComplete={() => handleComplete(r)}
+                onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
+                onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
+                menuOpen={openMenuId === `card-${r.id}`}
+                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Overdue section */}
+      {/* Overdue */}
       {overdueFollowups.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-            Overdue
-          </p>
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Overdue</p>
           <div className="space-y-3">
-            {overdueFollowups.map((fu) => (
+            {overdueFollowups.map((r: any) => (
               <ContactFollowupCard
-                key={fu.id}
-                followUp={fu}
+                key={r.id}
+                taskRecord={r}
                 variant="overdue"
-                onTap={() => navigate(`/followup/${fu.id}`)}
-                onComplete={() => completeFollowupMutation.mutate(fu.id)}
-                onReschedule={() => setRescheduleFollowup(fu)}
-                onEditFollowup={() => { setOpenMenuId(null); setEditingFollowup(fu); }}
-                onRemoveFollowup={() => { setOpenMenuId(null); setDeleteConfirmId(fu.id); setDeleteConfirmType("followup"); }}
-                menuOpen={openMenuId === `card-${fu.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${fu.id}` : null)}
+                onTap={() => navigate(`/interaction/${r.id}`)}
+                onComplete={() => handleComplete(r)}
+                onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
+                onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
+                menuOpen={openMenuId === `card-${r.id}`}
+                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Completed follow-ups */}
-      {completedFollowups.length > 0 && (
+      {/* History */}
+      {!isLoading && historyRecords.length > 0 && (
         <div className="mb-5">
-          {hasActiveFollowups && (
-            <div className="border-t border-border my-3" />
-          )}
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-            Completed
-          </p>
-          <div className="space-y-2">
-            {completedFollowups.map((fu) => (
-              <ContactFollowupCard
-                key={fu.id}
-                followUp={fu}
-                variant="completed"
-                onTap={() => navigate(`/followup/${fu.id}`)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Interaction history */}
-      {!isLoading && allInteractions.length > 0 && (
-        <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>
-            Interaction history
-          </p>
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>History</p>
           <div className="space-y-0">
-            {allInteractions.map((item) => {
-              const type = item.connect_type || item.planned_follow_up_type;
+            {historyRecords.map((record: any) => {
+              const type = record.connect_type;
               const TypeIcon = typeIcons[type] || MessageSquare;
               const verb = typeVerbs[type] || type;
-              const linkedFollowUp = followUpByInteraction[item.id];
+              const thread = getThreadLine(record);
 
               return (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(`/interaction/${item.id}`)}
-                  className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
+                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {verb}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {format(parseISO(item.date), "MMM d")}
-                      </span>
+                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>{verb}</span>
+                      <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
-                    {item.note && (
-                      <p className="text-[11px] line-clamp-2 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)" }}>
-                        {item.note}
-                      </p>
+                    {record.note && (
+                      <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)" }}>"{record.note}"</p>
                     )}
-                    {linkedFollowUp && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <ArrowRight size={10} className="text-primary" />
-                        <span className="text-[10px] text-primary" style={{ fontFamily: "var(--font-body)" }}>
-                          Follow-up {format(parseISO(linkedFollowUp.due_date), "MMM d")} · {typeLabels[linkedFollowUp.follow_up_type] || linkedFollowUp.follow_up_type}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
+                    </div>
                   </div>
-
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
                 </button>
               );
@@ -493,111 +296,36 @@ const ContactHistory = () => {
         </div>
       )}
 
-      {/* Loading skeleton */}
-      {isLoading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-14 rounded-lg bg-secondary animate-pulse" />
-          ))}
-        </div>
+      {isLoading && <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-14 rounded-lg bg-secondary animate-pulse" />)}</div>}
+
+      {/* Footer */}
+      {!isLoading && interactionCount > 0 && (
+        <p className="text-center text-[11px] text-muted-foreground py-4" style={{ fontFamily: "var(--font-body)" }}>
+          {interactionCount} interaction{interactionCount !== 1 ? "s" : ""}{firstContactDate ? ` · First contact ${firstContactDate}` : ""}
+        </p>
       )}
 
-      {/* Edit interaction sheet */}
-      {editingInteraction && (
-        <EditInteractionSheet
-          open={!!editingInteraction}
-          onClose={() => setEditingInteraction(null)}
-          interaction={editingInteraction}
-          followUp={followUpByInteraction[editingInteraction.id] || null}
-          contactId={id!}
-        />
+      {/* Sheets */}
+      {contact && <ScheduleFollowupSheet open={scheduleOpen} onOpenChange={setScheduleOpen} contactId={id!} contactName={fullName} />}
+
+      {rescheduleTask && contact && (
+        <RescheduleSheet open={!!rescheduleTask} onOpenChange={(o) => { if (!o) setRescheduleTask(null); }} taskRecordId={rescheduleTask.id} contactName={fullName} currentType={rescheduleTask.planned_follow_up_type} dueDate={rescheduleTask.planned_follow_up_date} contactId={id!} />
       )}
 
-      {/* Edit follow-up sheet */}
-      {editingFollowup && (
-        <EditFollowupSheet
-          open={!!editingFollowup}
-          onOpenChange={(o) => { if (!o) setEditingFollowup(null); }}
-          followUp={editingFollowup}
-        />
+      {target && (
+        <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
 
-      {/* Schedule follow-up sheet */}
-      {contact && (
-        <ScheduleFollowupSheet
-          open={scheduleOpen}
-          onOpenChange={setScheduleOpen}
-          contactId={id!}
-          contactName={fullName}
-        />
-      )}
-
-      {/* Delete confirmation */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(o) => { if (!o) setDeleteConfirmId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {deleteConfirmType === "interaction" ? "Delete interaction?" : "Remove follow-up?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteConfirmType === "interaction"
-                ? "This will permanently delete this interaction. Any linked follow-up will remain."
-                : "This will remove this follow-up. The linked interaction will remain intact."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteConfirmId) {
-                  if (deleteConfirmType === "interaction") {
-                    deleteInteraction.mutate(deleteConfirmId);
-                  } else {
-                    removeFollowup.mutate(deleteConfirmId);
-                  }
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteConfirmType === "interaction" ? "Delete" : "Remove"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete contact confirmation */}
+      {/* Delete contact */}
       <AlertDialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete contact?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {fullName} and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Delete contact?</AlertDialogTitle><AlertDialogDescription>This will permanently delete {fullName} and cannot be undone.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteContact.mutate()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => deleteContact.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Reschedule sheet */}
-      {rescheduleFollowup && contact && (
-        <RescheduleSheet
-          open={!!rescheduleFollowup}
-          onOpenChange={(o) => { if (!o) setRescheduleFollowup(null); }}
-          followUpId={rescheduleFollowup.id}
-          contactName={fullName}
-          currentType={rescheduleFollowup.follow_up_type}
-          dueDate={rescheduleFollowup.due_date}
-          contactId={id!}
-        />
-      )}
     </div>
   );
 };

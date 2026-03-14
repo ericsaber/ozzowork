@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Check, Phone, Mail, MessageSquare, Users, Video, CalendarIcon } from "lucide-react";
 import { addDays, addWeeks, format } from "date-fns";
-import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -26,7 +25,7 @@ interface LogStep2Props {
   contactName: string;
   note: string;
   logDate: string;
-  onBack: () => void;
+  onBack?: () => void;
   onSaveWithFollowup: (type: string, date: string) => void;
   onSkip: () => void;
   isSaving: boolean;
@@ -56,56 +55,41 @@ const LogStep2 = ({
   };
 
   const bothSelected = followUpType && selectedDate;
-
   const truncatedNote = note ? (note.length > 60 ? note.slice(0, 60) + "…" : note) : "";
-
-  const typeLabel =
-    connectType.charAt(0).toUpperCase() + connectType.slice(1);
-
-  // Helper hints
+  const typeLabel = connectType ? connectType.charAt(0).toUpperCase() + connectType.slice(1) : "";
   const showTypeHint = selectedDate && !followUpType;
   const showDateHint = followUpType && !selectedDate;
 
   return (
     <div className="space-y-5">
-      {/* Back link */}
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1 text-muted-foreground text-[13px]"
-        style={{ fontFamily: "var(--font-body)" }}
-      >
-        ← Edit log
-      </button>
+      {onBack && (
+        <button onClick={onBack} className="flex items-center gap-1 text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
+          ← Edit log
+        </button>
+      )}
 
-      {/* Title */}
-      <h2
-        className="text-[24px] text-foreground"
-        style={{ fontFamily: "var(--font-heading)" }}
-      >
+      <h2 className="text-[24px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
         What's next?
       </h2>
 
-      {/* Confirmation strip */}
-      <div className="flex items-start gap-2.5 rounded-[12px] border border-[#c2dfc2] bg-[#eef7ee] px-[14px] py-[10px]">
-        <div className="w-5 h-5 rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
-          <Check size={12} className="text-white" strokeWidth={2.5} />
+      {connectType && (
+        <div className="flex items-start gap-2.5 rounded-[12px] border border-[#c2dfc2] bg-[#eef7ee] px-[14px] py-[10px]">
+          <div className="w-5 h-5 rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
+            <Check size={12} className="text-white" strokeWidth={2.5} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-[hsl(142,40%,35%)]" style={{ fontFamily: "var(--font-body)" }}>
+              {typeLabel} logged with {contactName}
+            </p>
+            <p className="text-[10px] text-[hsl(142,30%,50%)]" style={{ fontFamily: "var(--font-body)" }}>
+              {logDate}{truncatedNote ? ` · ${truncatedNote}` : ""}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold text-[hsl(142,40%,35%)]" style={{ fontFamily: "var(--font-body)" }}>
-            {typeLabel} logged with {contactName}
-          </p>
-          <p className="text-[10px] text-[hsl(142,30%,50%)]" style={{ fontFamily: "var(--font-body)" }}>
-            {logDate}{truncatedNote ? ` · ${truncatedNote}` : ""}
-          </p>
-        </div>
-      </div>
+      )}
 
-      {/* Follow-up type */}
       <div>
-        <p
-          className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
           How will you follow up?
         </p>
         <div className="flex flex-wrap gap-2">
@@ -130,12 +114,8 @@ const LogStep2 = ({
         </div>
       </div>
 
-      {/* When */}
       <div>
-        <p
-          className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
+        <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
           When?
         </p>
         <div className="flex flex-wrap gap-2">
@@ -189,7 +169,6 @@ const LogStep2 = ({
           </Popover>
         </div>
 
-        {/* Helper hints */}
         {showDateHint && (
           <p className="text-[11px] italic text-muted-foreground mt-2" style={{ fontFamily: "var(--font-body)" }}>
             Select when to set the reminder.
@@ -202,7 +181,6 @@ const LogStep2 = ({
         )}
       </div>
 
-      {/* CTA */}
       <button
         onClick={() => onSaveWithFollowup(followUpType, selectedDate)}
         disabled={!bothSelected || isSaving}
@@ -212,14 +190,13 @@ const LogStep2 = ({
         {isSaving ? "Saving..." : "Save & set reminder"}
       </button>
 
-      {/* Skip link */}
       <button
         onClick={onSkip}
         disabled={isSaving}
         className="w-full text-center text-[13px] text-muted-foreground underline py-1"
         style={{ fontFamily: "var(--font-body)" }}
       >
-        Save log and skip follow-up
+        Skip follow-up
       </button>
     </div>
   );
