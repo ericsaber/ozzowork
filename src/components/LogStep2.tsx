@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, Phone, Mail, MessageSquare, Users, Video, CalendarIcon } from "lucide-react";
-import { addDays, addWeeks, format } from "date-fns";
+import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -167,6 +167,25 @@ const LogStep2 = ({
               />
             </PopoverContent>
           </Popover>
+          {selectedDate && !dateChips.some((chip) => chip.date() === selectedDate) && (() => {
+            const parsed = parseISO(selectedDate);
+            const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "MMM d") : format(parsed, "MMM d, yyyy");
+            return (
+              <span
+                className="inline-flex items-center gap-1 rounded-[20px] bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] px-[10px] py-[6px] text-[11px] font-medium text-[#c8622a]"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                {label}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedDate(""); }}
+                  className="ml-0.5 text-[#c8622a]/60 hover:text-[#c8622a] transition-colors"
+                  aria-label="Clear date"
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })()}
         </div>
 
         {showDateHint && (
