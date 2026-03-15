@@ -171,6 +171,25 @@ const ScheduleFollowupSheet = ({
                 />
               </PopoverContent>
             </Popover>
+            {date && !dateChips.some((chip) => chip.date() === date) && (() => {
+              const parsed = parseISO(date);
+              const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "MMM d") : format(parsed, "MMM d, yyyy");
+              return (
+                <span
+                  className="inline-flex items-center gap-1 rounded-[20px] bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] px-[10px] py-[6px] text-[11px] font-medium text-[#c8622a]"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  {label}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDate(""); }}
+                    className="ml-0.5 text-[#c8622a]/60 hover:text-[#c8622a] transition-colors"
+                    aria-label="Clear date"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })()}
           </div>
 
           <button
