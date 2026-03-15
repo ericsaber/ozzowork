@@ -169,21 +169,22 @@ const LogStep2 = ({
           </Popover>
           {selectedDate && !dateChips.some((chip) => chip.date() === selectedDate) && (() => {
             const parsed = parseISO(selectedDate);
-            const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "MMM d") : format(parsed, "MMM d, yyyy");
+            const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "EEE, MMM d") : format(parsed, "EEE, MMM d, yyyy");
             return (
-              <span
-                className="inline-flex items-center gap-1 rounded-[20px] bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] px-[10px] py-[6px] text-[11px] font-medium text-[#c8622a]"
+              <div
+                className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-3 py-[7px] text-[13px] font-medium text-foreground"
                 style={{ fontFamily: "var(--font-body)" }}
               >
+                <CalendarIcon size={14} className="text-muted-foreground shrink-0" />
                 {label}
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedDate(""); }}
-                  className="ml-0.5 text-[#c8622a]/60 hover:text-[#c8622a] transition-colors"
+                  className="ml-auto text-muted-foreground hover:text-foreground transition-colors text-[14px] leading-none"
                   aria-label="Clear date"
                 >
                   ×
                 </button>
-              </span>
+              </div>
             );
           })()}
         </div>
