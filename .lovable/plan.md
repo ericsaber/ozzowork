@@ -1,83 +1,116 @@
-## Log Flow Redesign — Full Plan
 
-### Task 1: New Toast Component (replaces CelebrationHeader) — pending
 
-**File: `src/components/CelebrationHeader.tsx`** — Full rewrite
+## Log Flow Fixes (Round 1) — Implementation Plan
 
-- Background `#fdf5f0`, border-radius 6px, padding `7px 12px 8px 14px`, margin-bottom 18px
-- Left accent: absolutely-positioned 3px-wide `#c8622a` div (NOT border-left)
-- **Variant A ("Nice work.")** — first interaction only:
-  - Border animates height 0→100% (280ms), text fades up with delays
-  - "Nice work." in Crimson Pro 20px `#c8622a`, subline "[Name] · First interaction" 11px `#7a746c`
-- **Variant B ("Done.")** — repeat interactions:
-  - Static border, only "✓" pops in (spring 220ms)
-  - "Done." + "✓" baseline row, subline "[Name] · Nth interaction"
-- Interaction count query unchanged
+### Fix 1: All flows render as bottom sheets
 
-### Task 2: Redesigned Stepper ✅
+**Current state**: FAB (`/log` route) renders `LogInteraction` as a full-screen page. CompleteFollowupSheet already uses `<Drawer>`.
 
-**File: `src/components/StepIndicator.tsx`** — Done
+**Change**:
+- Convert `LogInteraction` from a routed page into a bottom-sheet `<Drawer>` triggered from `BottomNav`
+- `BottomNav.tsx`: Instead of `navigate("/log")`, open a local `<Drawer>` state. Render a new `LogInteractionSheet` component inside the drawer.
+- Extract the logic from `LogInteraction.tsx` into a new `src/components/LogInteractionSheet.tsx` that accepts `open`, `onOpenChange`, and optional `preselectedContactId` props — same pattern as `CompleteFollowupSheet`
+- Drawer styling: `max-h-[90vh]`, border-radius handled by DrawerContent, drag handle already built into DrawerContent component (36px wide bar)
+- Sheet content scrollable via `overflow-y-auto` on inner div
+- Keep `/log` route working as a redirect or remove it; the FAB no longer navigates
+- For contact record Log button: also trigger `LogInteractionSheet` with `preselectedContactId` instead of navigating to `/log?contact=X`
 
-- 22px circles, always number, never checkmark
-- Active: transparent + 1.5px `#c8622a` border, sienna number
-- Completed: solid `#c8622a`, white number
-- Inactive: muted gray fill, gray number
-- Identical structure on both steps — no expansion, no `expandStep2` prop
-- Labels: 9px uppercase below circles
+**Files**: `src/components/BottomNav.tsx`, new `src/components/LogInteractionSheet.tsx` (extracted from `LogInteraction.tsx`), update contact record page to use the sheet, possibly remove/simplify `src/pages/LogInteraction.tsx`
 
-### Task 3: Unified Note Card (LogStep1 redesign) — pending
+---
 
-**File: `src/components/LogStep1.tsx`** — Major rewrite
+### Fix 2: Toast — wrong checkmark, fix animations
 
-- Single card: white bg, 0.5px border, 14px radius
-- **Contact header row** (46px): prefilled (avatar + name) or empty (dashed avatar + search). "Change" link only in FAB flow after selection
-- **Note/mic area**: default centered mic CTA (38px circle), typing mode (mic to corner, textarea), recording mode (CTA → "Done recording →", always active)
-- **Connect type chips** below card: dimmed until contact selected, 100px radius pills
-- **CTA**: "Next →", disabled until contact + type selected; "Done recording →" during recording
-- **Skip link**: "Set a follow-up without logging"
+**File**: `src/components/CelebrationHeader.tsx`
 
-### Task 4: LogStep2 Redesign — pending
+"Done." variant fixes:
+- Line 112: change `gap-1.5` → `gap-[8px]`
+- Line 113-121: "Done." text — change fontFamily to `var(--font-heading)` (Crimson Pro), fontSize `20px`, color `#c8622a` (currently uses `--font-body` and `--foreground`)
+- Line 124-131: "✓" — change fontSize to `17px`, color to `#c8622a` (currently uses `hsl(var(--success))` which is green), keep as plain text character (already is ✓ text)
+- Animation on ✓: already has `toast-check-pop` but the keyframes show scale going 0→1.2→1. Fix to match spec: `0%: opacity 0, scale(0.3)` → `100%: opacity 1, scale(1)` with `cubic-bezier(.34,1.56,.64,1)` over 220ms delay 100ms
 
-**File: `src/components/LogStep2.tsx`** — Moderate rewrite
+"Nice work." variant:
+- Already uses `var(--font-heading)`, 20px, `hsl(var(--primary))` — looks correct
+- Verify animation delays match spec (280ms for bar, then text at 280ms delay, subline at 400ms delay — currently 80ms and 180ms, need to update)
 
-- Remove standalone "What's next?" heading — stepper label is sufficient
-- Remove "← Edit log" back link entirely
-- **Green confirmation card**: `#eaf4ed` bg, green check + type/name/date, note italic serif, "Tap to edit"
-- **Inline edit**: card bg → white, chips + textarea inside, "Done editing" link to collapse
-- **Follow-up chips**: 100px radius pills, "How will you follow up?" + "When?" labels
-- **CTA**: "Save →" (dims until type + date selected), "Skip follow-up" link
+---
 
-### Task 5: LogInteraction Page Updates — pending
+### Fix 3: Stepper active label styling
 
-**File: `src/pages/LogInteraction.tsx`**
+**File**: `src/components/StepIndicator.tsx`
 
-- Remove h1 heading and back arrow
-- Merge ContactCombobox into LogStep1 (pass contacts, handlers)
-- Remove separate combobox + quick-add button
-- Pass `isContactPrefilled` based on `preselectedContact`
+- Line 37-44 `labelStyle`: When active, change weight to `600` and color to `#c8622a`. Currently active label is `#1c1812` weight 500.
 
-### Task 6: CompleteFollowupSheet Updates — pending
+---
 
-**File: `src/components/CompleteFollowupSheet.tsx`**
+### Fix 4: Contact combobox — cap results, always show add button
 
-- Toast above stepper only when completing a follow-up (Today check tap, contact record checkmark)
-- No toast for fresh interactions via FAB or contact Log button
-- Contact always prefilled
+**File**: `src/components/LogStep1.tsx`
 
-### Task 7: Entry Point Wiring — pending
+- Lines 76-84 `filteredContacts`: Cap to 3 when no search query, cap to 5 when searching
+- Line 259 `max-h-[180px]`: Remove this or adjust — dropdown should fit 3 results + add row without scrolling, then cap at that height
+- Ensure "Add" row is always visible (it's in a separate `border-t` div outside the scrollable area — already looks correct structurally, just need to constrain the scrollable list)
 
-| Entry | Contact | Toast | Chips dim? | CTA dims until |
-|-------|---------|-------|------------|----------------|
-| FAB (+) | Empty, searchable | No | Yes | Contact + type |
-| Contact Log btn | Prefilled | No | No | Type only |
-| Today/Contact check | Prefilled | Yes | No | Type only |
+---
 
-### Files Changed Summary
+### Fix 5: Global 118% font scale in log flow sheet
 
-1. `src/components/CelebrationHeader.tsx` — Full rewrite → toast
-2. `src/components/StepIndicator.tsx` — Done ✅
-3. `src/components/LogStep1.tsx` — Major rewrite, unified card + inline search
-4. `src/components/LogStep2.tsx` — Rewrite, inline edit, no heading
-5. `src/pages/LogInteraction.tsx` — Remove title/back, merge combobox
-6. `src/components/CompleteFollowupSheet.tsx` — Wire toast, new props
-7. `src/components/ContactCombobox.tsx` — Absorbed into LogStep1 or adapted
+Apply a CSS scale wrapper on the sheet content for both `LogInteractionSheet` and `CompleteFollowupSheet`:
+- Wrap sheet inner content in a div with `style={{ fontSize: "118%" }}` — but since sizes are in px throughout, need to multiply each px value by 1.18
+- Systematically update all `text-[Xpx]` and `fontSize` values in `LogStep1.tsx`, `LogStep2.tsx`, `StepIndicator.tsx` (but NOT `CelebrationHeader.tsx`)
+- Key size changes: 10px→12px, 11px→13px, 12px→14px, 13px→15.5px, 14px→16.5px, 9px→10.5px, 7px→8px
+
+---
+
+### Fix 6: Green card — always show "Tap to edit"
+
+**File**: `src/components/LogStep2.tsx`
+
+- Line 74: Currently wrapped in `{connectType && (` — the card should show even without connectType if we want "Tap to edit" always
+- Line 112: Currently wrapped in `{onUpdateLog && (` — good, but also needs to show when `!note` so user can add a note after the fact
+- Change: Always show "Tap to edit" regardless of whether note exists. The link should appear even when note is empty.
+
+---
+
+### Fix 7: AI transcription — verify wiring
+
+**Current state**: The edge function uses OpenAI Whisper + Lovable AI gateway for summarization. Both API keys exist in secrets. The client-side flow in `LogStep1.tsx`:
+1. `startRecording()` → sets `isRecording`, starts MediaRecorder
+2. `handleMainCTA()` when recording → calls `stopRecording()` which fires `mediaRecorder.stop()`
+3. `mediaRecorder.onstop` → calls `transcribeAudio(blob)` which sets `isTranscribing`, fetches edge function, sets note, then calls `onRecordingComplete`
+
+**Potential issue**: `stopRecording()` sets `isRecording = false` immediately (line 136), but transcription hasn't started yet. The `onstop` callback is async. The `onRecordingComplete` in `transcribeAudio` fires in the `finally` block — but `onRecordingComplete` is only passed from `LogInteraction.tsx` if it exists.
+
+**Check**: In `LogInteraction.tsx`, `onRecordingComplete` is NOT passed to `LogStep1`. So after transcription, the flow never auto-advances to step 2. Need to pass `onRecordingComplete={() => logMutation.mutate()}` or similar.
+
+Also in `CompleteFollowupSheet.tsx` line 129-139, `onRecordingComplete` is not passed either.
+
+**Fix**: Wire `onRecordingComplete` in both `LogInteractionSheet` and `CompleteFollowupSheet` to trigger the log mutation after transcription completes.
+
+Additionally, the `supabase.auth.getClaims` method (line 31 of edge function) may not exist in the Supabase JS client version used. This could cause 401 errors. Should replace with `supabase.auth.getUser(token)`.
+
+---
+
+### Implementation Order
+
+1. Fix 2 (Toast) — isolated component, no dependencies
+2. Fix 3 (Stepper labels) — one-line change
+3. Fix 6 (Tap to edit) — small LogStep2 change
+4. Fix 4 (Contact combobox caps) — LogStep1 change
+5. Fix 5 (Font scaling) — systematic px updates across LogStep1, LogStep2, StepIndicator
+6. Fix 7 (Transcription wiring) — wire onRecordingComplete, fix edge function auth
+7. Fix 1 (Bottom sheet conversion) — largest change, extract LogInteraction into sheet component
+
+### Files Changed
+
+1. `src/components/CelebrationHeader.tsx` — toast fixes
+2. `src/components/StepIndicator.tsx` — active label weight/color
+3. `src/components/LogStep2.tsx` — always show tap to edit, font scaling
+4. `src/components/LogStep1.tsx` — contact cap, font scaling, recording wiring
+5. `src/components/BottomNav.tsx` — trigger sheet instead of navigate
+6. New `src/components/LogInteractionSheet.tsx` — extracted from LogInteraction
+7. `src/pages/LogInteraction.tsx` — simplified or removed
+8. `src/components/CompleteFollowupSheet.tsx` — font scaling, recording wiring
+9. `supabase/functions/transcribe-audio/index.ts` — fix auth (getClaims → getUser)
+10. Contact record page — use sheet instead of navigate
+
