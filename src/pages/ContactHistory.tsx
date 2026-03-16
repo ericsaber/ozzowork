@@ -21,6 +21,7 @@ import ContactFollowupCard from "@/components/ContactFollowupCard";
 import RescheduleSheet from "@/components/RescheduleSheet";
 import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { toast } from "sonner";
 import { format, parseISO, startOfToday, isPast, isToday } from "date-fns";
@@ -41,6 +42,7 @@ const ContactHistory = () => {
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [rescheduleTask, setRescheduleTask] = useState<any | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
 
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
     onCompleted: () => {
@@ -167,7 +169,7 @@ const ContactHistory = () => {
 
           {/* Action row — flush left */}
           <div className="flex items-center justify-start gap-2 mt-4">
-            <button onClick={() => navigate(`/log?contact=${id}`)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
+            <button onClick={() => setLogSheetOpen(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
               <Plus size={14} /> Log
             </button>
             <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
@@ -315,6 +317,8 @@ const ContactHistory = () => {
       {target && (
         <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
+
+      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
 
       {/* Delete contact */}
       <AlertDialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>

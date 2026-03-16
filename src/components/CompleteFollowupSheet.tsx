@@ -18,7 +18,7 @@ interface CompleteFollowupSheetProps {
   followUpType: string;
   userId: string;
   hasInteraction: boolean;
-  showToast?: boolean; // true for Today check / contact record checkmark
+  showToast?: boolean;
 }
 
 const CompleteFollowupSheet = ({
@@ -117,14 +117,19 @@ const CompleteFollowupSheet = ({
     handleClose();
   };
 
+  const handleUpdateLog = async (newConnectType: string, newNote: string) => {
+    setConnectType(newConnectType);
+    setNote(newNote);
+  };
+
   return (
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         {showToast && (
           <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
         )}
-        <StepIndicator currentStep={step} />
-        <div className="px-5 pb-6 overflow-y-auto">
+        <div className="overflow-y-auto px-5 pb-6">
+          <StepIndicator currentStep={step} />
           {step === 1 ? (
             <LogStep1
               connectType={connectType}
@@ -136,6 +141,7 @@ const CompleteFollowupSheet = ({
               contactId={contactId}
               contactName={contactName}
               isContactPrefilled={true}
+              onRecordingComplete={() => logMutation.mutate()}
             />
           ) : (
             <LogStep2
@@ -147,6 +153,7 @@ const CompleteFollowupSheet = ({
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
+              onUpdateLog={handleUpdateLog}
             />
           )}
         </div>

@@ -26,7 +26,6 @@ interface LogStep1Props {
   onSubmit: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
-  // Contact props
   contactId?: string;
   contactName?: string;
   contactInitials?: string;
@@ -34,9 +33,7 @@ interface LogStep1Props {
   contacts?: Contact[];
   onContactSelect?: (id: string) => void;
   onAddNewContact?: (name: string) => void;
-  // Skip link
   onSkipToFollowup?: () => void;
-  // Recording callback — when recording finishes transcription, advance
   onRecordingComplete?: () => void;
 }
 
@@ -75,12 +72,17 @@ const LogStep1 = ({
 
   const filteredContacts = useMemo(() => {
     if (!contacts) return [];
-    if (!searchQuery) return contacts;
+    if (!searchQuery) {
+      // No search: show max 3, ordered by array position (already sorted)
+      return contacts.slice(0, 3);
+    }
     const q = searchQuery.toLowerCase();
-    return contacts.filter((c) => {
-      const name = `${c.first_name} ${c.last_name}`.toLowerCase();
-      return name.includes(q) || (c.company || "").toLowerCase().includes(q);
-    });
+    return contacts
+      .filter((c) => {
+        const name = `${c.first_name} ${c.last_name}`.toLowerCase();
+        return name.includes(q) || (c.company || "").toLowerCase().includes(q);
+      })
+      .slice(0, 5);
   }, [contacts, searchQuery]);
 
   // Close search on outside click
@@ -137,6 +139,7 @@ const LogStep1 = ({
   };
 
   const transcribeAudio = async (blob: Blob) => {
+    console.log("[transcribeAudio] called, blob size:", blob.size);
     setIsTranscribing(true);
     try {
       const formData = new FormData();
@@ -147,8 +150,13 @@ const LogStep1 = ({
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-audio`,
         { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` }, body: formData }
       );
-      if (!res.ok) throw new Error("Transcription failed");
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("[transcribeAudio] error response:", errText);
+        throw new Error("Transcription failed");
+      }
       const { summary } = await res.json();
+      console.log("[transcribeAudio] result summary:", summary);
       if (summary) {
         setNote(summary);
         toast.success("Recording transcribed");
@@ -170,7 +178,6 @@ const LogStep1 = ({
   const handleRecordingCTA = () => {
     if (isRecording) {
       stopRecording();
-      // transcription will happen via onstop, then onRecordingComplete fires
     } else {
       startRecording();
     }
@@ -178,7 +185,6 @@ const LogStep1 = ({
 
   const handleMainCTA = () => {
     if (isRecording) {
-      // "Done recording →" — stop, transcribe, then advance
       stopRecording();
     } else {
       onSubmit();
@@ -202,8 +208,8 @@ const LogStep1 = ({
       >
         {/* Contact header row */}
         <div
-          className="flex items-center px-[12px] border-b border-border"
-          style={{ minHeight: "46px", padding: "10px 12px" }}
+          className="flex items-center px-[14px] border-b border-border"
+          style={{ minHeight: "54px", padding: "12px 14px" }}
         >
           {showContactSearch ? (
             /* Searchable contact */
@@ -213,18 +219,18 @@ const LogStep1 = ({
                   <div className="flex items-center gap-2">
                     <div
                       className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                      style={{ width: 26, height: 26, fontSize: 10, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                      style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
                     >
                       {initials}
                     </div>
-                    <span className="text-[13px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
                       {contactName}
                     </span>
                   </div>
                   {hasSelectedOnce && (
                     <button
                       onClick={handleChangeContact}
-                      className="text-[11px] underline"
+                      className="text-[13px] underline"
                       style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
                     >
                       Change
@@ -236,9 +242,9 @@ const LogStep1 = ({
                   <div className="flex items-center gap-2">
                     <div
                       className="rounded-full flex items-center justify-center shrink-0"
-                      style={{ width: 26, height: 26, border: "1.5px dashed hsl(var(--border))" }}
+                      style={{ width: 30, height: 30, border: "1.5px dashed hsl(var(--border))" }}
                     >
-                      <Search size={11} className="text-muted-foreground" />
+                      <Search size={13} className="text-muted-foreground" />
                     </div>
                     <input
                       ref={searchInputRef}
@@ -247,7 +253,7 @@ const LogStep1 = ({
                       placeholder="Who did you talk to?"
                       onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
                       onFocus={() => setSearchOpen(true)}
-                      className="flex-1 bg-transparent border-none outline-none text-[13px] text-foreground placeholder:text-muted-foreground"
+                      className="flex-1 bg-transparent border-none outline-none text-[15.5px] text-foreground placeholder:text-muted-foreground"
                       style={{ fontFamily: "var(--font-body)" }}
                     />
                   </div>
@@ -256,9 +262,9 @@ const LogStep1 = ({
                       className="absolute left-0 right-0 top-full mt-1 rounded-[10px] border border-border bg-card overflow-hidden"
                       style={{ boxShadow: "0 8px 24px rgba(0,0,0,.10)", zIndex: 50 }}
                     >
-                      <div className="max-h-[180px] overflow-y-auto">
+                      <div className="overflow-y-auto" style={{ maxHeight: `${filteredContacts.length * 44 + 4}px` }}>
                         {filteredContacts.length === 0 && (
-                          <div className="px-3 py-2.5 text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                          <div className="px-3 py-2.5 text-[14px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                             No contacts found
                           </div>
                         )}
@@ -275,13 +281,13 @@ const LogStep1 = ({
                             >
                               <div
                                 className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                                style={{ width: 22, height: 22, fontSize: 9, fontWeight: 600, background: "hsl(var(--primary))" }}
+                                style={{ width: 26, height: 26, fontSize: 10.5, fontWeight: 600, background: "hsl(var(--primary))" }}
                               >
                                 {cInitials}
                               </div>
                               <div>
-                                <div className="text-[12px] text-foreground">{`${c.first_name} ${c.last_name}`.trim()}</div>
-                                {c.company && <div className="text-[10px] text-muted-foreground">{c.company}</div>}
+                                <div className="text-[14px] text-foreground">{`${c.first_name} ${c.last_name}`.trim()}</div>
+                                {c.company && <div className="text-[12px] text-muted-foreground">{c.company}</div>}
                               </div>
                             </button>
                           );
@@ -295,7 +301,7 @@ const LogStep1 = ({
                             onAddNewContact?.(searchQuery);
                             setSearchOpen(false);
                           }}
-                          className="w-full text-left px-3 py-2.5 text-[12px] font-medium hover:bg-secondary transition-colors"
+                          className="w-full text-left px-3 py-2.5 text-[14px] font-medium hover:bg-secondary transition-colors"
                           style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
                         >
                           + Add "{searchQuery || "new contact"}"
@@ -311,11 +317,11 @@ const LogStep1 = ({
             <div className="flex items-center gap-2">
               <div
                 className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                style={{ width: 26, height: 26, fontSize: 10, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
               >
                 {initials}
               </div>
-              <span className="text-[13px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 {contactName}
               </span>
             </div>
@@ -323,7 +329,7 @@ const LogStep1 = ({
         </div>
 
         {/* Note / mic area */}
-        <div className="px-[12px] py-[10px]">
+        <div className="px-[14px] py-[12px]">
           {!isTyping && !note && !isRecording && !isTranscribing ? (
             /* Default: centered mic CTA */
             <div className="flex flex-col items-center py-4 gap-2">
@@ -331,24 +337,24 @@ const LogStep1 = ({
                 onClick={handleRecordingCTA}
                 className="rounded-full flex items-center justify-center shrink-0 transition-colors"
                 style={{
-                  width: 38,
-                  height: 38,
+                  width: 44,
+                  height: 44,
                   background: "hsl(var(--secondary))",
                   border: "1px solid hsl(var(--border))",
                 }}
               >
-                <Mic size={16} className="text-muted-foreground" />
+                <Mic size={18} className="text-muted-foreground" />
               </button>
-              <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Speak a few sentences
               </span>
-              <span className="text-[10px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 AI will sum it up
               </span>
               <div className="w-12 border-t border-border my-1" />
               <button
                 onClick={() => setIsTyping(true)}
-                className="text-[12px] italic text-muted-foreground"
+                className="text-[14px] italic text-muted-foreground"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 or tap here to type…
@@ -357,17 +363,17 @@ const LogStep1 = ({
           ) : isRecording ? (
             /* Recording mode */
             <div className="flex items-center gap-2 py-3">
-              <span className="w-6 h-6 rounded-full bg-destructive flex items-center justify-center animate-pulse">
-                <Square size={10} className="text-destructive-foreground" />
+              <span className="w-7 h-7 rounded-full bg-destructive flex items-center justify-center animate-pulse">
+                <Square size={12} className="text-destructive-foreground" />
               </span>
-              <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Recording… tap button below to stop
               </span>
             </div>
           ) : isTranscribing ? (
             <div className="flex items-center gap-2 py-3">
-              <Loader2 size={16} className="text-muted-foreground animate-spin" />
-              <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <Loader2 size={18} className="text-muted-foreground animate-spin" />
+              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Transcribing…
               </span>
             </div>
@@ -376,10 +382,10 @@ const LogStep1 = ({
             <div className="relative">
               <div className="flex items-start gap-2">
                 <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
-                  <Mic size={16} className="text-muted-foreground" />
+                  <Mic size={18} className="text-muted-foreground" />
                 </button>
                 <div className="flex-1">
-                  <span className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                  <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
                     Note
                   </span>
                   <textarea
@@ -387,7 +393,7 @@ const LogStep1 = ({
                     placeholder="What happened?"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none resize-none text-[12px] text-foreground placeholder:text-muted-foreground min-h-[56px] italic"
+                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground min-h-[56px] italic"
                     style={{ fontFamily: "var(--font-heading)" }}
                   />
                 </div>
@@ -402,7 +408,7 @@ const LogStep1 = ({
         style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
       >
         <p
-          className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
+          className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
           style={{ fontFamily: "var(--font-body)" }}
         >
           How'd you connect?
@@ -414,7 +420,7 @@ const LogStep1 = ({
               <button
                 key={t.value}
                 onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 py-[7px] px-[13px] text-[11px] font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
                   selected
                     ? "text-primary-foreground"
                     : "text-muted-foreground"
@@ -427,7 +433,7 @@ const LogStep1 = ({
                     : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
                 }}
               >
-                <t.icon size={13} />
+                <t.icon size={15} />
                 {t.label}
               </button>
             );
@@ -439,7 +445,7 @@ const LogStep1 = ({
       <button
         onClick={handleMainCTA}
         disabled={isRecording ? false : (!canSubmit && !isTranscribing)}
-        className="w-full py-[14px] text-[14px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+        className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{
           borderRadius: "100px",
           background: "hsl(var(--primary))",
@@ -457,7 +463,7 @@ const LogStep1 = ({
       {onSkipToFollowup && (
         <button
           onClick={onSkipToFollowup}
-          className="w-full text-center text-[11px] text-muted-foreground underline py-1"
+          className="w-full text-center text-[13px] text-muted-foreground underline py-1"
           style={{ fontFamily: "var(--font-body)" }}
         >
           Set a follow-up without logging
