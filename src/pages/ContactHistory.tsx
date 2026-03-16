@@ -42,6 +42,7 @@ const ContactHistory = () => {
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [rescheduleTask, setRescheduleTask] = useState<any | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
 
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
     onCompleted: () => {
