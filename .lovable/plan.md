@@ -1,20 +1,33 @@
 
 
-## Update pill font size and properties
+## Log Flow Redesign — Full Plan
 
-Based on the screenshots, the user wants two font specs applied:
+### Task 2: Redesigned Stepper
 
-- **14px**: weight 500, line-height 20px
-- **12px**: weight 500, line-height 16px
+**File: `src/components/StepIndicator.tsx`** — Rewrite ✅
 
-The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
+- Circles: 22px, always show number (never checkmark)
+- Active step: transparent fill + 1.5px `#c8622a` border, sienna number
+- Completed step: solid `#c8622a` fill, white number
+- Inactive step: muted gray fill, gray number
+- Line: gray when step 1 active, sienna when step 1 complete
+- Labels: 9px uppercase tracking below circles ("What happened" / "What's next")
+- **No `expandStep2` prop** — stepper is identical in structure on both steps
+- No "Step 2" label above circle, no 22px heading, no expansion logic
 
-Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
+### Task 4: LogStep2 Redesign
 
-While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
+**File: `src/components/LogStep2.tsx`** — Moderate rewrite (pending)
 
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
-| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
+- Stepper no longer provides a heading — LogStep2 keeps its own standalone "What's next?" heading in Crimson Pro
+- Remove "← Edit log" back link entirely
+- Green confirmation card replaces current summary
+- Inline edit mode via "Tap to edit"
+- Follow-up chips same pill style
+- CTA: "Save →", skip: "Skip follow-up"
 
+### Task 1: New Toast Component (replaces CelebrationHeader) — pending
+### Task 3: Unified Note Card (LogStep1 redesign) — pending
+### Task 5: LogInteraction Page Updates — pending
+### Task 6: CompleteFollowupSheet Updates — pending
+### Task 7: Entry Point Wiring — pending
