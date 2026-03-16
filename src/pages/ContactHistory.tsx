@@ -169,7 +169,7 @@ const ContactHistory = () => {
 
           {/* Action row — flush left */}
           <div className="flex items-center justify-start gap-2 mt-4">
-            <button onClick={() => navigate(`/log?contact=${id}`)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
+            <button onClick={() => setLogSheetOpen(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
               <Plus size={14} /> Log
             </button>
             <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
