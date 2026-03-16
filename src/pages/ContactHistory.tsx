@@ -21,6 +21,7 @@ import ContactFollowupCard from "@/components/ContactFollowupCard";
 import RescheduleSheet from "@/components/RescheduleSheet";
 import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { toast } from "sonner";
 import { format, parseISO, startOfToday, isPast, isToday } from "date-fns";
