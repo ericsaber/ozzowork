@@ -29,6 +29,8 @@ interface LogStep2Props {
   onSaveWithFollowup: (type: string, date: string) => void;
   onSkip: () => void;
   isSaving: boolean;
+  // For inline editing
+  onUpdateLog?: (connectType: string, note: string) => void;
 }
 
 const LogStep2 = ({
@@ -40,10 +42,14 @@ const LogStep2 = ({
   onSaveWithFollowup,
   onSkip,
   isSaving,
+  onUpdateLog,
 }: LogStep2Props) => {
   const [followUpType, setFollowUpType] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editConnectType, setEditConnectType] = useState(connectType);
+  const [editNote, setEditNote] = useState(note);
 
   const handlePillClick = (value: string) => {
     setFollowUpType(followUpType === value ? "" : value);
@@ -54,40 +60,111 @@ const LogStep2 = ({
     setShowDatePicker(false);
   };
 
+  const handleDoneEditing = () => {
+    setIsEditing(false);
+    onUpdateLog?.(editConnectType, editNote);
+  };
+
   const bothSelected = followUpType && selectedDate;
-  const truncatedNote = note ? (note.length > 60 ? note.slice(0, 60) + "…" : note) : "";
   const typeLabel = connectType ? connectType.charAt(0).toUpperCase() + connectType.slice(1) : "";
-  const showTypeHint = selectedDate && !followUpType;
-  const showDateHint = followUpType && !selectedDate;
 
   return (
     <div className="space-y-5">
-      {onBack && (
-        <button onClick={onBack} className="flex items-center gap-1 text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
-          ← Edit log
-        </button>
-      )}
-
-      <h2 className="text-[24px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
-        What's next?
-      </h2>
-
+      {/* Green confirmation card */}
       {connectType && (
-        <div className="flex items-start gap-2.5 rounded-[12px] border border-[#c2dfc2] bg-[#eef7ee] px-[14px] py-[10px]">
-          <div className="w-5 h-5 rounded-full bg-[hsl(142,60%,40%)] flex items-center justify-center shrink-0 mt-0.5">
-            <Check size={12} className="text-white" strokeWidth={2.5} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold text-[hsl(142,40%,35%)]" style={{ fontFamily: "var(--font-body)" }}>
-              {typeLabel} logged with {contactName}
-            </p>
-            <p className="text-[10px] text-[hsl(142,30%,50%)]" style={{ fontFamily: "var(--font-body)" }}>
-              {logDate}{truncatedNote ? ` · ${truncatedNote}` : ""}
-            </p>
-          </div>
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: isEditing ? "hsl(var(--card))" : "#eaf4ed",
+            border: isEditing ? "0.5px solid hsl(var(--border))" : "0.5px solid rgba(42,112,72,0.2)",
+            padding: "12px 14px",
+          }}
+        >
+          {!isEditing ? (
+            <>
+              <div className="flex items-center gap-2">
+                <div
+                  className="rounded-full flex items-center justify-center shrink-0"
+                  style={{ width: 18, height: 18, background: "hsl(var(--success))" }}
+                >
+                  <Check size={10} className="text-white" strokeWidth={3} />
+                </div>
+                <span className="text-[12px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
+                  {typeLabel} · {contactName}
+                </span>
+                <span className="ml-auto text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  {logDate}
+                </span>
+              </div>
+              {note && (
+                <p
+                  className="italic mt-1.5"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontSize: "12px",
+                    color: "#2a5c3a",
+                    paddingLeft: "26px",
+                  }}
+                >
+                  {note}
+                </p>
+              )}
+              {onUpdateLog && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-[10px] underline mt-1.5"
+                  style={{ color: "#2a7048", fontFamily: "var(--font-body)", paddingLeft: "26px" }}
+                >
+                  Tap to edit
+                </button>
+              )}
+            </>
+          ) : (
+            /* Inline edit mode */
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {typeOptions.map((t) => {
+                  const selected = editConnectType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setEditConnectType(selected ? "" : t.value)}
+                      className={`inline-flex items-center gap-1.5 py-[6px] px-[12px] text-[11px] font-medium transition-colors ${
+                        selected ? "text-primary-foreground" : "text-muted-foreground"
+                      }`}
+                      style={{
+                        borderRadius: "100px",
+                        fontFamily: "var(--font-body)",
+                        ...(selected
+                          ? { background: "hsl(var(--primary))" }
+                          : { background: "hsl(var(--secondary))", border: "0.5px solid hsl(var(--border))" }),
+                      }}
+                    >
+                      <t.icon size={12} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
+                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 text-[12px] italic text-foreground min-h-[48px]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              />
+              <button
+                onClick={handleDoneEditing}
+                className="text-[11px] underline"
+                style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+              >
+                Done editing
+              </button>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Follow-up type chips */}
       <div>
         <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
           How will you follow up?
@@ -99,12 +176,16 @@ const LogStep2 = ({
               <button
                 key={t.value}
                 onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
-                  selected
-                    ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
-                    : "bg-white border-[1.5px] border-border text-muted-foreground"
+                className={`inline-flex items-center gap-1.5 py-[7px] px-[13px] text-[11px] font-medium transition-colors ${
+                  selected ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{
+                  borderRadius: "100px",
+                  fontFamily: "var(--font-body)",
+                  ...(selected
+                    ? { background: "hsl(var(--primary))" }
+                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                }}
               >
                 <t.icon size={13} />
                 {t.label}
@@ -114,6 +195,7 @@ const LogStep2 = ({
         </div>
       </div>
 
+      {/* Date chips */}
       <div>
         <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
           When?
@@ -126,12 +208,16 @@ const LogStep2 = ({
               <button
                 key={chip.label}
                 onClick={() => handleChipClick(chipDate)}
-                className={`rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
-                  selected
-                    ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
-                    : "bg-white border-[1.5px] border-border text-muted-foreground"
+                className={`py-[7px] px-[13px] text-[11px] font-medium transition-colors ${
+                  selected ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{
+                  borderRadius: "100px",
+                  fontFamily: "var(--font-body)",
+                  ...(selected
+                    ? { background: "hsl(var(--primary))" }
+                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                }}
               >
                 {chip.label}
               </button>
@@ -140,12 +226,16 @@ const LogStep2 = ({
           <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
             <PopoverTrigger asChild>
               <button
-                className={`rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors inline-flex items-center gap-1 ${
-                  showDatePicker
-                    ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
-                    : "bg-white border-[1.5px] border-border text-muted-foreground"
+                className={`inline-flex items-center gap-1 py-[7px] px-[13px] text-[11px] font-medium transition-colors ${
+                  showDatePicker ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{
+                  borderRadius: "100px",
+                  fontFamily: "var(--font-body)",
+                  ...(showDatePicker
+                    ? { background: "hsl(var(--primary))" }
+                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                }}
               >
                 <CalendarIcon size={12} />
                 Pick date
@@ -172,8 +262,8 @@ const LogStep2 = ({
             const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "EEE, MMM d") : format(parsed, "EEE, MMM d, yyyy");
             return (
               <div
-                className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-3 py-[7px] text-[13px] font-medium text-foreground"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="inline-flex items-center gap-2 py-[7px] px-[13px] text-[13px] font-medium text-foreground"
+                style={{ borderRadius: "100px", border: "0.5px solid hsl(var(--border))", fontFamily: "var(--font-body)" }}
               >
                 <CalendarIcon size={14} className="text-muted-foreground shrink-0" />
                 {label}
@@ -188,32 +278,23 @@ const LogStep2 = ({
             );
           })()}
         </div>
-
-        {showDateHint && (
-          <p className="text-[11px] italic text-muted-foreground mt-2" style={{ fontFamily: "var(--font-body)" }}>
-            Select when to set the reminder.
-          </p>
-        )}
-        {showTypeHint && (
-          <p className="text-[11px] italic text-muted-foreground mt-2" style={{ fontFamily: "var(--font-body)" }}>
-            Select how you'll follow up to set the reminder.
-          </p>
-        )}
       </div>
 
+      {/* CTA */}
       <button
         onClick={() => onSaveWithFollowup(followUpType, selectedDate)}
         disabled={!bothSelected || isSaving}
-        className="w-full rounded-[13px] bg-primary text-primary-foreground py-[14px] text-[14px] font-semibold shadow-md transition-opacity disabled:opacity-[0.38]"
-        style={{ fontFamily: "var(--font-body)" }}
+        className="w-full py-[14px] text-[14px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+        style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
       >
-        {isSaving ? "Saving..." : "Save & set reminder"}
+        {isSaving ? "Saving..." : "Save →"}
       </button>
 
+      {/* Skip */}
       <button
         onClick={onSkip}
         disabled={isSaving}
-        className="w-full text-center text-[13px] text-muted-foreground underline py-1"
+        className="w-full text-center text-[11px] text-muted-foreground underline py-1"
         style={{ fontFamily: "var(--font-body)" }}
       >
         Skip follow-up

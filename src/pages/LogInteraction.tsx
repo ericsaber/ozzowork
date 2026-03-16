@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
-import ContactCombobox from "@/components/ContactCombobox";
 
 const LogInteraction = () => {
   const navigate = useNavigate();
@@ -38,6 +36,7 @@ const LogInteraction = () => {
 
   const selectedContact = contacts?.find((c) => c.id === contactId);
   const contactName = selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "";
+  const isContactPrefilled = !!preselectedContact;
 
   const quickAddContact = useMutation({
     mutationFn: async () => {
@@ -65,7 +64,6 @@ const LogInteraction = () => {
     queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
   };
 
-  // Step 1: Create or update task record (heads-only)
   const logMutation = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -96,7 +94,6 @@ const LogInteraction = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Step 2: Update same task record with follow-up data
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       if (!savedTaskRecordId) throw new Error("No task record to update");
@@ -111,47 +108,76 @@ const LogInteraction = () => {
 
   const handleSkip = () => { invalidateAll(); toast.success("Interaction logged"); navigate(-1); };
 
+  const handleAddNewContact = (name: string) => {
+    const parts = name.trim().split(" ");
+    setQuickForm({ ...quickForm, first_name: parts[0] || "", last_name: parts.slice(1).join(" ") || "" });
+    setShowQuickAdd(true);
+  };
+
+  const handleUpdateLog = async (newConnectType: string, newNote: string) => {
+    setConnectType(newConnectType);
+    setNote(newNote);
+    if (savedTaskRecordId) {
+      await supabase.from("task_records" as any).update({
+        connect_type: newConnectType || null, note: newNote || null,
+      }).eq("id", savedTaskRecordId);
+    }
+  };
+
   return (
     <div className="min-h-screen pb-24 px-4 pt-[13px] max-w-lg mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4 text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
-        <ArrowLeft size={16} /><span>Back</span>
-      </button>
-      <h1 className="text-[24px] text-foreground mb-2" style={{ fontFamily: "var(--font-heading)" }}>Log interaction</h1>
       <StepIndicator currentStep={step} />
 
       {step === 1 ? (
         <div className="space-y-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <ContactCombobox contacts={contacts} contactId={contactId} onSelect={setContactId} onAddNew={() => setShowQuickAdd(true)} />
-              </div>
-              <button type="button" onClick={() => setShowQuickAdd((v) => !v)} className="flex-shrink-0 w-[42px] h-[42px] rounded-[12px] border-[1.5px] border-[#e0dbd3] bg-[#f0ede8] flex items-center justify-center text-[#c8622a] hover:bg-[#f5ede7] transition-colors">
-                <Plus size={18} />
-              </button>
-            </div>
-            {showQuickAdd && (
-              <div className="mt-3 p-3 rounded-[12px] border border-border bg-card animate-fade-in">
-                <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
-                  </div>
-                  <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                  <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
-                  <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
-                  <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
-                    {quickAddContact.isPending ? "Creating..." : "Create & Select"}
-                  </Button>
+          {showQuickAdd && (
+            <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
+              <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                  <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                 </div>
+                <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
+                  {quickAddContact.isPending ? "Creating..." : "Create & Select"}
+                </Button>
               </div>
-            )}
-          </div>
-          <LogStep1 connectType={connectType} setConnectType={setConnectType} note={note} setNote={setNote} onSubmit={() => logMutation.mutate()} isSubmitting={logMutation.isPending} disabled={!contactId} />
+            </div>
+          )}
+          <LogStep1
+            connectType={connectType}
+            setConnectType={setConnectType}
+            note={note}
+            setNote={setNote}
+            onSubmit={() => logMutation.mutate()}
+            isSubmitting={logMutation.isPending}
+            disabled={!contactId}
+            contactId={contactId}
+            contactName={contactName}
+            isContactPrefilled={isContactPrefilled}
+            contacts={contacts}
+            onContactSelect={setContactId}
+            onAddNewContact={handleAddNewContact}
+            onSkipToFollowup={() => {
+              // Skip logging, go directly to step 2
+              logMutation.mutate();
+            }}
+          />
         </div>
       ) : (
-        <LogStep2 connectType={connectType} contactName={contactName} note={note} logDate={format(new Date(), "MMM d, yyyy")} onBack={() => setStep(1)} onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })} onSkip={handleSkip} isSaving={followupMutation.isPending} />
+        <LogStep2
+          connectType={connectType}
+          contactName={contactName}
+          note={note}
+          logDate={format(new Date(), "MMM d, yyyy")}
+          onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+          onSkip={handleSkip}
+          isSaving={followupMutation.isPending}
+          onUpdateLog={handleUpdateLog}
+        />
       )}
     </div>
   );

@@ -18,6 +18,7 @@ interface CompleteFollowupSheetProps {
   followUpType: string;
   userId: string;
   hasInteraction: boolean;
+  showToast?: boolean; // true for Today check / contact record checkmark
 }
 
 const CompleteFollowupSheet = ({
@@ -29,6 +30,7 @@ const CompleteFollowupSheet = ({
   followUpType,
   userId,
   hasInteraction,
+  showToast = true,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
@@ -43,9 +45,6 @@ const CompleteFollowupSheet = ({
     queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
   };
 
-  // Removed: no longer auto-marking complete on open
-
-  // Step 1: Log interaction AND mark complete on same record
   const logMutation = useMutation({
     mutationFn: async () => {
       const now = new Date().toISOString();
@@ -53,6 +52,9 @@ const CompleteFollowupSheet = ({
         .update({
           status: "completed",
           completed_at: now,
+          connect_type: connectType || null,
+          connect_date: now,
+          note: note || null,
           planned_follow_up_type: connectType || null,
           planned_follow_up_date: now,
         })
@@ -66,7 +68,6 @@ const CompleteFollowupSheet = ({
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Step 2: Create new tails-only task record for next follow-up
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       const { error } = await supabase.from("task_records" as any)
@@ -119,7 +120,9 @@ const CompleteFollowupSheet = ({
   return (
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
-        <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
+        {showToast && (
+          <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
+        )}
         <StepIndicator currentStep={step} />
         <div className="px-5 pb-6 overflow-y-auto">
           {step === 1 ? (
@@ -130,6 +133,9 @@ const CompleteFollowupSheet = ({
               setNote={setNote}
               onSubmit={() => logMutation.mutate()}
               isSubmitting={logMutation.isPending}
+              contactId={contactId}
+              contactName={contactName}
+              isContactPrefilled={true}
             />
           ) : (
             <LogStep2
