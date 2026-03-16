@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -27,9 +26,8 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !data?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -45,7 +43,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate file size (25MB Whisper limit)
     const MAX_FILE_SIZE = 25 * 1024 * 1024;
     if (audioFile.size > MAX_FILE_SIZE) {
       return new Response(JSON.stringify({ error: 'File too large. Maximum 25MB.' }), {
@@ -54,7 +51,6 @@ serve(async (req) => {
       });
     }
 
-    // Validate MIME type
     const ALLOWED_TYPES = ['audio/webm', 'audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/ogg', 'audio/mp4'];
     if (audioFile.type && !ALLOWED_TYPES.includes(audioFile.type)) {
       return new Response(JSON.stringify({ error: 'Invalid file type. Use audio formats only.' }), {
@@ -68,7 +64,6 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    // Step 1: Transcribe with Whisper
     const whisperForm = new FormData();
     whisperForm.append('file', audioFile, 'audio.webm');
     whisperForm.append('model', 'whisper-1');
@@ -96,10 +91,8 @@ serve(async (req) => {
       });
     }
 
-    // Step 2: Summarize with Lovable AI Gateway
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      // Fall back to returning just the transcript
       return new Response(JSON.stringify({ transcript, summary: transcript }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -125,7 +118,6 @@ serve(async (req) => {
 
     if (!summaryRes.ok) {
       console.error('Summary error:', await summaryRes.text());
-      // Return transcript as fallback
       return new Response(JSON.stringify({ transcript, summary: transcript }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

@@ -46,13 +46,12 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
           100% { height: 100%; }
         }
         @keyframes toast-fade-up {
-          0% { opacity: 0; transform: translateY(4px); }
+          0% { opacity: 0; transform: translateY(5px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes toast-check-pop {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.2); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
+          0% { opacity: 0; transform: scale(0.3); }
+          100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
       <div
@@ -71,7 +70,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             left: 0,
             top: 0,
             width: "3px",
-            background: "hsl(var(--primary))",
+            background: "#c8622a",
             borderRadius: "3px 0 0 3px",
             ...(isFirst
               ? { height: "0%", animation: "toast-bar-grow 280ms ease-out forwards" }
@@ -87,19 +86,19 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
                 fontFamily: "var(--font-heading)",
                 fontSize: "20px",
                 lineHeight: "26px",
-                color: "hsl(var(--primary))",
-                animation: "toast-fade-up 250ms ease-out 80ms both",
+                color: "#c8622a",
+                animation: "toast-fade-up 220ms ease-out 280ms both",
               }}
             >
               Nice work.
             </h2>
             <p
-              className="text-muted-foreground"
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "11px",
                 lineHeight: "16px",
-                animation: "toast-fade-up 250ms ease-out 180ms both",
+                color: "#7a746c",
+                animation: "toast-fade-up 220ms ease-out 400ms both",
               }}
             >
               <span className="text-foreground font-medium">{contactName}</span>
@@ -109,23 +108,24 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
         ) : (
           /* Variant B: Done */
           <div style={{ paddingLeft: "10px" }}>
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex items-baseline" style={{ gap: "8px" }}>
               <h2
-                className="text-foreground"
                 style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "18px",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "20px",
                   fontWeight: 500,
                   lineHeight: "24px",
+                  color: "#c8622a",
                 }}
               >
                 Done.
               </h2>
               <span
                 style={{
-                  fontSize: "16px",
-                  color: "hsl(var(--success))",
-                  animation: "toast-check-pop 220ms cubic-bezier(0.34,1.56,0.64,1) forwards",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "17px",
+                  color: "#c8622a",
+                  animation: "toast-check-pop 220ms cubic-bezier(.34,1.56,.64,1) 100ms both",
                   display: "inline-block",
                 }}
               >
@@ -133,11 +133,11 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
               </span>
             </div>
             <p
-              className="text-muted-foreground"
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "11px",
                 lineHeight: "16px",
+                color: "#7a746c",
               }}
             >
               <span className="text-foreground font-medium">{contactName}</span>
