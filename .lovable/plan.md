@@ -1,20 +1,23 @@
 
 
-## Update pill font size and properties
+## Plan: Simplify StepIndicator — Remove Expanded Step 2 Mode
 
-Based on the screenshots, the user wants two font specs applied:
+Update the plan in `.lovable/plan.md` to revise Task 2 (Redesigned Stepper) and Task 4 (LogStep2):
 
-- **14px**: weight 500, line-height 20px
-- **12px**: weight 500, line-height 16px
+### Changes to Task 2 (StepIndicator)
+- Remove `expandStep2` prop entirely
+- No expanded mode on step 2 — stepper is identical in structure on both steps
+- Step circles: 22px, always show number
+- Active step: transparent + 1.5px `#c8622a` border, sienna number
+- Completed step: solid `#c8622a` fill, white number  
+- Inactive step: muted gray fill, gray number
+- Labels: 9px uppercase below circles, always same size
+- No "Step 2" label above circle, no 22px heading rendering, no conditional expansion logic
 
-The pills (due date badges) in `FollowupCard.tsx` are currently `text-[12px] font-medium`. Update them to `text-[14px] font-medium leading-[20px]`.
+### Changes to Task 4 (LogStep2)
+- LogStep2 still needs its own "What's next?" heading since the stepper no longer provides it
+- Add a standalone "What's next?" heading in Crimson Pro below the stepper (separate from the stepper component itself)
 
-Also update the "See all" pill in `Today.tsx` (line ~185) from `text-[12px]` to `text-[14px] leading-[20px]`.
-
-While at it, ensure all 12px elements have `leading-[16px]` and all 14px elements have `leading-[20px]` for consistency.
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/FollowupCard.tsx` | ~79, ~85 | Overdue and Today pill spans: `text-[12px]` → `text-[14px] leading-[20px]` |
-| `src/pages/Today.tsx` | ~185 | "See all" pill: `text-[12px]` → `text-[14px] leading-[20px]` |
+### File: `.lovable/plan.md`
+Update the plan text to reflect these simplifications.
 
