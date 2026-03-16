@@ -1,12 +1,3 @@
-
-
-## Updated Plan: Log Flow Redesign
-
-Rewrite `.lovable/plan.md` with the full revised plan. Key change from previous version: **Task 4 no longer has a standalone "What's next?" heading** — the stepper's 9px label is sufficient. The stepper remains identical on both steps with no expansion.
-
-### `.lovable/plan.md` — Full replacement
-
-```
 ## Log Flow Redesign — Full Plan
 
 ### Task 1: New Toast Component (replaces CelebrationHeader) — pending
@@ -90,5 +81,3 @@ Rewrite `.lovable/plan.md` with the full revised plan. Key change from previous 
 5. `src/pages/LogInteraction.tsx` — Remove title/back, merge combobox
 6. `src/components/CompleteFollowupSheet.tsx` — Wire toast, new props
 7. `src/components/ContactCombobox.tsx` — Absorbed into LogStep1 or adapted
-```
-
