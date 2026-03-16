@@ -1,23 +1,33 @@
 
 
-## Plan: Simplify StepIndicator — Remove Expanded Step 2 Mode
+## Log Flow Redesign — Full Plan
 
-Update the plan in `.lovable/plan.md` to revise Task 2 (Redesigned Stepper) and Task 4 (LogStep2):
+### Task 2: Redesigned Stepper
 
-### Changes to Task 2 (StepIndicator)
-- Remove `expandStep2` prop entirely
-- No expanded mode on step 2 — stepper is identical in structure on both steps
-- Step circles: 22px, always show number
-- Active step: transparent + 1.5px `#c8622a` border, sienna number
-- Completed step: solid `#c8622a` fill, white number  
+**File: `src/components/StepIndicator.tsx`** — Rewrite ✅
+
+- Circles: 22px, always show number (never checkmark)
+- Active step: transparent fill + 1.5px `#c8622a` border, sienna number
+- Completed step: solid `#c8622a` fill, white number
 - Inactive step: muted gray fill, gray number
-- Labels: 9px uppercase below circles, always same size
-- No "Step 2" label above circle, no 22px heading rendering, no conditional expansion logic
+- Line: gray when step 1 active, sienna when step 1 complete
+- Labels: 9px uppercase tracking below circles ("What happened" / "What's next")
+- **No `expandStep2` prop** — stepper is identical in structure on both steps
+- No "Step 2" label above circle, no 22px heading, no expansion logic
 
-### Changes to Task 4 (LogStep2)
-- LogStep2 still needs its own "What's next?" heading since the stepper no longer provides it
-- Add a standalone "What's next?" heading in Crimson Pro below the stepper (separate from the stepper component itself)
+### Task 4: LogStep2 Redesign
 
-### File: `.lovable/plan.md`
-Update the plan text to reflect these simplifications.
+**File: `src/components/LogStep2.tsx`** — Moderate rewrite (pending)
 
+- Stepper no longer provides a heading — LogStep2 keeps its own standalone "What's next?" heading in Crimson Pro
+- Remove "← Edit log" back link entirely
+- Green confirmation card replaces current summary
+- Inline edit mode via "Tap to edit"
+- Follow-up chips same pill style
+- CTA: "Save →", skip: "Skip follow-up"
+
+### Task 1: New Toast Component (replaces CelebrationHeader) — pending
+### Task 3: Unified Note Card (LogStep1 redesign) — pending
+### Task 5: LogInteraction Page Updates — pending
+### Task 6: CompleteFollowupSheet Updates — pending
+### Task 7: Entry Point Wiring — pending
