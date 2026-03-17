@@ -135,7 +135,9 @@ const LogStep1 = ({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
+    // Bug 4: Show transcribing state immediately for perceived speed
     setIsRecording(false);
+    setIsTranscribing(true);
   };
 
   const transcribeAudio = async (blob: Blob) => {
