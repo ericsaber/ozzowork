@@ -336,13 +336,13 @@ const LogStep1 = ({
                 onClick={handleRecordingCTA}
                 className="rounded-full flex items-center justify-center shrink-0 transition-colors"
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   background: "hsl(var(--secondary))",
                   border: "1px solid hsl(var(--border))",
                 }}
               >
-                <Mic size={18} className="text-muted-foreground" />
+                <Mic size={20} className="text-muted-foreground" />
               </button>
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Speak a few sentences
