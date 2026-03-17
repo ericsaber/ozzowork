@@ -71,6 +71,31 @@ const LogStep2 = ({
 
   return (
     <div className="space-y-5">
+      {/* Bug 7: Skipped interaction nudge */}
+      {skippedInteraction && !isEditing && (
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: "#fdf5f0",
+            border: "0.5px solid rgba(200,98,42,0.2)",
+            padding: "14px 16.5px",
+          }}
+        >
+          <p className="text-[14px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+            No interaction logged.{" "}
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="underline font-medium"
+                style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}
+              >
+                Want to add one?
+              </button>
+            )}
+          </p>
+        </div>
+      )}
+
       {/* Green confirmation card — always shown */}
       <div
         className="rounded-[14px] overflow-hidden"
