@@ -170,10 +170,7 @@ const LogStep1 = ({
       toast.error("Transcription failed — type your note manually.");
     } finally {
       setIsTranscribing(false);
-      // After transcription, auto-advance
-      if (onRecordingComplete) {
-        onRecordingComplete();
-      }
+      // Bug 3: Do NOT auto-advance — stay on step 1, user must select connect type first
     }
   };
 
