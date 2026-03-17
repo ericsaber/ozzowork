@@ -52,6 +52,7 @@ const BottomNav = () => {
       <LogInteractionSheet
         open={logSheetOpen}
         onOpenChange={setLogSheetOpen}
+        preselectedContactId={contextContactId}
       />
     </>
   );

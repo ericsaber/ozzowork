@@ -312,15 +312,17 @@ const LogStep2 = ({
         {isSaving ? "Saving..." : "Save →"}
       </button>
 
-      {/* Skip */}
-      <button
-        onClick={onSkip}
-        disabled={isSaving}
-        className="w-full text-center text-[13px] text-muted-foreground underline py-1"
-        style={{ fontFamily: "var(--font-body)" }}
-      >
-        Skip follow-up
-      </button>
+      {/* Skip — Bug 9: hide if user already skipped interaction */}
+      {!skippedInteraction && (
+        <button
+          onClick={onSkip}
+          disabled={isSaving}
+          className="w-full text-center text-[13px] text-muted-foreground underline py-1"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          Skip follow-up
+        </button>
+      )}
     </div>
   );
 };

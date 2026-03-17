@@ -360,13 +360,21 @@ const LogStep1 = ({
               </button>
             </div>
           ) : isRecording ? (
-            /* Recording mode */
-            <div className="flex items-center gap-2 py-3">
-              <span className="w-7 h-7 rounded-full bg-destructive flex items-center justify-center animate-pulse">
-                <Square size={12} className="text-destructive-foreground" />
-              </span>
+            /* Recording mode — Bug 6: 48px stop button in-place */
+            <div className="flex flex-col items-center py-4 gap-2">
+              <button
+                onClick={stopRecording}
+                className="rounded-full flex items-center justify-center shrink-0 transition-colors animate-pulse"
+                style={{
+                  width: 48,
+                  height: 48,
+                  background: "hsl(var(--destructive))",
+                }}
+              >
+                <Square size={16} className="text-destructive-foreground" />
+              </button>
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                Recording… tap button below to stop
+                Recording… tap to stop
               </span>
             </div>
           ) : isTranscribing ? (
