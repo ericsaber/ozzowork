@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -6,6 +6,16 @@ import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
@@ -16,6 +26,9 @@ interface LogInteractionSheetProps {
   preselectedContactId?: string | null;
 }
 
+// Bug 10: Module-level draft persistence
+let savedDraft: { contactId: string; connectType: string; note: string } | null = null;
+
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
@@ -24,23 +37,49 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
   const [savedTaskRecordId, setSavedTaskRecordId] = useState<string | null>(null);
+  const [skippedInteraction, setSkippedInteraction] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
 
-  // Reset when preselectedContactId changes or sheet opens
+  // Bug 10: Restore draft on open
+  useEffect(() => {
+    if (open && savedDraft && !preselectedContactId) {
+      setContactId(savedDraft.contactId);
+      setConnectType(savedDraft.connectType);
+      setNote(savedDraft.note);
+      savedDraft = null;
+    }
+  }, [open, preselectedContactId]);
+
+  const isDirty = !!note || !!connectType || (!!contactId && contactId !== (preselectedContactId || ""));
+
+  const clearAndClose = () => {
+    savedDraft = null;
+    onOpenChange(false);
+    setTimeout(() => {
+      setStep(1);
+      setContactId(preselectedContactId || "");
+      setConnectType("");
+      setNote("");
+      setSavedTaskRecordId(null);
+      setSkippedInteraction(false);
+      setShowQuickAdd(false);
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+    }, 300);
+  };
+
+  // Bug 10: Intercept dismiss
   const handleOpen = (o: boolean) => {
     if (!o) {
-      onOpenChange(false);
-      setTimeout(() => {
-        setStep(1);
-        setContactId(preselectedContactId || "");
-        setConnectType("");
-        setNote("");
-        setSavedTaskRecordId(null);
-        setShowQuickAdd(false);
-        setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
-      }, 300);
+      if (isDirty && step === 1) {
+        // Save draft for potential restoration
+        savedDraft = { contactId, connectType, note };
+        setShowDiscardDialog(true);
+        return;
+      }
+      clearAndClose();
     } else {
       onOpenChange(true);
     }
@@ -111,6 +150,8 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
     onSuccess: (data: any) => {
       setSavedTaskRecordId(data.id);
       invalidateAll();
+      // Bug 7: Track if interaction was skipped (no connect type selected)
+      setSkippedInteraction(!connectType);
       setStep(2);
     },
     onError: (e: any) => toast.error(e.message),
@@ -124,11 +165,21 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       }).eq("id", savedTaskRecordId);
       if (error) throw error;
     },
-    onSuccess: () => { invalidateAll(); toast.success("Follow-up set"); handleOpen(false); },
+    onSuccess: () => {
+      invalidateAll();
+      toast.success("Follow-up set");
+      savedDraft = null;
+      clearAndClose();
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleSkip = () => { invalidateAll(); toast.success("Interaction logged"); handleOpen(false); };
+  const handleSkip = () => {
+    invalidateAll();
+    toast.success("Interaction logged");
+    savedDraft = null;
+    clearAndClose();
+  };
 
   const handleAddNewContact = (name: string) => {
     const parts = name.trim().split(" ");
@@ -147,63 +198,90 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
   };
 
   return (
-    <Drawer open={open} onOpenChange={handleOpen}>
-      <DrawerContent className="max-h-[90vh]">
-        <div className="overflow-y-auto px-5 pb-6">
-          <StepIndicator currentStep={step} />
+    <>
+      <Drawer open={open} onOpenChange={handleOpen}>
+        <DrawerContent className="max-h-[90vh]">
+          <div className="overflow-y-auto px-5 pb-6">
+            <StepIndicator currentStep={step} />
 
-          {step === 1 ? (
-            <div className="space-y-5">
-              {showQuickAdd && (
-                <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
-                  <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
-                      <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
+            {step === 1 ? (
+              <div className="space-y-5">
+                {showQuickAdd && (
+                  <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
+                    <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                        <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
+                      </div>
+                      <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
+                        {quickAddContact.isPending ? "Creating..." : "Create & Select"}
+                      </Button>
                     </div>
-                    <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
-                      {quickAddContact.isPending ? "Creating..." : "Create & Select"}
-                    </Button>
                   </div>
-                </div>
-              )}
-              <LogStep1
+                )}
+                <LogStep1
+                  connectType={connectType}
+                  setConnectType={setConnectType}
+                  note={note}
+                  setNote={setNote}
+                  onSubmit={() => logMutation.mutate()}
+                  isSubmitting={logMutation.isPending}
+                  disabled={!contactId}
+                  contactId={contactId}
+                  contactName={contactName}
+                  isContactPrefilled={isContactPrefilled}
+                  contacts={contacts}
+                  onContactSelect={setContactId}
+                  onAddNewContact={handleAddNewContact}
+                  onSkipToFollowup={() => logMutation.mutate()}
+                />
+              </div>
+            ) : (
+              <LogStep2
                 connectType={connectType}
-                setConnectType={setConnectType}
-                note={note}
-                setNote={setNote}
-                onSubmit={() => logMutation.mutate()}
-                isSubmitting={logMutation.isPending}
-                disabled={!contactId}
-                contactId={contactId}
                 contactName={contactName}
-                isContactPrefilled={isContactPrefilled}
-                contacts={contacts}
-                onContactSelect={setContactId}
-                onAddNewContact={handleAddNewContact}
-                onSkipToFollowup={() => logMutation.mutate()}
-                onRecordingComplete={() => logMutation.mutate()}
+                note={note}
+                logDate={format(new Date(), "MMM d, yyyy")}
+                onBack={() => setStep(1)}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSkip={handleSkip}
+                isSaving={followupMutation.isPending}
+                onUpdateLog={handleUpdateLog}
+                skippedInteraction={skippedInteraction}
               />
-            </div>
-          ) : (
-            <LogStep2
-              connectType={connectType}
-              contactName={contactName}
-              note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-              onSkip={handleSkip}
-              isSaving={followupMutation.isPending}
-              onUpdateLog={handleUpdateLog}
-            />
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Bug 10: Discard confirmation dialog */}
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard this log?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes that will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setShowDiscardDialog(false);
+              savedDraft = null;
+              clearAndClose();
+            }}>
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

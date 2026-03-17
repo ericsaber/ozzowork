@@ -141,7 +141,6 @@ const CompleteFollowupSheet = ({
               contactId={contactId}
               contactName={contactName}
               isContactPrefilled={true}
-              onRecordingComplete={() => logMutation.mutate()}
             />
           ) : (
             <LogStep2
