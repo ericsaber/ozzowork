@@ -43,6 +43,7 @@ const LogStep2 = ({
   onSkip,
   isSaving,
   onUpdateLog,
+  skippedInteraction = false,
 }: LogStep2Props) => {
   const [followUpType, setFollowUpType] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
