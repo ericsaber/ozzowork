@@ -36,7 +36,8 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
   if (interactionCount === null) return null;
 
   const displayCount = (interactionCount ?? 0) + 1;
-  const isFirst = displayCount <= 1;
+  // "Nice work." fires when count goes from 1→2 (first real follow-up completion)
+  const isFirst = displayCount === 2;
 
   return (
     <>

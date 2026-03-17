@@ -30,6 +30,7 @@ interface LogStep2Props {
   onSkip: () => void;
   isSaving: boolean;
   onUpdateLog?: (connectType: string, note: string) => void;
+  skippedInteraction?: boolean;
 }
 
 const LogStep2 = ({
@@ -42,6 +43,7 @@ const LogStep2 = ({
   onSkip,
   isSaving,
   onUpdateLog,
+  skippedInteraction = false,
 }: LogStep2Props) => {
   const [followUpType, setFollowUpType] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -69,6 +71,31 @@ const LogStep2 = ({
 
   return (
     <div className="space-y-5">
+      {/* Bug 7: Skipped interaction nudge */}
+      {skippedInteraction && !isEditing && (
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: "#fdf5f0",
+            border: "0.5px solid rgba(200,98,42,0.2)",
+            padding: "14px 16.5px",
+          }}
+        >
+          <p className="text-[14px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+            No interaction logged.{" "}
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="underline font-medium"
+                style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}
+              >
+                Want to add one?
+              </button>
+            )}
+          </p>
+        </div>
+      )}
+
       {/* Green confirmation card — always shown */}
       <div
         className="rounded-[14px] overflow-hidden"
@@ -310,15 +337,17 @@ const LogStep2 = ({
         {isSaving ? "Saving..." : "Save →"}
       </button>
 
-      {/* Skip */}
-      <button
-        onClick={onSkip}
-        disabled={isSaving}
-        className="w-full text-center text-[13px] text-muted-foreground underline py-1"
-        style={{ fontFamily: "var(--font-body)" }}
-      >
-        Skip follow-up
-      </button>
+      {/* Skip — Bug 9: hide if user already skipped interaction */}
+      {!skippedInteraction && (
+        <button
+          onClick={onSkip}
+          disabled={isSaving}
+          className="w-full text-center text-[13px] text-muted-foreground underline py-1"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          Skip follow-up
+        </button>
+      )}
     </div>
   );
 };

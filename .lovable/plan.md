@@ -1,161 +1,83 @@
+## Log Flow Redesign — Full Plan
 
+### Task 1: New Toast Component (replaces CelebrationHeader) — pending
 
-## Log Flow Bug Fixes — Implementation Plan
+**File: `src/components/CelebrationHeader.tsx`** — Full rewrite
 
-### Bug 1: FAB context-awareness from contact record
+- Background `#fdf5f0`, border-radius 6px, padding `7px 12px 8px 14px`, margin-bottom 18px
+- Left accent: absolutely-positioned 3px-wide `#c8622a` div (NOT border-left)
+- **Variant A ("Nice work.")** — first interaction only:
+  - Border animates height 0→100% (280ms), text fades up with delays
+  - "Nice work." in Crimson Pro 20px `#c8622a`, subline "[Name] · First interaction" 11px `#7a746c`
+- **Variant B ("Done.")** — repeat interactions:
+  - Static border, only "✓" pops in (spring 220ms)
+  - "Done." + "✓" baseline row, subline "[Name] · Nth interaction"
+- Interaction count query unchanged
 
-**File: `src/components/BottomNav.tsx`**
+### Task 2: Redesigned Stepper ✅
 
-- Use `useLocation()` + `useParams()` pattern to detect if current route matches `/contact/:id`
-- Extract contact ID from the route path via regex or `matchPath`
-- Pass it as `preselectedContactId` to `LogInteractionSheet`
+**File: `src/components/StepIndicator.tsx`** — Done
 
-```
-// In BottomNav:
-const contactMatch = location.pathname.match(/^\/contact\/(.+)$/);
-const contextContactId = contactMatch ? contactMatch[1] : undefined;
-// Pass to LogInteractionSheet as preselectedContactId={contextContactId}
-```
+- 22px circles, always number, never checkmark
+- Active: transparent + 1.5px `#c8622a` border, sienna number
+- Completed: solid `#c8622a`, white number
+- Inactive: muted gray fill, gray number
+- Identical structure on both steps — no expansion, no `expandStep2` prop
+- Labels: 9px uppercase below circles
 
-No other files need changes — `LogInteractionSheet` already handles `preselectedContactId`.
+### Task 3: Unified Note Card (LogStep1 redesign) — pending
 
----
+**File: `src/components/LogStep1.tsx`** — Major rewrite
 
-### Bug 2: "Nice work." trigger — change from count 1 to count 2
+- Single card: white bg, 0.5px border, 14px radius
+- **Contact header row** (46px): prefilled (avatar + name) or empty (dashed avatar + search). "Change" link only in FAB flow after selection
+- **Note/mic area**: default centered mic CTA (38px circle), typing mode (mic to corner, textarea), recording mode (CTA → "Done recording →", always active)
+- **Connect type chips** below card: dimmed until contact selected, 100px radius pills
+- **CTA**: "Next →", disabled until contact + type selected; "Done recording →" during recording
+- **Skip link**: "Set a follow-up without logging"
 
-**File: `src/components/CelebrationHeader.tsx`**
+### Task 4: LogStep2 Redesign — pending
 
-- Line 38-39: `displayCount` is currently `(interactionCount ?? 0) + 1`, and `isFirst` checks `displayCount <= 1`
-- Change: `isFirst = displayCount === 2` (the second interaction = first real follow-up completion)
-- "Done." fires when `displayCount > 2`
-- When `displayCount === 1`: show "Done." (not "Nice work." — first interaction isn't celebratory)
+**File: `src/components/LogStep2.tsx`** — Moderate rewrite
 
----
+- Remove standalone "What's next?" heading — stepper label is sufficient
+- Remove "← Edit log" back link entirely
+- **Green confirmation card**: `#eaf4ed` bg, green check + type/name/date, note italic serif, "Tap to edit"
+- **Inline edit**: card bg → white, chips + textarea inside, "Done editing" link to collapse
+- **Follow-up chips**: 100px radius pills, "How will you follow up?" + "When?" labels
+- **CTA**: "Save →" (dims until type + date selected), "Skip follow-up" link
 
-### Bug 3: No auto-advance after transcription without connect type
+### Task 5: LogInteraction Page Updates — pending
 
-**File: `src/components/LogStep1.tsx`**
+**File: `src/pages/LogInteraction.tsx`**
 
-- Lines 170-174: The `finally` block in `transcribeAudio` calls `onRecordingComplete()` unconditionally
-- Remove `onRecordingComplete()` from the `finally` block entirely
-- After transcription, just populate the note and stay on step 1
-- The user must select a connect type chip, then tap "Next →" to advance normally
+- Remove h1 heading and back arrow
+- Merge ContactCombobox into LogStep1 (pass contacts, handlers)
+- Remove separate combobox + quick-add button
+- Pass `isContactPrefilled` based on `preselectedContact`
 
-**File: `src/components/LogInteractionSheet.tsx`** and **`CompleteFollowupSheet.tsx`**:
-- Remove `onRecordingComplete` prop from `LogStep1` usage (lines 189, 144) since it's no longer needed for auto-advance
+### Task 6: CompleteFollowupSheet Updates — pending
 
----
+**File: `src/components/CompleteFollowupSheet.tsx`**
 
-### Bug 4: Transcription speed — fire API call earlier
+- Toast above stepper only when completing a follow-up (Today check tap, contact record checkmark)
+- No toast for fresh interactions via FAB or contact Log button
+- Contact always prefilled
 
-**File: `src/components/LogStep1.tsx`**
+### Task 7: Entry Point Wiring — pending
 
-- Currently: `stopRecording()` calls `mediaRecorder.stop()` which triggers `onstop` callback asynchronously, which then calls `transcribeAudio`
-- Optimization: In `stopRecording`, immediately set `isTranscribing(true)` so the UI shows the transcribing state instantly (no frozen UI)
-- The actual flow can't start the API call before the blob is assembled (MediaRecorder needs to fire `onstop`), but showing the loading state immediately removes perceived latency
-- Move `setIsRecording(false)` and `setIsTranscribing(true)` into `stopRecording` so the UI transitions instantly
+| Entry | Contact | Toast | Chips dim? | CTA dims until |
+|-------|---------|-------|------------|----------------|
+| FAB (+) | Empty, searchable | No | Yes | Contact + type |
+| Contact Log btn | Prefilled | No | No | Type only |
+| Today/Contact check | Prefilled | Yes | No | Type only |
 
----
+### Files Changed Summary
 
-### Bug 5: Keyboard causes bottom sheet to jump
-
-**File: `src/components/ui/drawer.tsx`** (or a wrapper approach)
-
-- The issue is the Vaul drawer repositioning when the virtual keyboard opens
-- Add to the `DrawerContent` component: listen to `window.visualViewport` resize events
-- When keyboard appears, prevent the sheet from reflowing by using a fixed height based on `visualViewport.height`
-- Alternative simpler approach: on the search input in `LogStep1.tsx`, add `onFocus` handler that scrolls the input into view within the sheet's scroll container rather than letting the browser push the sheet up
-- Add CSS to the drawer: `position: fixed; bottom: 0` is already set by Vaul. The fix is to prevent the height from changing — set `max-height` based on `visualViewport.height` instead of `100vh`
-
-Implementation: Add a `useEffect` in `DrawerContent` that listens to `visualViewport.resize` and sets a CSS custom property `--visual-vh` on the content element. Use that for `max-height` instead of `90vh`.
-
----
-
-### Bug 6: Recording UI — stop button size and mic size
-
-**File: `src/components/LogStep1.tsx`**
-
-- Lines 336-347 (default mic): Change width/height from 44 to 48px
-- Lines 363-372 (recording mode): Replace the small pulsing red circle with a 48px circle (same position/size as the mic) with a red background and a white square stop icon
-- The stop button must be tappable — ensure no overlapping elements or pointer-events issues
-- The "Done recording →" CTA at the bottom should also work (it already calls `handleMainCTA` which calls `stopRecording`)
-- After transcription: note populates, mic returns to default 48px state (already happens via state reset)
-
----
-
-### Bug 7: "Set follow-up only" nudge on step 2
-
-**Files: `src/components/LogStep2.tsx`, `src/components/LogInteractionSheet.tsx`, `src/components/CompleteFollowupSheet.tsx`**
-
-- Add a `skippedInteraction` boolean prop to `LogStep2`
-- In `LogInteractionSheet`: track whether user arrived at step 2 via the skip path. Currently `onSkipToFollowup` calls `logMutation.mutate()` which creates a task_record without connect_type — detect this by checking if `connectType` is empty when entering step 2
-- In `LogStep2`: when `skippedInteraction` is true, replace/augment the green card with a nudge: "No interaction logged. Want to add one?" as a tappable link
-- The link should call `onBack?.()` to go back to step 1
-- Pass `onBack={() => setStep(1)}` when `skippedInteraction` is true
-
----
-
-### Bug 8: Today screen refresh after saving follow-up
-
-**Files: `src/components/LogInteractionSheet.tsx`, `src/components/CompleteFollowupSheet.tsx`**
-
-- Both already call `invalidateAll()` which invalidates `task-records-today` — check if the query key matches what the Today page uses
-- Read the Today page to verify the query key
-
-**File: `src/pages/Today.tsx`** — verify query key matches `task-records-today`
-
-This may already work. If the query key matches, the issue might be that `invalidateAll` runs but the Today page component is unmounted (sheet is open over it). React Query should still refetch on remount if stale. Verify `staleTime` isn't set too high.
-
----
-
-### Bug 9: Cannot skip both interaction and follow-up
-
-**File: `src/components/LogStep2.tsx`**
-
-- Add `skippedInteraction` prop (same as Bug 7)
-- When `skippedInteraction` is true: hide or disable the "Skip follow-up" button (line 314-321)
-- The user must save a follow-up if they skipped the interaction
-
----
-
-### Bug 10: Sheet dismissal — preserve draft state
-
-**File: `src/components/LogInteractionSheet.tsx`**
-
-- Add `isDirty` computed boolean: `!!note || !!connectType || (!!contactId && !preselectedContactId)`
-- In `handleOpen(false)`: if `isDirty`, show a confirmation dialog instead of closing
-- Use `AlertDialog` component (already imported in the project)
-- "Discard" → clears state and closes
-- "Keep editing" → dismisses dialog, keeps sheet open
-- Draft persistence: store draft in a module-level variable (outside component) or use `useRef` that persists across sheet open/close. On FAB tap, if draft exists, restore it.
-
-Implementation:
-- Create a module-level `let savedDraft: { contactId, connectType, note } | null = null`
-- On "Discard": `savedDraft = null`, close sheet
-- On dismiss with dirty: save to `savedDraft`, show dialog
-- On open: if `savedDraft` exists, restore values
-
----
-
-### Implementation Order
-
-1. Bug 3 (remove auto-advance) — small, critical fix
-2. Bug 1 (FAB context) — small BottomNav change
-3. Bug 2 (Nice work trigger) — CelebrationHeader condition change
-4. Bug 6 (mic size / stop button) — LogStep1 UI
-5. Bug 4 (transcription speed) — LogStep1 timing
-6. Bug 7 + 9 (skip interaction nudge + prevent double skip) — LogStep2 props
-7. Bug 8 (Today refresh) — verify query keys
-8. Bug 5 (keyboard jump) — drawer viewport fix
-9. Bug 10 (draft preservation) — LogInteractionSheet state management
-
-### Files Changed
-
-1. `src/components/BottomNav.tsx` — extract contact ID from route
-2. `src/components/CelebrationHeader.tsx` — change trigger condition
-3. `src/components/LogStep1.tsx` — remove auto-advance, mic sizing, transcription timing
-4. `src/components/LogStep2.tsx` — add skippedInteraction prop, nudge, hide skip
-5. `src/components/LogInteractionSheet.tsx` — track skip state, draft persistence, discard dialog
-6. `src/components/CompleteFollowupSheet.tsx` — remove onRecordingComplete from LogStep1
-7. `src/components/ui/drawer.tsx` — visualViewport keyboard fix
-
+1. `src/components/CelebrationHeader.tsx` — Full rewrite → toast
+2. `src/components/StepIndicator.tsx` — Done ✅
+3. `src/components/LogStep1.tsx` — Major rewrite, unified card + inline search
+4. `src/components/LogStep2.tsx` — Rewrite, inline edit, no heading
+5. `src/pages/LogInteraction.tsx` — Remove title/back, merge combobox
+6. `src/components/CompleteFollowupSheet.tsx` — Wire toast, new props
+7. `src/components/ContactCombobox.tsx` — Absorbed into LogStep1 or adapted

@@ -135,7 +135,9 @@ const LogStep1 = ({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
+    // Bug 4: Show transcribing state immediately for perceived speed
     setIsRecording(false);
+    setIsTranscribing(true);
   };
 
   const transcribeAudio = async (blob: Blob) => {
@@ -168,10 +170,7 @@ const LogStep1 = ({
       toast.error("Transcription failed — type your note manually.");
     } finally {
       setIsTranscribing(false);
-      // After transcription, auto-advance
-      if (onRecordingComplete) {
-        onRecordingComplete();
-      }
+      // Bug 3: Do NOT auto-advance — stay on step 1, user must select connect type first
     }
   };
 
@@ -337,13 +336,13 @@ const LogStep1 = ({
                 onClick={handleRecordingCTA}
                 className="rounded-full flex items-center justify-center shrink-0 transition-colors"
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   background: "hsl(var(--secondary))",
                   border: "1px solid hsl(var(--border))",
                 }}
               >
-                <Mic size={18} className="text-muted-foreground" />
+                <Mic size={20} className="text-muted-foreground" />
               </button>
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Speak a few sentences
@@ -361,13 +360,21 @@ const LogStep1 = ({
               </button>
             </div>
           ) : isRecording ? (
-            /* Recording mode */
-            <div className="flex items-center gap-2 py-3">
-              <span className="w-7 h-7 rounded-full bg-destructive flex items-center justify-center animate-pulse">
-                <Square size={12} className="text-destructive-foreground" />
-              </span>
+            /* Recording mode — Bug 6: 48px stop button in-place */
+            <div className="flex flex-col items-center py-4 gap-2">
+              <button
+                onClick={stopRecording}
+                className="rounded-full flex items-center justify-center shrink-0 transition-colors animate-pulse"
+                style={{
+                  width: 48,
+                  height: 48,
+                  background: "hsl(var(--destructive))",
+                }}
+              >
+                <Square size={16} className="text-destructive-foreground" />
+              </button>
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                Recording… tap button below to stop
+                Recording… tap to stop
               </span>
             </div>
           ) : isTranscribing ? (

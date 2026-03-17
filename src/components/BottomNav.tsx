@@ -10,6 +10,10 @@ const BottomNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Bug 1: Auto-populate contact from current screen
+  const contactMatch = location.pathname.match(/^\/contact\/(.+)$/);
+  const contextContactId = contactMatch ? contactMatch[1] : undefined;
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card will-change-transform [transform:translate3d(0,0,0)] [backface-visibility:hidden]">
@@ -48,6 +52,7 @@ const BottomNav = () => {
       <LogInteractionSheet
         open={logSheetOpen}
         onOpenChange={setLogSheetOpen}
+        preselectedContactId={contextContactId}
       />
     </>
   );
