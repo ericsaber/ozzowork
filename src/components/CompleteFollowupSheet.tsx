@@ -141,6 +141,7 @@ const CompleteFollowupSheet = ({
               contactId={contactId}
               contactName={contactName}
               isContactPrefilled={true}
+              onChangeContact={undefined}
             />
           ) : (
             <LogStep2

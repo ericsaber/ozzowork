@@ -103,7 +103,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
               }}
             >
               <span className="text-foreground font-medium">{contactName}</span>
-              {" · First interaction"}
+              {" · First follow-up"}
             </p>
           </div>
         ) : (
