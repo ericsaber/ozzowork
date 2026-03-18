@@ -39,9 +39,22 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
   const [savedTaskRecordId, setSavedTaskRecordId] = useState<string | null>(null);
   const [skippedInteraction, setSkippedInteraction] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  // Bug 3: Track if prefilled contact was cleared by user
+  const [contactCleared, setContactCleared] = useState(false);
 
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+
+  // Bug 2: Sync contactId when preselectedContactId changes (route navigation)
+  useEffect(() => {
+    if (!open) {
+      // When sheet is closed, always sync to current route context
+      if (!savedDraft) {
+        setContactId(preselectedContactId || "");
+        setContactCleared(false);
+      }
+    }
+  }, [preselectedContactId, open]);
 
   // Bug 10: Restore draft on open
   useEffect(() => {
@@ -50,6 +63,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       setConnectType(savedDraft.connectType);
       setNote(savedDraft.note);
       savedDraft = null;
+    } else if (open && !savedDraft && !contactCleared) {
+      // Fresh open — sync to preselected
+      setContactId(preselectedContactId || "");
     }
   }, [open, preselectedContactId]);
 
@@ -65,18 +81,19 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       setNote("");
       setSavedTaskRecordId(null);
       setSkippedInteraction(false);
+      setContactCleared(false);
       setShowQuickAdd(false);
       setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
     }, 300);
   };
 
-  // Bug 10: Intercept dismiss
+  // Bug 7: Intercept dismiss — do NOT close the drawer while showing dialog
   const handleOpen = (o: boolean) => {
     if (!o) {
       if (isDirty && step === 1) {
-        // Save draft for potential restoration
         savedDraft = { contactId, connectType, note };
         setShowDiscardDialog(true);
+        // Do NOT call onOpenChange(false) — keep drawer open
         return;
       }
       clearAndClose();
@@ -97,7 +114,8 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
 
   const selectedContact = contacts?.find((c) => c.id === contactId);
   const contactName = selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "";
-  const isContactPrefilled = !!preselectedContactId;
+  // Bug 3: isContactPrefilled is false if user cleared it
+  const isContactPrefilled = !!preselectedContactId && !contactCleared;
 
   const quickAddContact = useMutation({
     mutationFn: async () => {
@@ -150,7 +168,6 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
     onSuccess: (data: any) => {
       setSavedTaskRecordId(data.id);
       invalidateAll();
-      // Bug 7: Track if interaction was skipped (no connect type selected)
       setSkippedInteraction(!connectType);
       setStep(2);
     },
@@ -197,6 +214,12 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
     }
   };
 
+  // Bug 3: Handle "Change" from prefilled contact
+  const handleChangeContact = () => {
+    setContactCleared(true);
+    setContactId("");
+  };
+
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpen}>
@@ -238,6 +261,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
                   onSkipToFollowup={() => logMutation.mutate()}
+                  onChangeContact={handleChangeContact}
                 />
               </div>
             ) : (
@@ -268,7 +292,11 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>
+            <AlertDialogCancel onClick={() => {
+              setShowDiscardDialog(false);
+              // Bug 7: Ensure drawer stays open
+              onOpenChange(true);
+            }}>
               Keep editing
             </AlertDialogCancel>
             <AlertDialogAction onClick={() => {

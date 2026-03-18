@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo, useEffect } from "react";
-import { Mic, Square, Loader2, Phone, Mail, MessageSquare, Users, Video, Search } from "lucide-react";
+import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ interface LogStep1Props {
   onContactSelect?: (id: string) => void;
   onAddNewContact?: (name: string) => void;
   onSkipToFollowup?: () => void;
-  onRecordingComplete?: () => void;
+  onChangeContact?: () => void;
 }
 
 const LogStep1 = ({
@@ -53,7 +53,7 @@ const LogStep1 = ({
   onContactSelect,
   onAddNewContact,
   onSkipToFollowup,
-  onRecordingComplete,
+  onChangeContact,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -64,18 +64,17 @@ const LogStep1 = ({
   // Contact search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [hasSelectedOnce, setHasSelectedOnce] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Bug 9: Soft flag when recording completes without contact
+  const [showContactFlag, setShowContactFlag] = useState(false);
 
   const contactSelected = !!contactId;
 
   const filteredContacts = useMemo(() => {
     if (!contacts) return [];
-    if (!searchQuery) {
-      // No search: show max 3, ordered by array position (already sorted)
-      return contacts.slice(0, 3);
-    }
+    if (!searchQuery) return contacts.slice(0, 3);
     const q = searchQuery.toLowerCase();
     return contacts
       .filter((c) => {
@@ -100,10 +99,13 @@ const LogStep1 = ({
     onContactSelect?.(id);
     setSearchOpen(false);
     setSearchQuery("");
-    setHasSelectedOnce(true);
+    setShowContactFlag(false); // Bug 9: clear flag on contact select
   };
 
   const handleChangeContact = () => {
+    if (onChangeContact) {
+      onChangeContact();
+    }
     setSearchOpen(true);
     setSearchQuery("");
     setTimeout(() => searchInputRef.current?.focus(), 50);
@@ -113,7 +115,10 @@ const LogStep1 = ({
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      // Bug 5: Lower bitrate for faster upload
+      const options: MediaRecorderOptions = { mimeType: "audio/webm" };
+      try { options.audioBitsPerSecond = 32000; } catch {}
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       mediaRecorder.ondataavailable = (e) => {
@@ -135,14 +140,13 @@ const LogStep1 = ({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
-    // Bug 4: Show transcribing state immediately for perceived speed
+    // Bug 4: Show transcribing state immediately
     setIsRecording(false);
     setIsTranscribing(true);
   };
 
   const transcribeAudio = async (blob: Blob) => {
-    console.log("[transcribeAudio] called, blob size:", blob.size);
-    setIsTranscribing(true);
+    // isTranscribing already set by stopRecording
     try {
       const formData = new FormData();
       formData.append("audio", blob, "audio.webm");
@@ -158,10 +162,13 @@ const LogStep1 = ({
         throw new Error("Transcription failed");
       }
       const { summary } = await res.json();
-      console.log("[transcribeAudio] result summary:", summary);
       if (summary) {
         setNote(summary);
-        toast.success("Recording transcribed");
+        // Bug 9: Flag if no contact selected after transcription
+        if (!contactId) {
+          setShowContactFlag(true);
+        }
+        // Bug 11: No toast — populated note is confirmation enough
       } else {
         toast.info("No speech detected.");
       }
@@ -170,7 +177,6 @@ const LogStep1 = ({
       toast.error("Transcription failed — type your note manually.");
     } finally {
       setIsTranscribing(false);
-      // Bug 3: Do NOT auto-advance — stay on step 1, user must select connect type first
     }
   };
 
@@ -198,12 +204,19 @@ const LogStep1 = ({
   const showContactSearch = !isContactPrefilled && onContactSelect;
   const canSubmit = !disabled && contactSelected && !!connectType && !isSubmitting;
 
+  // Bug 1: Only render avatar when data is ready
+  const hasContactData = !!initials && !!contactName;
+
   return (
     <div className="space-y-5">
       {/* Unified Card */}
       <div
         className="rounded-[14px] bg-card overflow-hidden"
-        style={{ border: "0.5px solid hsl(var(--border))" }}
+        style={{
+          border: showContactFlag
+            ? "1.5px solid rgba(200,98,42,0.4)"
+            : "0.5px solid hsl(var(--border))",
+        }}
       >
         {/* Contact header row */}
         <div
@@ -213,7 +226,7 @@ const LogStep1 = ({
           {showContactSearch ? (
             /* Searchable contact */
             <div ref={searchWrapperRef} className="flex-1 relative">
-              {contactSelected && !searchOpen ? (
+              {contactSelected && !searchOpen && hasContactData ? (
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
                     <div
@@ -226,15 +239,14 @@ const LogStep1 = ({
                       {contactName}
                     </span>
                   </div>
-                  {hasSelectedOnce && (
-                    <button
-                      onClick={handleChangeContact}
-                      className="text-[13px] underline"
-                      style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                    >
-                      Change
-                    </button>
-                  )}
+                  {/* Bug 3: Always show Change when contact is selected */}
+                  <button
+                    onClick={handleChangeContact}
+                    className="text-[13px] underline"
+                    style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                  >
+                    Change
+                  </button>
                 </div>
               ) : (
                 <>
@@ -313,22 +325,58 @@ const LogStep1 = ({
             </div>
           ) : (
             /* Prefilled contact (not searchable) */
-            <div className="flex items-center gap-2">
-              <div
-                className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-              >
-                {initials}
+            hasContactData ? (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
+                    style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                  >
+                    {initials}
+                  </div>
+                  <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    {contactName}
+                  </span>
+                </div>
+                {/* Bug 3: Change link on prefilled contacts too */}
+                {onChangeContact && (
+                  <button
+                    onClick={handleChangeContact}
+                    className="text-[13px] underline"
+                    style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                  >
+                    Change
+                  </button>
+                )}
               </div>
-              <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                {contactName}
-              </span>
-            </div>
+            ) : (
+              /* Bug 1: Show placeholder while data loads */
+              <div className="flex items-center gap-2">
+                <div
+                  className="rounded-full flex items-center justify-center shrink-0"
+                  style={{ width: 30, height: 30, border: "1.5px dashed hsl(var(--border))" }}
+                >
+                  <Search size={13} className="text-muted-foreground" />
+                </div>
+                <span className="text-[15.5px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  Loading…
+                </span>
+              </div>
+            )
           )}
         </div>
 
-        {/* Note / mic area */}
-        <div className="px-[14px] py-[12px]">
+        {/* Bug 9: Contact flag message */}
+        {showContactFlag && (
+          <div className="px-[14px] py-1.5 border-b border-border">
+            <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
+              Select a contact to continue
+            </span>
+          </div>
+        )}
+
+        {/* Note / mic area — Bug 10: stable min-height */}
+        <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
           {!isTyping && !note && !isRecording && !isTranscribing ? (
             /* Default: centered mic CTA */
             <div className="flex flex-col items-center py-4 gap-2">
@@ -360,7 +408,7 @@ const LogStep1 = ({
               </button>
             </div>
           ) : isRecording ? (
-            /* Recording mode — Bug 6: 48px stop button in-place */
+            /* Bug 10: Recording mode — same layout, labels stay */
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 onClick={stopRecording}
@@ -376,12 +424,45 @@ const LogStep1 = ({
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Recording… tap to stop
               </span>
+              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                AI will sum it up
+              </span>
+              <div className="w-12 border-t border-border my-1" />
+              <button
+                onClick={() => setIsTyping(true)}
+                className="text-[14px] italic text-muted-foreground"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                or tap here to type…
+              </button>
             </div>
           ) : isTranscribing ? (
-            <div className="flex items-center gap-2 py-3">
-              <Loader2 size={18} className="text-muted-foreground animate-spin" />
-              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+            /* Bug 10: Transcribing — pulsing placeholder in note position */
+            <div className="flex flex-col items-center py-4 gap-2">
+              <button
+                disabled
+                className="rounded-full flex items-center justify-center shrink-0"
+                style={{
+                  width: 48,
+                  height: 48,
+                  background: "hsl(var(--secondary))",
+                  border: "1px solid hsl(var(--border))",
+                }}
+              >
+                <Mic size={20} className="text-muted-foreground" />
+              </button>
+              <span
+                className="text-[13px] italic animate-pulse"
+                style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-heading)" }}
+              >
                 Transcribing…
+              </span>
+              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                AI will sum it up
+              </span>
+              <div className="w-12 border-t border-border my-1" />
+              <span className="text-[14px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                or tap here to type…
               </span>
             </div>
           ) : (
