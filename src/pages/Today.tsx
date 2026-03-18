@@ -50,7 +50,7 @@ const Today = () => {
       }
       // Bug 6: Correct sort orders
       overdue.sort((a: any, b: any) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date)); // ascending — oldest first
-      dueToday.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); // descending — newest first
+      dueToday.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()); // descending — most recently modified first
       return { overdue, dueToday, comingUp };
     },
   });

@@ -294,8 +294,10 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => {
               setShowDiscardDialog(false);
-              // Bug 7: Ensure drawer stays open
-              onOpenChange(true);
+              // Bug 7: Ensure drawer stays open + force layout reset after keyboard
+              requestAnimationFrame(() => {
+                onOpenChange(true);
+              });
             }}>
               Keep editing
             </AlertDialogCancel>

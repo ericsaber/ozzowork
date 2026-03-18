@@ -58,8 +58,18 @@ const LogStep1 = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRawTranscript, setIsRawTranscript] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Auto-grow textarea when note is set programmatically
+  useEffect(() => {
+    if (textareaRef.current && note) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [note]);
 
   // Contact search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,9 +171,10 @@ const LogStep1 = ({
         console.error("[transcribeAudio] error response:", errText);
         throw new Error("Transcription failed");
       }
-      const { summary } = await res.json();
+      const { summary, isRawTranscript: rawFlag } = await res.json();
       if (summary) {
         setNote(summary);
+        setIsRawTranscript(!!rawFlag);
         // Bug 9: Flag if no contact selected after transcription
         if (!contactId) {
           setShowContactFlag(true);
@@ -366,14 +377,15 @@ const LogStep1 = ({
           )}
         </div>
 
-        {/* Bug 9: Contact flag message */}
-        {showContactFlag && (
-          <div className="px-[14px] py-1.5 border-b border-border">
-            <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
-              Select a contact to continue
-            </span>
-          </div>
-        )}
+        {/* Bug 9: Contact flag message — always in DOM, visibility toggled */}
+        <div
+          className="px-[14px] py-1.5 border-b border-border"
+          style={{ visibility: showContactFlag ? "visible" : "hidden" }}
+        >
+          <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
+            Select a contact to continue
+          </span>
+        </div>
 
         {/* Note / mic area — Bug 10: stable min-height */}
         <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
@@ -474,15 +486,21 @@ const LogStep1 = ({
                 </button>
                 <div className="flex-1">
                   <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
-                    Note
+                    {isRawTranscript ? "Transcript" : "Note"}
                   </span>
                   <textarea
-                    autoFocus
+                    ref={textareaRef}
                     placeholder="What happened?"
                     value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground min-h-[56px] italic"
-                    style={{ fontFamily: "var(--font-heading)" }}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                      // Auto-grow
+                      const el = e.target;
+                      el.style.height = "auto";
+                      el.style.height = el.scrollHeight + "px";
+                    }}
+                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
+                    style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
                   />
                 </div>
               </div>

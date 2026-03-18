@@ -59,6 +59,10 @@ serve(async (req) => {
       });
     }
 
+    // Debug: estimated duration from file size (~4000 bytes/sec at 32kbps webm)
+    const estimatedDurationSec = audioFile.size / 4000;
+    console.log('[transcribe-audio] file size:', audioFile.size, 'bytes, estimated duration:', estimatedDurationSec.toFixed(1), 'seconds');
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY not configured');
@@ -84,19 +88,31 @@ serve(async (req) => {
     }
 
     const { text: transcript } = await whisperRes.json();
+    console.log('[transcribe-audio] raw Whisper transcript:', transcript);
 
     if (!transcript || transcript.trim().length === 0) {
-      return new Response(JSON.stringify({ transcript: '', summary: '' }), {
+      return new Response(JSON.stringify({ transcript: '', summary: '', isRawTranscript: false }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Duration gate: skip Gemini for recordings >30s
+    if (estimatedDurationSec > 30) {
+      console.log('[transcribe-audio] duration >30s, skipping Gemini, returning raw transcript');
+      return new Response(JSON.stringify({ transcript, summary: transcript, isRawTranscript: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ transcript, summary: transcript }), {
+      console.log('[transcribe-audio] no LOVABLE_API_KEY, returning raw transcript');
+      return new Response(JSON.stringify({ transcript, summary: transcript, isRawTranscript: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    let isRawTranscript = false;
 
     const summaryRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -109,24 +125,36 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You summarize sales call notes into 1-2 crisp sentences. Be factual and direct. No filler.',
+            content: `You are a note-taking assistant helping professionals keep track of conversations.
+Clean up the following voice note transcript into 1-3 clear, factual sentences.
+Preserve all specific details exactly as spoken: names, places, numbers, dates,
+dollar amounts, and any other specifics — do not paraphrase, generalize, or
+replace specific terms with generic ones.
+Do not add, invent, or infer any information not present in the transcript.
+If the transcript is unclear or very short, return it as-is with minimal cleanup.`,
           },
-          { role: 'user', content: transcript },
+          { role: 'user', content: `Transcript: ${transcript}` },
         ],
       }),
     });
 
+    let summary: string;
+
     if (!summaryRes.ok) {
       console.error('Summary error:', await summaryRes.text());
-      return new Response(JSON.stringify({ transcript, summary: transcript }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      summary = transcript;
+      isRawTranscript = true;
+    } else {
+      const summaryData = await summaryRes.json();
+      summary = summaryData.choices?.[0]?.message?.content || transcript;
+      if (!summaryData.choices?.[0]?.message?.content) {
+        isRawTranscript = true;
+      }
     }
 
-    const summaryData = await summaryRes.json();
-    const summary = summaryData.choices?.[0]?.message?.content || transcript;
+    console.log('[transcribe-audio] final summary:', summary, '| isRawTranscript:', isRawTranscript);
 
-    return new Response(JSON.stringify({ transcript, summary }), {
+    return new Response(JSON.stringify({ transcript, summary, isRawTranscript }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
