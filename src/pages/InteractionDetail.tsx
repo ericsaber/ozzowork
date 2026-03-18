@@ -278,6 +278,7 @@ const InteractionDetail = () => {
       {target && (
         <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
+      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={task.contact_id} />
     </div>
   );
 };

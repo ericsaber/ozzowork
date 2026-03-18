@@ -125,7 +125,7 @@ const EditTaskRecord = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-records"] });
-      toast.success("Record deleted"); navigate(-1);
+      toast.success("Record deleted"); navigate(`/contact/${task.contact_id}`, { replace: true });
     },
     onError: (e: any) => toast.error(e.message),
   });
