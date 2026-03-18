@@ -35,6 +35,7 @@ interface LogStep1Props {
   onAddNewContact?: (name: string) => void;
   onSkipToFollowup?: () => void;
   onChangeContact?: () => void;
+  submitLabel?: string;
 }
 
 const LogStep1 = ({
