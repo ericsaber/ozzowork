@@ -13,6 +13,7 @@ import {
 import RescheduleSheet from "@/components/RescheduleSheet";
 import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 
 const typeIcons: Record<string, typeof Phone> = {
@@ -28,6 +29,7 @@ const InteractionDetail = () => {
   const queryClient = useQueryClient();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
@@ -197,8 +199,11 @@ const InteractionDetail = () => {
               </div>
             </div>
           ) : (
-            <p className="italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#9e9e99" }}>
-              No interaction logged.
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#7a746c" }}>
+              No interaction logged.{" "}
+              <button onClick={() => setLogSheetOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+                Want to add one?
+              </button>
             </p>
           )}
         </div>
@@ -273,6 +278,7 @@ const InteractionDetail = () => {
       {target && (
         <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
+      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={task.contact_id} />
     </div>
   );
 };

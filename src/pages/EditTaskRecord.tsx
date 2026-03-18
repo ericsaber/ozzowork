@@ -125,7 +125,7 @@ const EditTaskRecord = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-records"] });
-      toast.success("Record deleted"); navigate(-1);
+      toast.success("Record deleted"); navigate(`/contact/${task.contact_id}`, { replace: true });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -247,6 +247,13 @@ const EditTaskRecord = () => {
                       <Calendar mode="single" selected={followUpDate ? new Date(followUpDate + "T00:00:00") : undefined} onSelect={(d) => { if (d) { setFollowUpDate(format(d, "yyyy-MM-dd")); setShowDatePicker(false); } }} disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))} initialFocus className={cn("p-3 pointer-events-auto")} />
                     </PopoverContent>
                   </Popover>
+                  {followUpDate && !dateChips.some(c => c.date() === followUpDate) && (
+                    <span className="inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" style={{ fontFamily: "var(--font-body)" }}>
+                      <CalendarIcon size={10} />
+                      {format(new Date(followUpDate + "T00:00:00"), "EEE, MMM d")}
+                      <button onClick={() => setFollowUpDate("")} className="ml-0.5 text-[#c8622a] hover:opacity-70">×</button>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
