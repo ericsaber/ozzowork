@@ -281,6 +281,7 @@ const LogStep2 = ({
                 onSelect={(date) => {
                   if (date) {
                     setSelectedDate(format(date, "yyyy-MM-dd"));
+                    if (!viaActivated) setViaActivated(true);
                     setShowDatePicker(false);
                   }
                 }}
