@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, Check, MoreHorizontal, Pencil, Clock } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Check, MoreHorizontal, Pencil, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { format, parseISO, differenceInDays, isToday, isTomorrow } from "date-fns";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
