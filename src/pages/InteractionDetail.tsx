@@ -97,7 +97,7 @@ const InteractionDetail = () => {
 
   const ConnectIcon = task.connect_type ? typeIcons[task.connect_type] : null;
   const FollowUpIcon = task.planned_follow_up_type ? typeIcons[task.planned_follow_up_type] : null;
-  const showBottomBar = (hasFollowUp) && !isCompleted;
+  const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
 
   const handleLogFollowUp = () => {
     if (task && contact) {
