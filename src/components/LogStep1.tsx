@@ -478,15 +478,21 @@ const LogStep1 = ({
                 </button>
                 <div className="flex-1">
                   <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
-                    Note
+                    {isRawTranscript ? "Transcript" : "Note"}
                   </span>
                   <textarea
-                    autoFocus
+                    ref={textareaRef}
                     placeholder="What happened?"
                     value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground min-h-[56px] italic"
-                    style={{ fontFamily: "var(--font-heading)" }}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                      // Auto-grow
+                      const el = e.target;
+                      el.style.height = "auto";
+                      el.style.height = el.scrollHeight + "px";
+                    }}
+                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
+                    style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
                   />
                 </div>
               </div>
