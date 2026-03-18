@@ -29,7 +29,8 @@ const FollowupCard = ({
   plannedType, connectType, connectDate, note, isCompleting, onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
-  const TypeIcon = typeIcon[plannedType?.toLowerCase()] || MessageSquare;
+  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || null) : null;
+  const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
   const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
   const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
 
