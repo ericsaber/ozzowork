@@ -79,15 +79,24 @@ const LogStep2 = ({
       {/* Skipped interaction nudge */}
       {skippedInteraction && !isEditing && (
         <div
-          className="rounded-[14px] overflow-hidden"
+          className="rounded-[10px]"
           style={{
             background: "#fdf5f0",
             border: "0.5px solid rgba(200,98,42,0.2)",
-            padding: "14px 16.5px",
+            padding: "10px 14px",
           }}
         >
-          <p className="text-[14px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
-            No interaction logged.
+          <p style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)" }}>
+            No interaction logged.{" "}
+            {onAddInteraction && (
+              <button
+                onClick={onAddInteraction}
+                className="underline font-medium"
+                style={{ color: "#c8622a" }}
+              >
+                Want to add one?
+              </button>
+            )}
           </p>
         </div>
       )}
