@@ -151,6 +151,19 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
+      // skipFollowupStep mode: update existing task record with interaction data
+      if (skipFollowupStep && existingTaskRecordId) {
+        const updatePayload = {
+          connect_type: connectType || null,
+          note: note || null,
+          connect_date: new Date().toISOString(),
+        };
+        console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
+        const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
+        if (error) throw error;
+        return { id: existingTaskRecordId };
+      }
+
       if (savedTaskRecordId) {
         const { error } = await supabase.from("task_records" as any).update({
           connect_type: connectType || null, note: note || null,
@@ -168,6 +181,13 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       return data;
     },
     onSuccess: (data: any) => {
+      if (skipFollowupStep) {
+        invalidateAll();
+        toast.success("Interaction logged");
+        savedDraft = null;
+        clearAndClose();
+        return;
+      }
       setSavedTaskRecordId(data.id);
       invalidateAll();
       setSkippedInteraction(!connectType);
