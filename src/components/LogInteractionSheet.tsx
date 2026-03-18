@@ -151,7 +151,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
-      // skipFollowupStep mode: update existing task record with interaction data
+      // skipFollowupStep mode: ONLY update existing task record — no insert
       if (skipFollowupStep && existingTaskRecordId) {
         const updatePayload = {
           connect_type: connectType || null,
@@ -161,7 +161,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
         const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
         if (error) throw error;
-        return { id: existingTaskRecordId };
+        return { id: existingTaskRecordId, skipMode: true };
       }
 
       if (savedTaskRecordId) {
@@ -169,7 +169,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
           connect_type: connectType || null, note: note || null,
         }).eq("id", savedTaskRecordId);
         if (error) throw error;
-        return { id: savedTaskRecordId };
+        return { id: savedTaskRecordId, skipMode: false };
       }
 
       const { data, error } = await supabase.from("task_records" as any).insert({
@@ -178,11 +178,12 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         note: note || null, status: "active",
       }).select("id").single();
       if (error) throw error;
-      return data;
+      return { id: (data as any).id, skipMode: false };
     },
     onSuccess: (data: any) => {
-      if (skipFollowupStep) {
+      if (data.skipMode) {
         invalidateAll();
+        queryClient.invalidateQueries({ queryKey: ["task-record"] });
         toast.success("Interaction logged");
         savedDraft = null;
         clearAndClose();
@@ -253,7 +254,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpen}>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="max-h-[90vh]" onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
             {!skipFollowupStep && <StepIndicator currentStep={step} />}
 
