@@ -154,7 +154,7 @@ If the transcript is unclear or very short, return it as-is with minimal cleanup
 
     console.log('[transcribe-audio] final summary:', summary, '| isRawTranscript:', isRawTranscript);
 
-    return new Response(JSON.stringify({ transcript, summary, isRawTranscript }), {
+    return new Response(JSON.stringify({ transcript, summary, isRawTranscript, estimatedDuration: estimatedDurationSec }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {

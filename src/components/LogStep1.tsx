@@ -171,7 +171,12 @@ const LogStep1 = ({
         console.error("[transcribeAudio] error response:", errText);
         throw new Error("Transcription failed");
       }
-      const { summary, isRawTranscript: rawFlag } = await res.json();
+      const resData = await res.json();
+      console.log('[Transcribe] Estimated duration:', resData.estimatedDuration, 's');
+      console.log('[Transcribe] Raw Whisper:', resData.transcript);
+      console.log('[Transcribe] Gemini skipped:', resData.isRawTranscript);
+      console.log('[Transcribe] Final note:', resData.summary || resData.transcript);
+      const { summary, isRawTranscript: rawFlag } = resData;
       if (summary) {
         setNote(summary);
         setIsRawTranscript(!!rawFlag);
