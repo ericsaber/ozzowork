@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Check, Phone, Mail, MessageSquare, Users, Video } from "lucide-react";
+import { Check, Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
@@ -29,10 +29,12 @@ const FollowupCard = ({
   plannedType, connectType, connectDate, note, isCompleting, onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
-  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || null) : null;
+  // Use CalendarIcon as fallback when no planned type
+  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || CalendarIcon) : CalendarIcon;
   const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
-  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
-  const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
+  // Fix 3: fallback icon and verb when no connect type
+  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || MessageSquare) : MessageSquare;
+  const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : "Interacted";
 
   const badgeLabel = variant === "today" ? "Today" : `Due ${format(parseISO(dueDate), "MMM d")}`;
 
@@ -63,11 +65,11 @@ const FollowupCard = ({
           </span>
           {variant === "overdue" ? (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#fce8e8', color: '#a32d2d' }}>
-              {TypeIcon && <TypeIcon size={16} />}{TypeIcon ? badgeLabel : `Planned · ${badgeLabel.replace("Due ", "")}`}
+              <TypeIcon size={16} />{badgeLabel}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#e9f2eb', color: '#3d7a4a' }}>
-              {TypeIcon && <TypeIcon size={16} />}{TypeIcon ? badgeLabel : `Planned · ${badgeLabel.replace("Due ", "")}`}
+              <TypeIcon size={16} />{badgeLabel}
             </span>
           )}
         </div>

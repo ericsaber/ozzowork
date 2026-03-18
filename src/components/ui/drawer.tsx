@@ -22,13 +22,21 @@ const DrawerOverlay = React.forwardRef<
 ));
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
-// Bug 5: Hook to track visual viewport height (keyboard-safe)
+// Fix 5: Stable viewport height — capture on mount, ignore keyboard shrink
 function useVisualViewportHeight() {
   const [height, setHeight] = React.useState<number | undefined>(undefined);
   React.useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const update = () => setHeight(vv.height);
+    // Capture initial height
+    const initialHeight = vv.height;
+    setHeight(initialHeight);
+    const update = () => {
+      // Only update when viewport grows back (keyboard dismissed)
+      if (vv.height >= initialHeight) {
+        setHeight(vv.height);
+      }
+    };
     vv.addEventListener("resize", update);
     return () => vv.removeEventListener("resize", update);
   }, []);

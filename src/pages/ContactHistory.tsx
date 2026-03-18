@@ -78,9 +78,9 @@ const ContactHistory = () => {
   const overdueFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date < todayStr);
   const hasActiveFollowups = activeFollowups.length > 0;
 
-  // History: records with connect_type
+  // History: records with connect_type OR note (Fix 3: include note-only records)
   const historyRecords = (taskRecords || [])
-    .filter((r: any) => r.connect_type)
+    .filter((r: any) => r.connect_type || r.note)
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
   const interactionCount = historyRecords.length;
@@ -269,8 +269,9 @@ const ContactHistory = () => {
           <div className="space-y-0">
             {historyRecords.map((record: any) => {
               const type = record.connect_type;
-              const TypeIcon = typeIcons[type] || MessageSquare;
-              const verb = typeVerbs[type] || type;
+              // Fix 3: fallback icon and verb when no connect type
+              const TypeIcon = type ? (typeIcons[type] || MessageSquare) : MessageSquare;
+              const verb = type ? (typeVerbs[type] || type) : "Interacted";
               const thread = getThreadLine(record);
 
               return (

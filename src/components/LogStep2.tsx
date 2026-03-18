@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -47,13 +47,20 @@ const LogStep2 = ({
   skippedInteraction = false,
   onAddInteraction,
 }: LogStep2Props) => {
+  // Fix 3: Log connectType on mount for verification
+  useEffect(() => {
+    console.log("[LogStep2] connectType received on mount:", connectType);
+  }, []);
+
+  // Fix 3: When connectType is empty, via row starts fully dimmed with no pre-selection
   const [followUpType, setFollowUpType] = useState(connectType || "");
   const [selectedDate, setSelectedDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
-  const [viaActivated, setViaActivated] = useState(false);
+  // Fix 3: viaActivated starts false when no connectType (row fully dimmed)
+  const [viaActivated, setViaActivated] = useState(!!connectType);
 
   const handlePillClick = (value: string) => {
     if (!viaActivated) setViaActivated(true);

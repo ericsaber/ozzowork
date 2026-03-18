@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
-  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw,
+  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw, Calendar as CalendarIcon,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isPast, isToday as isDateToday } from "date-fns";
 import {
@@ -225,7 +225,7 @@ const InteractionDetail = () => {
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#f5ede7" }}>
                 {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} /> : (
-                  <span style={{ fontSize: "10px", fontWeight: 600, color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a", fontFamily: "var(--font-body)" }}>📋</span>
+                  <CalendarIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} />
                 )}
               </div>
               <div className="flex-1 min-w-0">
