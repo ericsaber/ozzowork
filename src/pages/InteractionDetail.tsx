@@ -13,6 +13,7 @@ import {
 import RescheduleSheet from "@/components/RescheduleSheet";
 import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 
 const typeIcons: Record<string, typeof Phone> = {
