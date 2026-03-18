@@ -284,6 +284,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 skippedInteraction={skippedInteraction}
+                onAddInteraction={handleAddInteraction}
               />
             )}
           </div>
