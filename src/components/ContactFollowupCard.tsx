@@ -100,8 +100,8 @@ const ContactFollowupCard = ({
               className="inline-flex items-center gap-1 rounded-full px-[9px] py-[2px] shrink-0"
               style={{ background: pillBg, color: pillColor, fontSize: "11px", fontWeight: 500, fontFamily: "var(--font-body)" }}
             >
-              <TypeIcon size={11} />
-              {typeLabels[plannedType] || plannedType} planned
+              {TypeIcon && <TypeIcon size={11} />}
+              {plannedType ? (typeLabels[plannedType] || plannedType) : "Planned"} planned
             </span>
           </div>
           {relativeTime && (
