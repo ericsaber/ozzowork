@@ -48,7 +48,7 @@ const RescheduleSheet = ({
   const [selectedDate, setSelectedDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const typeLabel = currentType.charAt(0).toUpperCase() + currentType.slice(1);
+  const typeLabel = currentType ? currentType.charAt(0).toUpperCase() + currentType.slice(1) : "Planned";
   const dueDateFormatted = dueDate ? format(parseISO(dueDate), "MMM d") : "";
 
   const mutation = useMutation({
