@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Phone, Mail, MessageSquare, Users, Video, CalendarIcon } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,14 +45,16 @@ const LogStep2 = ({
   onUpdateLog,
   skippedInteraction = false,
 }: LogStep2Props) => {
-  const [followUpType, setFollowUpType] = useState("");
+  const [followUpType, setFollowUpType] = useState(connectType || "");
   const [selectedDate, setSelectedDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
+  const [viaActivated, setViaActivated] = useState(false);
 
   const handlePillClick = (value: string) => {
+    if (!viaActivated) setViaActivated(true);
     setFollowUpType(followUpType === value ? "" : value);
   };
 
@@ -66,12 +68,11 @@ const LogStep2 = ({
     onUpdateLog?.(editConnectType, editNote);
   };
 
-  const bothSelected = followUpType && selectedDate;
   const typeLabel = connectType ? connectType.charAt(0).toUpperCase() + connectType.slice(1) : "";
 
   return (
     <div className="space-y-5">
-      {/* Bug 7: Skipped interaction nudge */}
+      {/* Skipped interaction nudge */}
       {skippedInteraction && !isEditing && (
         <div
           className="rounded-[14px] overflow-hidden"
@@ -96,7 +97,7 @@ const LogStep2 = ({
         </div>
       )}
 
-      {/* Green confirmation card — always shown */}
+      {/* Green confirmation card */}
       <div
         className="rounded-[14px] overflow-hidden"
         style={{
@@ -167,7 +168,6 @@ const LogStep2 = ({
             )}
           </>
         ) : (
-          /* Inline edit mode */
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {typeOptions.map((t) => {
@@ -211,41 +211,21 @@ const LogStep2 = ({
         )}
       </div>
 
-      {/* Follow-up type chips */}
-      <div>
-        <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-          How will you follow up?
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {typeOptions.map((t) => {
-            const selected = followUpType === t.value;
-            return (
-              <button
-                key={t.value}
-                onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
-                  selected ? "text-primary-foreground" : "text-muted-foreground"
-                }`}
-                style={{
-                  borderRadius: "100px",
-                  fontFamily: "var(--font-body)",
-                  ...(selected
-                    ? { background: "hsl(var(--primary))" }
-                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
-                }}
-              >
-                <t.icon size={15} />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Date chips */}
-      <div>
-        <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
-          When?
+      {/* Unified follow-up card */}
+      <div
+        className="rounded-[14px]"
+        style={{
+          background: "#fff",
+          border: "0.5px solid rgba(28,24,18,0.11)",
+          padding: "13px 14px",
+        }}
+      >
+        {/* Date section */}
+        <p
+          className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
+          style={{ fontSize: "11px", color: "#1c1812", fontFamily: "var(--font-body)" }}
+        >
+          Next connect
         </p>
         <div className="flex flex-wrap gap-2">
           {dateChips.map((chip) => {
@@ -255,15 +235,16 @@ const LogStep2 = ({
               <button
                 key={chip.label}
                 onClick={() => handleChipClick(chipDate)}
-                className={`py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
-                  selected ? "text-primary-foreground" : "text-muted-foreground"
-                }`}
+                className="transition-colors"
                 style={{
                   borderRadius: "100px",
+                  padding: "8px 13px",
+                  fontSize: "12px",
                   fontFamily: "var(--font-body)",
+                  fontWeight: 500,
                   ...(selected
-                    ? { background: "hsl(var(--primary))" }
-                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                    ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                    : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
                 }}
               >
                 {chip.label}
@@ -273,18 +254,19 @@ const LogStep2 = ({
           <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
             <PopoverTrigger asChild>
               <button
-                className={`inline-flex items-center gap-1 py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
-                  showDatePicker ? "text-primary-foreground" : "text-muted-foreground"
-                }`}
+                className="inline-flex items-center gap-1 transition-colors"
                 style={{
                   borderRadius: "100px",
+                  padding: "8px 13px",
+                  fontSize: "12px",
                   fontFamily: "var(--font-body)",
+                  fontWeight: 500,
                   ...(showDatePicker
-                    ? { background: "hsl(var(--primary))" }
-                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                    ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                    : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
                 }}
               >
-                <CalendarIcon size={14} />
+                <CalendarIcon size={13} />
                 Pick date
               </button>
             </PopoverTrigger>
@@ -308,36 +290,82 @@ const LogStep2 = ({
             const parsed = parseISO(selectedDate);
             const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "EEE, MMM d") : format(parsed, "EEE, MMM d, yyyy");
             return (
-              <div
-                className="inline-flex items-center gap-2 py-[8px] px-[15px] text-[15px] font-medium text-foreground"
-                style={{ borderRadius: "100px", border: "0.5px solid hsl(var(--border))", fontFamily: "var(--font-body)" }}
+              <button
+                onClick={() => setSelectedDate("")}
+                className="inline-flex items-center gap-1.5 transition-colors"
+                style={{
+                  borderRadius: "100px",
+                  padding: "8px 13px",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 500,
+                  background: "#c8622a",
+                  color: "#fff",
+                  border: "0.5px solid transparent",
+                }}
               >
-                <CalendarIcon size={16} className="text-muted-foreground shrink-0" />
+                <CalendarIcon size={13} />
                 {label}
-                <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedDate(""); }}
-                  className="ml-auto text-muted-foreground hover:text-foreground transition-colors text-[16px] leading-none"
-                  aria-label="Clear date"
-                >
-                  ×
-                </button>
-              </div>
+                <span className="ml-1 text-[14px] leading-none opacity-70">×</span>
+              </button>
             );
           })()}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: "0.5px", background: "rgba(28,24,18,0.11)", margin: "11px 0" }} />
+
+        {/* Via row */}
+        <div
+          className="flex items-center gap-2.5"
+          style={{
+            opacity: viaActivated ? 1 : 0.38,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          <span
+            className="shrink-0"
+            style={{ fontSize: "11px", color: "#b0a89e", fontFamily: "var(--font-body)" }}
+          >
+            via
+          </span>
+          <div className="flex items-center gap-2">
+            {typeOptions.map((t) => {
+              const selected = followUpType === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => handlePillClick(t.value)}
+                  className="flex items-center justify-center transition-colors"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    ...(selected
+                      ? { background: "#c8622a", borderColor: "transparent", border: "0.5px solid transparent" }
+                      : { background: "#f0ede8", border: "0.5px solid rgba(28,24,18,0.11)" }),
+                  }}
+                  title={t.label}
+                >
+                  <t.icon size={14} style={{ color: selected ? "#fff" : "#1c1812" }} />
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* CTA */}
       <button
-        onClick={() => onSaveWithFollowup(followUpType, selectedDate)}
-        disabled={!bothSelected || isSaving}
+        onClick={() => onSaveWithFollowup(followUpType || connectType, selectedDate)}
+        disabled={!selectedDate || isSaving}
         className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
       >
         {isSaving ? "Saving..." : "Save →"}
       </button>
 
-      {/* Skip — Bug 9: hide if user already skipped interaction */}
+      {/* Skip */}
       {!skippedInteraction && (
         <button
           onClick={onSkip}
