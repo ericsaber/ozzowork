@@ -85,16 +85,7 @@ const LogStep2 = ({
           }}
         >
           <p className="text-[14px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
-            No interaction logged.{" "}
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="underline font-medium"
-                style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}
-              >
-                Want to add one?
-              </button>
-            )}
+            No interaction logged.
           </p>
         </div>
       )}

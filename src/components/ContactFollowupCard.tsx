@@ -101,7 +101,7 @@ const ContactFollowupCard = ({
               style={{ background: pillBg, color: pillColor, fontSize: "11px", fontWeight: 500, fontFamily: "var(--font-body)" }}
             >
               {TypeIcon && <TypeIcon size={11} />}
-              {plannedType ? (typeLabels[plannedType] || plannedType) : "Planned"} planned
+              {plannedType ? `${typeLabels[plannedType] || plannedType} planned` : "Planned"}
             </span>
           </div>
           {relativeTime && (
