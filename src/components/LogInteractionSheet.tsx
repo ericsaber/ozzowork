@@ -31,7 +31,7 @@ interface LogInteractionSheetProps {
 // Bug 10: Module-level draft persistence
 let savedDraft: { contactId: string; connectType: string; note: string } | null = null;
 
-const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogInteractionSheetProps) => {
+const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<1 | 2>(1);
