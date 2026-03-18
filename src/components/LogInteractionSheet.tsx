@@ -24,6 +24,8 @@ interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
+  skipFollowupStep?: boolean;
+  existingTaskRecordId?: string;
 }
 
 // Bug 10: Module-level draft persistence
