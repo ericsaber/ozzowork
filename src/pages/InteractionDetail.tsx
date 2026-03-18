@@ -115,13 +115,14 @@ const InteractionDetail = () => {
 
   const getDaysLabel = () => {
     if (!dueDate) return "";
-    if (overdue) {
-      const days = Math.ceil((new Date().getTime() - dueDate.getTime()) / 86400000);
-      return `${days} day${days !== 1 ? "s" : ""} overdue`;
-    }
-    if (dueDateIsToday) return "Due today";
-    const days = Math.ceil((dueDate.getTime() - new Date().getTime()) / 86400000);
-    return `In ${days} day${days !== 1 ? "s" : ""}`;
+    const todayMidnight = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    const dueMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+    const diffMs = todayMidnight.getTime() - dueMidnight.getTime();
+    const diffDays = Math.round(diffMs / 86400000);
+    if (diffDays > 0) return `${diffDays} day${diffDays !== 1 ? "s" : ""} overdue`;
+    if (diffDays === 0) return "Due today";
+    const ahead = Math.abs(diffDays);
+    return `In ${ahead} day${ahead !== 1 ? "s" : ""}`;
   };
 
   return (
