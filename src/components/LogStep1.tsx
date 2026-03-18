@@ -1,7 +1,11 @@
 import { useRef, useState, useMemo, useEffect } from "react";
-import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search } from "lucide-react";
+import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format, addDays } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
@@ -36,6 +40,10 @@ interface LogStep1Props {
   onSkipToFollowup?: () => void;
   onChangeContact?: () => void;
   submitLabel?: string;
+  // Fix 1: date row for skipFollowupStep mode
+  showDateRow?: boolean;
+  connectDate?: string;
+  setConnectDate?: (v: string) => void;
 }
 
 const LogStep1 = ({
@@ -56,6 +64,9 @@ const LogStep1 = ({
   onSkipToFollowup,
   onChangeContact,
   submitLabel,
+  showDateRow,
+  connectDate,
+  setConnectDate,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -64,6 +75,11 @@ const LogStep1 = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Fix 1: date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const yesterdayStr = format(addDays(new Date(), -1), "yyyy-MM-dd");
 
   // Auto-grow textarea when note is set programmatically
   useEffect(() => {
@@ -220,7 +236,8 @@ const LogStep1 = ({
 
   const initials = contactInitials || (contactName ? contactName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "");
   const showContactSearch = !isContactPrefilled && onContactSelect;
-  const canSubmit = !disabled && contactSelected && !!connectType && !isSubmitting;
+  // Fix 3: connect type optional — activate when connectType OR note exists
+  const canSubmit = !disabled && contactSelected && (!!connectType || !!note) && !isSubmitting;
 
   // Bug 1: Only render avatar when data is ready
   const hasContactData = !!initials && !!contactName;
@@ -553,6 +570,96 @@ const LogStep1 = ({
           })}
         </div>
       </div>
+
+      {/* Fix 1: Date row for past interactions — only in skipFollowupStep mode */}
+      {showDateRow && connectDate && setConnectDate && (
+        <div
+          style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
+        >
+          <p
+            className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            When?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {/* Today chip */}
+            <button
+              onClick={() => { setConnectDate(todayStr); setShowDatePicker(false); }}
+              className="transition-colors"
+              style={{
+                borderRadius: "100px",
+                padding: "8px 13px",
+                fontSize: "12px",
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                ...(connectDate === todayStr
+                  ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                  : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
+              }}
+            >
+              Today
+            </button>
+            {/* Yesterday chip */}
+            <button
+              onClick={() => { setConnectDate(yesterdayStr); setShowDatePicker(false); }}
+              className="transition-colors"
+              style={{
+                borderRadius: "100px",
+                padding: "8px 13px",
+                fontSize: "12px",
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                ...(connectDate === yesterdayStr
+                  ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                  : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
+              }}
+            >
+              Yesterday
+            </button>
+            {/* Pick date */}
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <PopoverTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-1 transition-colors"
+                  style={{
+                    borderRadius: "100px",
+                    padding: "8px 13px",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 500,
+                    ...(connectDate !== todayStr && connectDate !== yesterdayStr
+                      ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                      : showDatePicker
+                      ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
+                      : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
+                  }}
+                >
+                  <CalendarIcon size={13} />
+                  {connectDate !== todayStr && connectDate !== yesterdayStr
+                    ? format(new Date(connectDate + "T00:00:00"), "MMM d")
+                    : "Pick date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={connectDate ? new Date(connectDate + "T00:00:00") : undefined}
+                  onSelect={(d) => {
+                    if (d) {
+                      setConnectDate(format(d, "yyyy-MM-dd"));
+                      setShowDatePicker(false);
+                    }
+                  }}
+                  disabled={(d) => d > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      )}
 
       {/* CTA */}
       <button

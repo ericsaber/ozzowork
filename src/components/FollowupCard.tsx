@@ -29,7 +29,8 @@ const FollowupCard = ({
   plannedType, connectType, connectDate, note, isCompleting, onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
-  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || null) : null;
+  // Use CalendarIcon as fallback when no planned type
+  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || CalendarIcon) : CalendarIcon;
   const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
   // Fix 3: fallback icon and verb when no connect type
   const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || MessageSquare) : MessageSquare;

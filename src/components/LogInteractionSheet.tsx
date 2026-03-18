@@ -44,6 +44,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   // Bug 3: Track if prefilled contact was cleared by user
   const [contactCleared, setContactCleared] = useState(false);
 
+  // Fix 1: connect date for skipFollowupStep mode (defaults to today)
+  const [connectDate, setConnectDate] = useState(format(new Date(), "yyyy-MM-dd"));
+
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
 
@@ -84,6 +87,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       setSavedTaskRecordId(null);
       setSkippedInteraction(false);
       setContactCleared(false);
+      setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
       setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
     }, 300);
@@ -156,7 +160,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         const updatePayload = {
           connect_type: connectType || null,
           note: note || null,
-          connect_date: new Date().toISOString(),
+          connect_date: new Date(connectDate + "T12:00:00").toISOString(),
         };
         console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
         const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
@@ -294,6 +298,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
                   onSkipToFollowup={skipFollowupStep ? undefined : () => logMutation.mutate()}
                   onChangeContact={handleChangeContact}
                   submitLabel={skipFollowupStep ? "Save →" : undefined}
+                  showDateRow={skipFollowupStep}
+                  connectDate={connectDate}
+                  setConnectDate={setConnectDate}
                 />
               </div>
             ) : (
