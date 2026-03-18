@@ -144,7 +144,7 @@ const EditTaskRecord = () => {
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate(-1)} className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>Cancel</button>
         <span className="text-[15px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>Edit interaction</span>
-        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)" }}>
+        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending || (followUpOn && !followUpDate)} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)", opacity: (saveMutation.isPending || (followUpOn && !followUpDate)) ? 0.38 : 1 }}>
           {saveMutation.isPending ? "..." : bothOff ? "Delete" : "Save"}
         </button>
       </div>
@@ -255,6 +255,11 @@ const EditTaskRecord = () => {
                     </span>
                   )}
                 </div>
+                {followUpOn && !followUpDate && (
+                  <p className="text-[12px] mt-1" style={{ color: "#a32d2d", fontFamily: "var(--font-body)" }}>
+                    A date is required to schedule a follow-up.
+                  </p>
+                )}
               </div>
             </div>
           )}

@@ -35,6 +35,7 @@ interface LogStep1Props {
   onAddNewContact?: (name: string) => void;
   onSkipToFollowup?: () => void;
   onChangeContact?: () => void;
+  submitLabel?: string;
 }
 
 const LogStep1 = ({
@@ -54,6 +55,7 @@ const LogStep1 = ({
   onAddNewContact,
   onSkipToFollowup,
   onChangeContact,
+  submitLabel,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -567,7 +569,7 @@ const LogStep1 = ({
           ? "Done recording →"
           : isSubmitting
           ? "Saving..."
-          : "Next →"}
+          : (submitLabel || "Next →")}
       </button>
 
       {/* Skip link */}

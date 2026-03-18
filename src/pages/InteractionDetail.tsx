@@ -278,7 +278,16 @@ const InteractionDetail = () => {
       {target && (
         <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
-      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={task.contact_id} />
+      <LogInteractionSheet
+        open={logSheetOpen}
+        onOpenChange={(o) => {
+          setLogSheetOpen(o);
+          if (!o) queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+        }}
+        preselectedContactId={task.contact_id}
+        skipFollowupStep={true}
+        existingTaskRecordId={task.id}
+      />
     </div>
   );
 };

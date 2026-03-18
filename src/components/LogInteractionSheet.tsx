@@ -24,12 +24,14 @@ interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
+  skipFollowupStep?: boolean;
+  existingTaskRecordId?: string;
 }
 
 // Bug 10: Module-level draft persistence
 let savedDraft: { contactId: string; connectType: string; note: string } | null = null;
 
-const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogInteractionSheetProps) => {
+const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<1 | 2>(1);
@@ -149,6 +151,19 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
+      // skipFollowupStep mode: update existing task record with interaction data
+      if (skipFollowupStep && existingTaskRecordId) {
+        const updatePayload = {
+          connect_type: connectType || null,
+          note: note || null,
+          connect_date: new Date().toISOString(),
+        };
+        console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
+        const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
+        if (error) throw error;
+        return { id: existingTaskRecordId };
+      }
+
       if (savedTaskRecordId) {
         const { error } = await supabase.from("task_records" as any).update({
           connect_type: connectType || null, note: note || null,
@@ -166,6 +181,13 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       return data;
     },
     onSuccess: (data: any) => {
+      if (skipFollowupStep) {
+        invalidateAll();
+        toast.success("Interaction logged");
+        savedDraft = null;
+        clearAndClose();
+        return;
+      }
       setSavedTaskRecordId(data.id);
       invalidateAll();
       setSkippedInteraction(!connectType);
@@ -233,7 +255,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
       <Drawer open={open} onOpenChange={handleOpen}>
         <DrawerContent className="max-h-[90vh]">
           <div className="overflow-y-auto px-5 pb-6">
-            <StepIndicator currentStep={step} />
+            {!skipFollowupStep && <StepIndicator currentStep={step} />}
 
             {step === 1 ? (
               <div className="space-y-5">
@@ -268,8 +290,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={() => logMutation.mutate()}
+                  onSkipToFollowup={skipFollowupStep ? undefined : () => logMutation.mutate()}
                   onChangeContact={handleChangeContact}
+                  submitLabel={skipFollowupStep ? "Save →" : undefined}
                 />
               </div>
             ) : (
