@@ -63,6 +63,14 @@ const LogStep1 = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  // Auto-grow textarea when note is set programmatically
+  useEffect(() => {
+    if (textareaRef.current && note) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [note]);
+
   // Contact search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
