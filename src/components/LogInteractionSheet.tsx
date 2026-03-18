@@ -220,6 +220,14 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
     setContactId("");
   };
 
+  // Fix 1: "Want to add one?" — reset to step 1 with contact preserved
+  const handleAddInteraction = () => {
+    setStep(1);
+    setSkippedInteraction(false);
+    setSavedTaskRecordId(null);
+    // contactId remains set — contact stays pre-filled
+  };
+
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpen}>
