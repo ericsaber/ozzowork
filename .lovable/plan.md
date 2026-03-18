@@ -1,83 +1,57 @@
-## Log Flow Redesign — Full Plan
 
-### Task 1: New Toast Component (replaces CelebrationHeader) — pending
 
-**File: `src/components/CelebrationHeader.tsx`** — Full rewrite
+## Step 2 & Task Record Fixes (Round 2) — 6 Fixes
 
-- Background `#fdf5f0`, border-radius 6px, padding `7px 12px 8px 14px`, margin-bottom 18px
-- Left accent: absolutely-positioned 3px-wide `#c8622a` div (NOT border-left)
-- **Variant A ("Nice work.")** — first interaction only:
-  - Border animates height 0→100% (280ms), text fades up with delays
-  - "Nice work." in Crimson Pro 20px `#c8622a`, subline "[Name] · First interaction" 11px `#7a746c`
-- **Variant B ("Done.")** — repeat interactions:
-  - Static border, only "✓" pops in (spring 220ms)
-  - "Done." + "✓" baseline row, subline "[Name] · Nth interaction"
-- Interaction count query unchanged
+### Fix 1: "Planned planned" duplicate text
+**ContactFollowupCard.tsx** line 104: `{plannedType ? (typeLabels[plannedType] || plannedType) : "Planned"} planned` produces "Planned planned" when null. Change to:
+```
+{plannedType ? `${typeLabels[plannedType] || plannedType} planned` : "Planned"}
+```
 
-### Task 2: Redesigned Stepper ✅
+### Fix 2: Pluralization — "In 1 days"
+**InteractionDetail.tsx** `getDaysLabel()` (lines 119-124):
+- Line 120: `${days} days overdue` → `${days} day${days !== 1 ? "s" : ""} overdue`
+- Line 124: `In ${days} days` → `In ${days} day${days !== 1 ? "s" : ""}`
 
-**File: `src/components/StepIndicator.tsx`** — Done
+### Fix 3: Edit screen toggle state for tails-only
+**EditTaskRecord.tsx** line 67: `setFollowUpOn(!!task.planned_follow_up_type)` misses records with only a date. Change to:
+```js
+setFollowUpOn(!!task.planned_follow_up_type || !!task.planned_follow_up_date);
+```
 
-- 22px circles, always number, never checkmark
-- Active: transparent + 1.5px `#c8622a` border, sienna number
-- Completed: solid `#c8622a`, white number
-- Inactive: muted gray fill, gray number
-- Identical structure on both steps — no expansion, no `expandStep2` prop
-- Labels: 9px uppercase below circles
+### Fix 4: Tails-only task record — show both halves
+**InteractionDetail.tsx** lines 174-215: Remove the `{!isTailsOnly && (...)}` conditional. Always render the "What happened" section. The existing dashed "Log an interaction" button (line 201) already handles the empty state when `!hasInteraction`. For tails-only, it shows the section header + the dashed button — intentionally minimal, not broken.
 
-### Task 3: Unified Note Card (LogStep1 redesign) — pending
+Line 220: Revert header to always say "What's next" (remove the `isTailsOnly ? "Follow-up scheduled" :` ternary).
 
-**File: `src/components/LogStep1.tsx`** — Major rewrite
+### Fix 5: Remove "Want to add one?" link from nudge
+**LogStep2.tsx** lines 87-98: Replace with passive-only text:
+```tsx
+<p className="text-[14px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+  No interaction logged.
+</p>
+```
+Remove the `onBack` conditional and button element.
 
-- Single card: white bg, 0.5px border, 14px radius
-- **Contact header row** (46px): prefilled (avatar + name) or empty (dashed avatar + search). "Change" link only in FAB flow after selection
-- **Note/mic area**: default centered mic CTA (38px circle), typing mode (mic to corner, textarea), recording mode (CTA → "Done recording →", always active)
-- **Connect type chips** below card: dimmed until contact selected, 100px radius pills
-- **CTA**: "Next →", disabled until contact + type selected; "Done recording →" during recording
-- **Skip link**: "Set a follow-up without logging"
+### Fix 6: Heads-only task record — "No follow-up" nudge
+**InteractionDetail.tsx** lines 245-249: Replace the current dashed "Add a follow-up" button in the `!hasFollowUp` branch of the "What's next" section with a passive nudge + optional link:
 
-### Task 4: LogStep2 Redesign — pending
+```tsx
+<div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
+  <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+    No follow-up scheduled.{" "}
+    <button onClick={() => setScheduleOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+      Add one?
+    </button>
+  </p>
+</div>
+```
 
-**File: `src/components/LogStep2.tsx`** — Moderate rewrite
+Uses existing `setScheduleOpen(true)` which already opens `ScheduleFollowupSheet` (line 268-269). Styling matches the tails-only nudge in LogStep2.
 
-- Remove standalone "What's next?" heading — stepper label is sufficient
-- Remove "← Edit log" back link entirely
-- **Green confirmation card**: `#eaf4ed` bg, green check + type/name/date, note italic serif, "Tap to edit"
-- **Inline edit**: card bg → white, chips + textarea inside, "Done editing" link to collapse
-- **Follow-up chips**: 100px radius pills, "How will you follow up?" + "When?" labels
-- **CTA**: "Save →" (dims until type + date selected), "Skip follow-up" link
+### Files changed (4)
+1. `src/components/ContactFollowupCard.tsx` — fix pill text duplication
+2. `src/pages/InteractionDetail.tsx` — pluralization, show both halves, heads-only nudge
+3. `src/pages/EditTaskRecord.tsx` — fix followUpOn initial state
+4. `src/components/LogStep2.tsx` — passive nudge text only
 
-### Task 5: LogInteraction Page Updates — pending
-
-**File: `src/pages/LogInteraction.tsx`**
-
-- Remove h1 heading and back arrow
-- Merge ContactCombobox into LogStep1 (pass contacts, handlers)
-- Remove separate combobox + quick-add button
-- Pass `isContactPrefilled` based on `preselectedContact`
-
-### Task 6: CompleteFollowupSheet Updates — pending
-
-**File: `src/components/CompleteFollowupSheet.tsx`**
-
-- Toast above stepper only when completing a follow-up (Today check tap, contact record checkmark)
-- No toast for fresh interactions via FAB or contact Log button
-- Contact always prefilled
-
-### Task 7: Entry Point Wiring — pending
-
-| Entry | Contact | Toast | Chips dim? | CTA dims until |
-|-------|---------|-------|------------|----------------|
-| FAB (+) | Empty, searchable | No | Yes | Contact + type |
-| Contact Log btn | Prefilled | No | No | Type only |
-| Today/Contact check | Prefilled | Yes | No | Type only |
-
-### Files Changed Summary
-
-1. `src/components/CelebrationHeader.tsx` — Full rewrite → toast
-2. `src/components/StepIndicator.tsx` — Done ✅
-3. `src/components/LogStep1.tsx` — Major rewrite, unified card + inline search
-4. `src/components/LogStep2.tsx` — Rewrite, inline edit, no heading
-5. `src/pages/LogInteraction.tsx` — Remove title/back, merge combobox
-6. `src/components/CompleteFollowupSheet.tsx` — Wire toast, new props
-7. `src/components/ContactCombobox.tsx` — Absorbed into LogStep1 or adapted
