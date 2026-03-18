@@ -255,7 +255,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       <Drawer open={open} onOpenChange={handleOpen}>
         <DrawerContent className="max-h-[90vh]">
           <div className="overflow-y-auto px-5 pb-6">
-            <StepIndicator currentStep={step} />
+            {!skipFollowupStep && <StepIndicator currentStep={step} />}
 
             {step === 1 ? (
               <div className="space-y-5">
