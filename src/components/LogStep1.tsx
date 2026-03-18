@@ -369,14 +369,15 @@ const LogStep1 = ({
           )}
         </div>
 
-        {/* Bug 9: Contact flag message */}
-        {showContactFlag && (
-          <div className="px-[14px] py-1.5 border-b border-border">
-            <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
-              Select a contact to continue
-            </span>
-          </div>
-        )}
+        {/* Bug 9: Contact flag message — always in DOM, visibility toggled */}
+        <div
+          className="px-[14px] py-1.5 border-b border-border"
+          style={{ visibility: showContactFlag ? "visible" : "hidden" }}
+        >
+          <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
+            Select a contact to continue
+          </span>
+        </div>
 
         {/* Note / mic area — Bug 10: stable min-height */}
         <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
