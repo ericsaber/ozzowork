@@ -233,7 +233,7 @@ const InteractionDetail = () => {
                   {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Planned"}
                 </p>
                 <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                  {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : overdue ? `Was due ${format(dueDate!, "MMM d")}` : `Due ${format(dueDate!, "MMM d")}`}
+                  {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
                 </p>
                 <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
                   fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
