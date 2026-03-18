@@ -163,9 +163,10 @@ const LogStep1 = ({
         console.error("[transcribeAudio] error response:", errText);
         throw new Error("Transcription failed");
       }
-      const { summary } = await res.json();
+      const { summary, isRawTranscript: rawFlag } = await res.json();
       if (summary) {
         setNote(summary);
+        setIsRawTranscript(!!rawFlag);
         // Bug 9: Flag if no contact selected after transcription
         if (!contactId) {
           setShowContactFlag(true);
