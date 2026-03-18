@@ -91,7 +91,7 @@ serve(async (req) => {
     console.log('[transcribe-audio] raw Whisper transcript:', transcript);
 
     if (!transcript || transcript.trim().length === 0) {
-      return new Response(JSON.stringify({ transcript: '', summary: '', isRawTranscript: false }), {
+      return new Response(JSON.stringify({ transcript: '', summary: '', isRawTranscript: false, estimatedDuration: estimatedDurationSec }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -99,7 +99,7 @@ serve(async (req) => {
     // Duration gate: skip Gemini for recordings >30s
     if (estimatedDurationSec > 30) {
       console.log('[transcribe-audio] duration >30s, skipping Gemini, returning raw transcript');
-      return new Response(JSON.stringify({ transcript, summary: transcript, isRawTranscript: true }), {
+      return new Response(JSON.stringify({ transcript, summary: transcript, isRawTranscript: true, estimatedDuration: estimatedDurationSec }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -154,7 +154,7 @@ If the transcript is unclear or very short, return it as-is with minimal cleanup
 
     console.log('[transcribe-audio] final summary:', summary, '| isRawTranscript:', isRawTranscript);
 
-    return new Response(JSON.stringify({ transcript, summary, isRawTranscript }), {
+    return new Response(JSON.stringify({ transcript, summary, isRawTranscript, estimatedDuration: estimatedDurationSec }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
