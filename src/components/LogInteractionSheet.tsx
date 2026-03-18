@@ -290,8 +290,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={() => logMutation.mutate()}
+                  onSkipToFollowup={skipFollowupStep ? undefined : () => logMutation.mutate()}
                   onChangeContact={handleChangeContact}
+                  submitLabel={skipFollowupStep ? "Save →" : undefined}
                 />
               </div>
             ) : (
