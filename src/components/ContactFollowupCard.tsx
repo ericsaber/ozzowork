@@ -41,7 +41,7 @@ const ContactFollowupCard = ({
   const [checkHovered, setCheckHovered] = useState(false);
   const followUpDate = parseISO(taskRecord.planned_follow_up_date);
   const plannedType = taskRecord.planned_follow_up_type;
-  const TypeIcon = typeIcons[plannedType] || MessageSquare;
+  const TypeIcon = plannedType ? (typeIcons[plannedType] || null) : null;
 
   // Date label
   let dateLabel = "";
