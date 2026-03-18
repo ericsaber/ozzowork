@@ -29,6 +29,7 @@ const InteractionDetail = () => {
   const queryClient = useQueryClient();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
