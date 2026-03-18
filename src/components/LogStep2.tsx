@@ -31,6 +31,7 @@ interface LogStep2Props {
   isSaving: boolean;
   onUpdateLog?: (connectType: string, note: string) => void;
   skippedInteraction?: boolean;
+  onAddInteraction?: () => void;
 }
 
 const LogStep2 = ({
