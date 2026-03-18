@@ -178,7 +178,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId }: LogIn
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       if (!savedTaskRecordId) throw new Error("No task record to update");
       const { error } = await supabase.from("task_records" as any).update({
-        planned_follow_up_type: type, planned_follow_up_date: date,
+        planned_follow_up_type: type || null, planned_follow_up_date: date,
       }).eq("id", savedTaskRecordId);
       if (error) throw error;
     },

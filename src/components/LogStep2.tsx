@@ -59,7 +59,9 @@ const LogStep2 = ({
   };
 
   const handleChipClick = (chipDate: string) => {
-    setSelectedDate(selectedDate === chipDate ? "" : chipDate);
+    const newDate = selectedDate === chipDate ? "" : chipDate;
+    setSelectedDate(newDate);
+    if (newDate && !viaActivated) setViaActivated(true);
     setShowDatePicker(false);
   };
 
@@ -97,119 +99,121 @@ const LogStep2 = ({
         </div>
       )}
 
-      {/* Green confirmation card */}
-      <div
-        className="rounded-[14px] overflow-hidden"
-        style={{
-          background: isEditing ? "hsl(var(--card))" : "#eaf4ed",
-          border: isEditing ? "0.5px solid hsl(var(--border))" : "0.5px solid rgba(42,112,72,0.2)",
-          padding: "14px 16.5px",
-        }}
-      >
-        {!isEditing ? (
-          <>
-            {connectType && (
-              <div className="flex items-center gap-2">
-                <div
-                  className="rounded-full flex items-center justify-center shrink-0"
-                  style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
-                >
-                  <Check size={12} className="text-white" strokeWidth={3} />
-                </div>
-                <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                  {typeLabel} · {contactName}
-                </span>
-                <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  {logDate}
-                </span>
-              </div>
-            )}
-            {!connectType && (
-              <div className="flex items-center gap-2">
-                <div
-                  className="rounded-full flex items-center justify-center shrink-0"
-                  style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
-                >
-                  <Check size={12} className="text-white" strokeWidth={3} />
-                </div>
-                <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                  {contactName}
-                </span>
-                <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  {logDate}
-                </span>
-              </div>
-            )}
-            {note && (
-              <p
-                className="italic mt-1.5"
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "14px",
-                  color: "#2a5c3a",
-                  paddingLeft: "29px",
-                }}
-              >
-                {note}
-              </p>
-            )}
-            {onUpdateLog && (
-              <button
-                onClick={() => {
-                  setEditConnectType(connectType);
-                  setEditNote(note);
-                  setIsEditing(true);
-                }}
-                className="text-[13px] underline mt-1.5"
-                style={{ color: "rgba(42,112,72,0.65)", fontFamily: "var(--font-body)", paddingLeft: "29px" }}
-              >
-                Tap to edit
-              </button>
-            )}
-          </>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {typeOptions.map((t) => {
-                const selected = editConnectType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setEditConnectType(selected ? "" : t.value)}
-                    className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[13px] font-medium transition-colors ${
-                      selected ? "text-primary-foreground" : "text-muted-foreground"
-                    }`}
-                    style={{
-                      borderRadius: "100px",
-                      fontFamily: "var(--font-body)",
-                      ...(selected
-                        ? { background: "hsl(var(--primary))" }
-                        : { background: "hsl(var(--secondary))", border: "0.5px solid hsl(var(--border))" }),
-                    }}
+      {/* Green confirmation card — only shown when interaction was logged */}
+      {!skippedInteraction && (
+        <div
+          className="rounded-[14px] overflow-hidden"
+          style={{
+            background: isEditing ? "hsl(var(--card))" : "#eaf4ed",
+            border: isEditing ? "0.5px solid hsl(var(--border))" : "0.5px solid rgba(42,112,72,0.2)",
+            padding: "14px 16.5px",
+          }}
+        >
+          {!isEditing ? (
+            <>
+              {connectType && (
+                <div className="flex items-center gap-2">
+                  <div
+                    className="rounded-full flex items-center justify-center shrink-0"
+                    style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
                   >
-                    <t.icon size={14} />
-                    {t.label}
-                  </button>
-                );
-              })}
+                    <Check size={12} className="text-white" strokeWidth={3} />
+                  </div>
+                  <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
+                    {typeLabel} · {contactName}
+                  </span>
+                  <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    {logDate}
+                  </span>
+                </div>
+              )}
+              {!connectType && (
+                <div className="flex items-center gap-2">
+                  <div
+                    className="rounded-full flex items-center justify-center shrink-0"
+                    style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
+                  >
+                    <Check size={12} className="text-white" strokeWidth={3} />
+                  </div>
+                  <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
+                    {contactName}
+                  </span>
+                  <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    {logDate}
+                  </span>
+                </div>
+              )}
+              {note && (
+                <p
+                  className="italic mt-1.5"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontSize: "14px",
+                    color: "#2a5c3a",
+                    paddingLeft: "29px",
+                  }}
+                >
+                  {note}
+                </p>
+              )}
+              {onUpdateLog && (
+                <button
+                  onClick={() => {
+                    setEditConnectType(connectType);
+                    setEditNote(note);
+                    setIsEditing(true);
+                  }}
+                  className="text-[13px] underline mt-1.5"
+                  style={{ color: "rgba(42,112,72,0.65)", fontFamily: "var(--font-body)", paddingLeft: "29px" }}
+                >
+                  Tap to edit
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {typeOptions.map((t) => {
+                  const selected = editConnectType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setEditConnectType(selected ? "" : t.value)}
+                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[13px] font-medium transition-colors ${
+                        selected ? "text-primary-foreground" : "text-muted-foreground"
+                      }`}
+                      style={{
+                        borderRadius: "100px",
+                        fontFamily: "var(--font-body)",
+                        ...(selected
+                          ? { background: "hsl(var(--primary))" }
+                          : { background: "hsl(var(--secondary))", border: "0.5px solid hsl(var(--border))" }),
+                      }}
+                    >
+                      <t.icon size={14} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
+                placeholder="Add a note…"
+                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 text-[14px] italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
+                style={{ fontFamily: "var(--font-heading)" }}
+              />
+              <button
+                onClick={handleDoneEditing}
+                className="text-[13px] underline"
+                style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+              >
+                Done editing
+              </button>
             </div>
-            <textarea
-              value={editNote}
-              onChange={(e) => setEditNote(e.target.value)}
-              placeholder="Add a note…"
-              className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 text-[14px] italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
-              style={{ fontFamily: "var(--font-heading)" }}
-            />
-            <button
-              onClick={handleDoneEditing}
-              className="text-[13px] underline"
-              style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-            >
-              Done editing
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Unified follow-up card */}
       <div
@@ -277,6 +281,7 @@ const LogStep2 = ({
                 onSelect={(date) => {
                   if (date) {
                     setSelectedDate(format(date, "yyyy-MM-dd"));
+                    if (!viaActivated) setViaActivated(true);
                     setShowDatePicker(false);
                   }
                 }}
@@ -357,7 +362,7 @@ const LogStep2 = ({
 
       {/* CTA */}
       <button
-        onClick={() => onSaveWithFollowup(followUpType || connectType, selectedDate)}
+        onClick={() => onSaveWithFollowup(followUpType || connectType || "", selectedDate)}
         disabled={!selectedDate || isSaving}
         className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}

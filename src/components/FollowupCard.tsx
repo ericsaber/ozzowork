@@ -29,7 +29,8 @@ const FollowupCard = ({
   plannedType, connectType, connectDate, note, isCompleting, onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
-  const TypeIcon = typeIcon[plannedType?.toLowerCase()] || MessageSquare;
+  const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || null) : null;
+  const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
   const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
   const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
 
@@ -62,11 +63,11 @@ const FollowupCard = ({
           </span>
           {variant === "overdue" ? (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#fce8e8', color: '#a32d2d' }}>
-              <TypeIcon size={16} />{badgeLabel}
+              {TypeIcon && <TypeIcon size={16} />}{TypeIcon ? badgeLabel : `Planned · ${badgeLabel.replace("Due ", "")}`}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#e9f2eb', color: '#3d7a4a' }}>
-              <TypeIcon size={16} />{badgeLabel}
+              {TypeIcon && <TypeIcon size={16} />}{TypeIcon ? badgeLabel : `Planned · ${badgeLabel.replace("Due ", "")}`}
             </span>
           )}
         </div>
