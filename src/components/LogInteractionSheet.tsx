@@ -178,7 +178,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         note: note || null, status: "active",
       }).select("id").single();
       if (error) throw error;
-      return { ...data, skipMode: false };
+      return { id: data.id, skipMode: false };
     },
     onSuccess: (data: any) => {
       if (skipFollowupStep) {
