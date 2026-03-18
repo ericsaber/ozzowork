@@ -213,7 +213,7 @@ const InteractionDetail = () => {
         {/* WHAT'S NEXT */}
         <div className="px-4 py-3">
           <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
-            {isTailsOnly ? "Follow-up scheduled" : "What's next"}
+            What's next
           </p>
           {hasFollowUp ? (
             <div className="flex items-start gap-3">
