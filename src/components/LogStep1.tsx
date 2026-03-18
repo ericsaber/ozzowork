@@ -569,7 +569,7 @@ const LogStep1 = ({
           ? "Done recording →"
           : isSubmitting
           ? "Saving..."
-          : "Next →"}
+          : (submitLabel || "Next →")}
       </button>
 
       {/* Skip link */}

@@ -255,6 +255,11 @@ const EditTaskRecord = () => {
                     </span>
                   )}
                 </div>
+                {followUpOn && !followUpDate && (
+                  <p className="text-[12px] mt-1" style={{ color: "#a32d2d", fontFamily: "var(--font-body)" }}>
+                    A date is required to schedule a follow-up.
+                  </p>
+                )}
               </div>
             </div>
           )}
