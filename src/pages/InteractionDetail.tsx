@@ -199,8 +199,11 @@ const InteractionDetail = () => {
               </div>
             </div>
           ) : (
-            <p className="italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#9e9e99" }}>
-              No interaction logged.
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#7a746c" }}>
+              No interaction logged.{" "}
+              <button onClick={() => setLogSheetOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+                Want to add one?
+              </button>
             </p>
           )}
         </div>
