@@ -69,6 +69,7 @@ const App = () => (
       <Sonner />
       <PasswordGate>
         <BrowserRouter>
+          <ScrollToTop />
           <AppContent />
         </BrowserRouter>
       </PasswordGate>
