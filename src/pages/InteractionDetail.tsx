@@ -90,7 +90,7 @@ const InteractionDetail = () => {
   const hasInteraction = !!task.connect_type;
   const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
-  const isTailsOnly = hasFollowUp && !hasInteraction;
+  
   const showBottomBar = hasFollowUp && !isCompleted;
 
   const dueDate = task.planned_follow_up_date ? parseISO(task.planned_follow_up_date) : null;
