@@ -55,6 +55,7 @@ const LogStep1 = ({
   onAddNewContact,
   onSkipToFollowup,
   onChangeContact,
+  submitLabel,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
