@@ -239,9 +239,14 @@ const InteractionDetail = () => {
               </div>
             </div>
           ) : (
-            <button onClick={() => setScheduleOpen(true)} className="w-full rounded-[8px] border-[1.5px] border-dashed border-border py-3 text-center hover:border-primary/40 transition-colors">
-              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>Add a follow-up</span>
-            </button>
+            <div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
+              <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+                No follow-up scheduled.{" "}
+                <button onClick={() => setScheduleOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+                  Add one?
+                </button>
+              </p>
+            </div>
           )}
         </div>
       </div>
