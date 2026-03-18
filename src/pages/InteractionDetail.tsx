@@ -117,11 +117,11 @@ const InteractionDetail = () => {
     if (!dueDate) return "";
     if (overdue) {
       const days = Math.ceil((new Date().getTime() - dueDate.getTime()) / 86400000);
-      return `${days} days overdue`;
+      return `${days} day${days !== 1 ? "s" : ""} overdue`;
     }
     if (dueDateIsToday) return "Due today";
     const days = Math.ceil((dueDate.getTime() - new Date().getTime()) / 86400000);
-    return `In ${days} days`;
+    return `In ${days} day${days !== 1 ? "s" : ""}`;
   };
 
   return (
