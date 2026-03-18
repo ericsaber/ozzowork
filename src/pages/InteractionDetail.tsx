@@ -171,48 +171,44 @@ const InteractionDetail = () => {
 
       {/* Task record card */}
       <div className="rounded-[12px] bg-card border border-border overflow-hidden" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
-        {/* WHAT HAPPENED — only show if not tails-only */}
-        {!isTailsOnly && (
-          <>
-            <div className="px-4 py-3">
-              <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
-                What happened
-              </p>
-              {hasInteraction ? (
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f0ede8" }}>
-                    {ConnectIcon && <ConnectIcon size={14} className="text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
-                      {typeLabels[task.connect_type] || task.connect_type}
-                    </p>
-                    <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                      {task.connect_date ? `${format(parseISO(task.connect_date), "MMM d")} · ${formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago` : ""}
-                    </p>
-                    {task.note && (
-                      <p className="mt-1 italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "18px", color: "#6b6b67" }}>
-                        {task.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <button onClick={handleLogFollowUp} className="w-full rounded-[8px] border-[1.5px] border-dashed border-border py-3 text-center hover:border-primary/40 transition-colors">
-                  <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>Log an interaction</span>
-                </button>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="relative px-4">
-              <div className="border-t border-border" />
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
-                <ArrowRight size={12} style={{ color: "#9e9e99" }} />
+        {/* WHAT HAPPENED */}
+        <div className="px-4 py-3">
+          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
+            What happened
+          </p>
+          {hasInteraction ? (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f0ede8" }}>
+                {ConnectIcon && <ConnectIcon size={14} className="text-muted-foreground" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
+                  {typeLabels[task.connect_type] || task.connect_type}
+                </p>
+                <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                  {task.connect_date ? `${format(parseISO(task.connect_date), "MMM d")} · ${formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago` : ""}
+                </p>
+                {task.note && (
+                  <p className="mt-1 italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "18px", color: "#6b6b67" }}>
+                    {task.note}
+                  </p>
+                )}
               </div>
             </div>
-          </>
-        )}
+          ) : (
+            <p className="italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#9e9e99" }}>
+              No interaction logged.
+            </p>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="relative px-4">
+          <div className="border-t border-border" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
+            <ArrowRight size={12} style={{ color: "#9e9e99" }} />
+          </div>
+        </div>
 
         {/* WHAT'S NEXT */}
         <div className="px-4 py-3">
