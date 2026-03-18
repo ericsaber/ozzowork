@@ -181,8 +181,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       return { id: (data as any).id, skipMode: false };
     },
     onSuccess: (data: any) => {
-      if (skipFollowupStep) {
+      if (data.skipMode) {
         invalidateAll();
+        queryClient.invalidateQueries({ queryKey: ["task-record"] });
         toast.success("Interaction logged");
         savedDraft = null;
         clearAndClose();
