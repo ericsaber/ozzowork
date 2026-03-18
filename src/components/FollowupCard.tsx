@@ -31,8 +31,9 @@ const FollowupCard = ({
   const navigate = useNavigate();
   const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || null) : null;
   const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
-  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || null) : null;
-  const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : null;
+  // Fix 3: fallback icon and verb when no connect type
+  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || MessageSquare) : MessageSquare;
+  const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : "Interacted";
 
   const badgeLabel = variant === "today" ? "Today" : `Due ${format(parseISO(dueDate), "MMM d")}`;
 
