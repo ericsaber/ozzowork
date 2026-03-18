@@ -88,10 +88,10 @@ const InteractionDetail = () => {
   const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
   const initials = contactName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const hasInteraction = !!task.connect_type;
+  const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
   const isTailsOnly = hasFollowUp && !hasInteraction;
   const showBottomBar = hasFollowUp && !isCompleted;
-  const isCompleted = task.status === "completed";
 
   const dueDate = task.planned_follow_up_date ? parseISO(task.planned_follow_up_date) : null;
   const overdue = dueDate && !isCompleted ? isPast(dueDate) && !isDateToday(dueDate) : false;
@@ -99,7 +99,6 @@ const InteractionDetail = () => {
 
   const ConnectIcon = task.connect_type ? typeIcons[task.connect_type] : null;
   const FollowUpIcon = task.planned_follow_up_type ? typeIcons[task.planned_follow_up_type] : null;
-  const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
 
   const handleLogFollowUp = () => {
     if (task && contact) {
