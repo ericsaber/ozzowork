@@ -59,7 +59,9 @@ const LogStep2 = ({
   };
 
   const handleChipClick = (chipDate: string) => {
-    setSelectedDate(selectedDate === chipDate ? "" : chipDate);
+    const newDate = selectedDate === chipDate ? "" : chipDate;
+    setSelectedDate(newDate);
+    if (newDate && !viaActivated) setViaActivated(true);
     setShowDatePicker(false);
   };
 
