@@ -160,7 +160,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         const updatePayload = {
           connect_type: connectType || null,
           note: note || null,
-          connect_date: new Date(connectDate + "T12:00:00").toISOString(),
+          connect_date: new Date().toISOString(),
         };
         console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
         const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
