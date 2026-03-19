@@ -45,6 +45,7 @@ interface LogStep1Props {
   showDateRow?: boolean;
   connectDate?: string;
   setConnectDate?: (v: string) => void;
+  addLog?: (msg: string) => void;
 }
 
 const LogStep1 = ({
