@@ -90,6 +90,7 @@ const InteractionDetail = () => {
   const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
   const initials = contactName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const hasInteraction = !!(task.connect_type || task.note);
+  console.log('[InteractionDetail] task data:', { connect_type: task.connect_type, note: task.note, hasInteraction: !!(task.connect_type || task.note) });
   const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
   
