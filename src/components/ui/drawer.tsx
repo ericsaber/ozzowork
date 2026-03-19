@@ -48,22 +48,10 @@ const DrawerOverlay = React.forwardRef<
 ));
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
-// Stable viewport height — capture on mount, only update when viewport grows back
 function useVisualViewportHeight() {
-  const [height, setHeight] = React.useState<number | undefined>(undefined);
-  React.useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const initialHeight = vv.height;
-    setHeight(initialHeight);
-    const update = () => {
-      if (vv.height >= initialHeight) {
-        setHeight(vv.height);
-      }
-    };
-    vv.addEventListener("resize", update);
-    return () => vv.removeEventListener("resize", update);
-  }, []);
+  const [height] = React.useState(
+    () => window.visualViewport?.height ?? window.innerHeight
+  );
   return height;
 }
 
