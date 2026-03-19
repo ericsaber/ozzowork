@@ -89,6 +89,13 @@ const LogStep1 = ({
     }
   }, [note]);
 
+  // Auto-focus textarea when typing mode activates
+  useEffect(() => {
+    if (isTyping) {
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [isTyping]);
+
   // Contact search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);

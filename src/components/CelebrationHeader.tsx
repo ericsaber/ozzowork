@@ -28,7 +28,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
         .from("task_records" as any)
         .select("id", { count: "exact", head: true })
         .eq("contact_id", contactId)
-        .not("connect_type", "is", null);
+        .or("connect_type.not.is.null,note.not.is.null");
       setInteractionCount(count ?? 0);
     })();
   }, [open, contactId]);
