@@ -11,9 +11,15 @@ interface LogInteractionSheetProps {
   existingTaskRecordId?: string;
 }
 
-const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
+const LogInteractionSheet = ({
+  open,
+  onOpenChange,
+  preselectedContactId,
+  skipFollowupStep = false,
+  existingTaskRecordId,
+}: LogInteractionSheetProps) => {
   const [debugLog, setDebugLog] = useState<string[]>([]);
-  const addLog = (msg: string) => setDebugLog(prev => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
+  const addLog = (msg: string) => setDebugLog((prev) => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
   addLog(`render open=${open}`);
   const mountHeightRef = useRef(window.innerHeight);
   const hasAnimated = useRef(false);
@@ -81,13 +87,26 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         justifyContent: "flex-end",
       }}
     >
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-        background: 'black', color: 'lime', fontSize: 10, padding: 4,
-        fontFamily: 'monospace', maxHeight: 120, overflowY: 'auto',
-        pointerEvents: 'none',
-      }}>
-        {debugLog.map((l, i) => <div key={i}>{l}</div>)}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          background: "black",
+          color: "lime",
+          fontSize: 10,
+          padding: 4,
+          fontFamily: "monospace",
+          maxHeight: 120,
+          overflowY: "auto",
+          pointerEvents: "none",
+        }}
+      >
+        {debugLog.map((l, i) => (
+          <div key={i}>{l}</div>
+        ))}
       </div>
       {/* Overlay */}
       <div
@@ -108,7 +127,6 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         style={{
           maxHeight: `${mountHeightRef.current * 0.9}px`,
           overflowY: "auto",
-          animation: hasAnimated.current ? 'none' : 'slide-up 300ms ease-out',
         }}
       >
         {/* Drag handle — decorative only */}
@@ -126,7 +144,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         />
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
