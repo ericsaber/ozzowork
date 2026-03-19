@@ -144,8 +144,9 @@ const LogStep2 = ({
                   >
                     <Check size={12} className="text-white" strokeWidth={3} />
                   </div>
+                  <ClipboardList size={14} style={{ color: "#2a7048" }} />
                   <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                    {contactName}
+                    Interacted · {contactName}
                   </span>
                   <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                     {logDate}
