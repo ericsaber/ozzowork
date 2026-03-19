@@ -1,7 +1,7 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { preventScrollOnFocus } from "@/lib/preventScrollOnFocus";
+
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -306,7 +306,7 @@ const LogStep1 = ({
                       value={searchQuery}
                       placeholder="Who did you talk to?"
                       onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-                      onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
+                      onFocus={() => setSearchOpen(true)}
                       className="flex-1 bg-transparent border-none outline-none text-[15.5px] text-foreground placeholder:text-muted-foreground"
                       style={{ fontFamily: "var(--font-body)" }}
                     />
@@ -531,7 +531,7 @@ const LogStep1 = ({
                       el.style.height = "auto";
                       el.style.height = el.scrollHeight + "px";
                     }}
-                    onFocus={preventScrollOnFocus}
+                    
                     className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
                     style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
                   />
