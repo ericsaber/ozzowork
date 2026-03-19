@@ -12,6 +12,7 @@ interface LogInteractionSheetProps {
 }
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
+  console.log('[Sheet] render', { open });
   const mountHeightRef = useRef(window.innerHeight);
   const hasAnimated = useRef(false);
 
@@ -34,6 +35,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   useEffect(() => {
+    console.log('[Sheet] body lock effect fired', { open });
     if (!open) return;
 
     document.body.style.overflow = "hidden";
@@ -52,6 +54,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   const handleOpen = (o: boolean) => {
+    console.log('[Sheet] handleOpen called', { o });
     if (!o) {
       state.handleRequestClose();
       return;
@@ -59,6 +62,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     onOpenChange(true);
   };
 
+  console.log('[Sheet] before open check', { open });
   if (!open) return null;
 
   return createPortal(
