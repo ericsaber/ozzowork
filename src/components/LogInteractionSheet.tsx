@@ -61,11 +61,11 @@ const LogInteractionSheet = ({
   return createPortal(
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         top: 0,
         left: 0,
         right: 0,
-        height: mountHeightRef.current,
+        bottom: 0,
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
@@ -101,7 +101,7 @@ const LogInteractionSheet = ({
           top: 0,
           left: 0,
           right: 0,
-          height: mountHeightRef.current,
+          bottom: 0,
           backgroundColor: "hsl(0 0% 0% / 0.4)",
         }}
         onClick={() => handleOpen(false)}
@@ -110,7 +110,6 @@ const LogInteractionSheet = ({
       <div
         className="relative rounded-t-[10px] bg-background"
         style={{
-          maxHeight: `${mountHeightRef.current * 0.9}px`,
           overflowY: "auto",
         }}
       >
