@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
-  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw, Calendar as CalendarIcon,
+  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw, Calendar as CalendarIcon, ClipboardList,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isPast, isToday as isDateToday } from "date-fns";
 import {
