@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CalendarCheck, Users, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import LogInteractionPanel from "@/components/LogInteractionPanel";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const BottomNav = () => {
         </div>
       </nav>
 
-      <LogInteractionPanel
+      <LogInteractionSheet
         open={logSheetOpen}
         onOpenChange={setLogSheetOpen}
         preselectedContactId={contextContactId}
