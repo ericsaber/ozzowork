@@ -31,14 +31,18 @@ const InteractionDetail = () => {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [logSheetOpen, setLogSheetOpen] = useState(false);
 
+  console.log('[InteractionDetail] query key:', ['task-record', id]);
+
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
     queryFn: async () => {
+      console.log('[InteractionDetail] FETCHING task-record:', id);
       const { data, error } = await supabase.from("task_records" as any)
         .select("*, contacts(*)")
         .eq("id", id!)
         .single();
       if (error) throw error;
+      console.log('[InteractionDetail] fetched data:', { connect_type: data.connect_type, note: data.note, status: data.status });
       return data as any;
     },
     enabled: !!id,

@@ -186,10 +186,10 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     },
     onSuccess: (data: any) => {
       if (data.skipMode) {
+        console.log('[LogInteractionSheet] invalidating:', existingTaskRecordId, 'type:', typeof existingTaskRecordId);
         invalidateAll();
-        console.log('[skipFollowupStep] invalidating queries for task-record:', existingTaskRecordId);
-        queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] });
-        queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] });
+        await queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] });
+        await queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] });
         toast.success("Interaction logged");
         savedDraft = null;
         clearAndClose();
