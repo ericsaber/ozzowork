@@ -531,6 +531,7 @@ const LogStep1 = ({
                       el.style.height = "auto";
                       el.style.height = el.scrollHeight + "px";
                     }}
+                    onFocus={preventScrollOnFocus}
                     className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
                     style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
                   />
