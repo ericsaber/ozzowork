@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLogInteraction } from "@/hooks/useLogInteraction";
 import LogInteractionContent from "@/components/LogInteractionContent";
