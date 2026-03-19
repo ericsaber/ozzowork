@@ -1,6 +1,7 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { preventScrollOnFocus } from "@/lib/preventScrollOnFocus";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
