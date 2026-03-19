@@ -419,10 +419,12 @@ const LogStep1 = ({
           </span>
         </div>
 
-        {/* Note / mic area — Bug 10: stable min-height */}
-        <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
-          {!isTyping && !note && !isRecording && !isTranscribing ? (
-            /* Default: centered mic CTA */
+        {/* Note / mic area — mic CTA always in flow to hold height */}
+        <div className="px-[14px] py-[12px] relative">
+          {/* Mic CTA — ALWAYS in flow, holds container height */}
+          <div style={{
+            visibility: (!isTyping && !note && !isRecording && !isTranscribing) ? 'visible' : 'hidden',
+          }}>
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 onClick={handleRecordingCTA}
@@ -451,7 +453,10 @@ const LogStep1 = ({
                 or tap here to type…
               </button>
             </div>
-          ) : isRecording ? (
+          </div>
+
+          {/* Recording — absolute overlay */}
+          {isRecording && (
             /* Bug 10: Recording mode — same layout, labels stay */
             <div className="flex flex-col items-center py-4 gap-2">
               <button
