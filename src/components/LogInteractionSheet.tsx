@@ -160,7 +160,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         const updatePayload = {
           connect_type: connectType || null,
           note: note || null,
-          connect_date: new Date().toISOString(),
+          connect_date: connectDate === format(new Date(), 'yyyy-MM-dd')
+            ? new Date().toISOString()
+            : new Date(connectDate + 'T12:00:00').toISOString(),
         };
         console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
         const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
@@ -178,7 +180,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
 
       const { data, error } = await supabase.from("task_records" as any).insert({
         contact_id: contactId, user_id: user.id,
-        connect_type: connectType || null, connect_date: new Date().toISOString(),
+        connect_type: connectType || null, connect_date: connectDate === format(new Date(), 'yyyy-MM-dd') ? new Date().toISOString() : new Date(connectDate + 'T12:00:00').toISOString(),
         note: note || null, status: "active",
       }).select("id").single();
       if (error) throw error;
