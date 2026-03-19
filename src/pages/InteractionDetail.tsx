@@ -43,6 +43,7 @@ const InteractionDetail = () => {
         .single();
       if (error) throw error;
       console.log('[InteractionDetail] fetched data:', { connect_type: (data as any).connect_type, note: (data as any).note, status: (data as any).status });
+      console.log('[InteractionDetail] connect_date raw:', (data as any).connect_date);
       return data as any;
     },
     enabled: !!id,
