@@ -420,7 +420,7 @@ const LogStep1 = ({
         </div>
 
         {/* Note / mic area — Bug 10: stable min-height */}
-        <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
+        <div className="px-[14px] py-[12px]" style={{ minHeight: 180, transition: 'height 0.15s ease' }}>
           {!isTyping && !note && !isRecording && !isTranscribing ? (
             /* Default: centered mic CTA */
             <div className="flex flex-col items-center py-4 gap-2">
@@ -511,7 +511,7 @@ const LogStep1 = ({
             </div>
           ) : (
             /* Typing / note populated */
-            <div className="relative">
+            <div className="relative py-4">
               <div className="flex items-start gap-2">
                 <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
                   <Mic size={18} className="text-muted-foreground" />
