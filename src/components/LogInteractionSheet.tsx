@@ -32,10 +32,14 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div
+      className="fixed left-0 right-0 top-0 z-50 flex flex-col justify-end"
+      style={{ height: mountHeightRef.current }}
+    >
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/40 animate-fade-in"
+        className="absolute left-0 right-0 top-0 z-0 bg-black/40 animate-fade-in"
+        style={{ height: mountHeightRef.current }}
         onClick={() => handleOpen(false)}
       />
       {/* Sheet panel */}
