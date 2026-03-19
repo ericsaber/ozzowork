@@ -69,6 +69,7 @@ const LogStep1 = ({
   showDateRow,
   connectDate,
   setConnectDate,
+  addLog,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
