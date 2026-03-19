@@ -122,6 +122,13 @@ const LogStep1 = ({
       .slice(0, 5);
   }, [contacts, searchQuery]);
 
+  // Auto-focus search input on FAB open
+  useEffect(() => {
+    if (autoFocusSearch) {
+      searchInputRef.current?.focus();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Close search on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
