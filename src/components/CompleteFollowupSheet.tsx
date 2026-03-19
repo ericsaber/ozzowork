@@ -72,17 +72,19 @@ const CompleteFollowupSheet = ({
 
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
+      const newRecord = {
+        contact_id: contactId,
+        user_id: userId,
+        connect_type: connectType || null,
+        connect_date: new Date().toISOString(),
+        note: note || null,
+        planned_follow_up_type: type || null,
+        planned_follow_up_date: date,
+        status: "active",
+      };
+      console.log('[completion] creating follow-up record:', { connect_type: newRecord.connect_type, note: newRecord.note, connect_date: newRecord.connect_date });
       const { error } = await supabase.from("task_records" as any)
-        .insert({
-          contact_id: contactId,
-          user_id: userId,
-          connect_type: connectType || null,
-          connect_date: new Date().toISOString(),
-          note: note || null,
-          planned_follow_up_type: type || null,
-          planned_follow_up_date: date,
-          status: "active",
-        });
+        .insert(newRecord);
       if (error) throw error;
     },
     onSuccess: () => {
