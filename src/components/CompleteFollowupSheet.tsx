@@ -122,6 +122,13 @@ const CompleteFollowupSheet = ({
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
+    // Persist edits to the completed record
+    const { error } = await supabase.from("task_records" as any).update({
+      connect_type: newConnectType || null,
+      note: newNote || null,
+    }).eq("id", taskRecordId);
+    if (error) console.error('[completion] failed to update log:', error);
+    else invalidateAll();
   };
 
   return (
