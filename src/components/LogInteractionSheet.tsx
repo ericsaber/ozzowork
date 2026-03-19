@@ -13,6 +13,7 @@ interface LogInteractionSheetProps {
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
   const mountHeightRef = useRef(window.innerHeight);
+  const hasAnimated = useRef(false);
 
   const state = useLogInteraction({
     open,
