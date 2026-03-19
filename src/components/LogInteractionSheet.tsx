@@ -64,7 +64,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     onOpenChange(true);
   };
 
-  console.log('[Sheet] before open check', { open });
+  addLog(`before open check open=${open}`);
   if (!open) return null;
 
   return createPortal(
