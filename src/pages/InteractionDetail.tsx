@@ -42,7 +42,7 @@ const InteractionDetail = () => {
         .eq("id", id!)
         .single();
       if (error) throw error;
-      console.log('[InteractionDetail] fetched data:', { connect_type: data.connect_type, note: data.note, status: data.status });
+      console.log('[InteractionDetail] fetched data:', { connect_type: (data as any).connect_type, note: (data as any).note, status: (data as any).status });
       return data as any;
     },
     enabled: !!id,
