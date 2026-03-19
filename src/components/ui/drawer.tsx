@@ -88,6 +88,7 @@ const DrawerContent = React.forwardRef<
         )}
         style={{
           ...(maxH ? { maxHeight: maxH } : {}),
+          ...(maxH && maxHeightRatio > 0.9 ? { minHeight: maxH } : {}),
           outline: "none",
           touchAction: "none",
           overscrollBehavior: "none",
