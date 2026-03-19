@@ -259,10 +259,22 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     // contactId remains set — contact stays pre-filled
   };
 
+  const handleDrawerFocusCapture = () => {
+    const drawer = document.querySelector<HTMLElement>("[vaul-drawer]");
+    if (!drawer) return;
+
+    drawer.style.transition = "none";
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        drawer.style.transition = "";
+      });
+    });
+  };
+
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpen}>
-        <DrawerContent onContextMenu={(e) => e?.preventDefault?.()}>
+        <DrawerContent onContextMenu={(e) => e?.preventDefault?.()} onFocusCapture={handleDrawerFocusCapture}>
           <div className="overflow-y-auto px-5 pb-6">
             {!skipFollowupStep && <StepIndicator currentStep={step} />}
 
