@@ -1,8 +1,8 @@
-```
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLogInteraction } from "@/hooks/useLogInteraction";
 import LogInteractionContent from "@/components/LogInteractionContent";
+
 interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -10,6 +10,7 @@ interface LogInteractionSheetProps {
   skipFollowupStep?: boolean;
   existingTaskRecordId?: string;
 }
+
 const LogInteractionSheet = ({
   open,
   onOpenChange,
@@ -20,7 +21,9 @@ const LogInteractionSheet = ({
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const addLog = (msg: string) => setDebugLog((prev) => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
   addLog(`render open=${open}`);
+  const mountHeightRef = useRef(window.innerHeight);
   const hasAnimated = useRef(false);
+
   const state = useLogInteraction({
     open,
     onOpenChange,
@@ -28,6 +31,7 @@ const LogInteractionSheet = ({
     skipFollowupStep,
     existingTaskRecordId,
   });
+
   useEffect(() => {
     if (open) {
       requestAnimationFrame(() => {
@@ -37,6 +41,11 @@ const LogInteractionSheet = ({
       hasAnimated.current = false;
     }
   }, [open]);
+
+  useEffect(() => {
+    // disabled for debugging
+  }, [open]);
+
   const handleOpen = (o: boolean) => {
     addLog(`handleOpen o=${o}`);
     if (!o) {
@@ -45,16 +54,18 @@ const LogInteractionSheet = ({
     }
     onOpenChange(true);
   };
+
   addLog(`before open check open=${open}`);
   if (!open) return null;
+
   return createPortal(
     <div
       style={{
-        position: "fixed",
+        position: "absolute",
         top: 0,
         left: 0,
         right: 0,
-        bottom: 0,
+        height: mountHeightRef.current,
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
@@ -87,7 +98,10 @@ const LogInteractionSheet = ({
         className="animate-fade-in"
         style={{
           position: "absolute",
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: mountHeightRef.current,
           backgroundColor: "hsl(0 0% 0% / 0.4)",
         }}
         onClick={() => handleOpen(false)}
@@ -96,11 +110,13 @@ const LogInteractionSheet = ({
       <div
         className="relative rounded-t-[10px] bg-background"
         style={{
+          maxHeight: `${mountHeightRef.current * 0.9}px`,
           overflowY: "auto",
         }}
       >
         {/* Drag handle — decorative only */}
         <div className="mx-auto mt-3 mb-1 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+
         {/* Existing content */}
         <LogInteractionContent
           state={state}
@@ -116,5 +132,5 @@ const LogInteractionSheet = ({
     document.body,
   );
 };
+
 export default LogInteractionSheet;
-```
