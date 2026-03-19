@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, ClipboardList } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
