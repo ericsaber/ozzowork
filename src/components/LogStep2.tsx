@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, ClipboardList } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -144,8 +144,9 @@ const LogStep2 = ({
                   >
                     <Check size={12} className="text-white" strokeWidth={3} />
                   </div>
+                  <ClipboardList size={14} style={{ color: "#2a7048" }} />
                   <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                    {contactName}
+                    Interacted · {contactName}
                   </span>
                   <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                     {logDate}

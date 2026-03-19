@@ -197,7 +197,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       }
       setSavedTaskRecordId(data.id);
       invalidateAll();
-      setSkippedInteraction(!connectType);
+      setSkippedInteraction(!connectType && !note);
       setStep(2);
     },
     onError: (e: any) => toast.error(e.message),
