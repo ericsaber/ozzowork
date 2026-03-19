@@ -1,5 +1,5 @@
+import { useRef } from "react";
 import { useLogInteraction } from "@/hooks/useLogInteraction";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import LogInteractionContent from "@/components/LogInteractionContent";
 
 interface LogInteractionSheetProps {
@@ -11,6 +11,8 @@ interface LogInteractionSheetProps {
 }
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
+  const mountHeightRef = useRef(window.innerHeight);
+
   const state = useLogInteraction({
     open,
     onOpenChange,
@@ -27,20 +29,27 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     onOpenChange(true);
   };
 
-  const handleDrawerFocusCapture = () => {
-    const drawer = document.querySelector<HTMLElement>("[vaul-drawer]");
-    if (!drawer) return;
-    drawer.style.transition = "none";
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        drawer.style.transition = "";
-      });
-    });
-  };
+  if (!open) return null;
 
   return (
-    <Drawer open={open} onOpenChange={handleOpen} handleOnly={true}>
-      <DrawerContent onContextMenu={(e) => e?.preventDefault?.()} onFocusCapture={handleDrawerFocusCapture}>
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black/40 animate-fade-in"
+        onClick={() => handleOpen(false)}
+      />
+      {/* Sheet panel */}
+      <div
+        className="relative rounded-t-[10px] bg-background animate-slide-up"
+        style={{
+          maxHeight: `${mountHeightRef.current * 0.9}px`,
+          overflowY: "auto",
+        }}
+      >
+        {/* Drag handle — decorative only */}
+        <div className="mx-auto mt-3 mb-1 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+
+        {/* Existing content */}
         <LogInteractionContent
           state={state}
           onKeepEditing={() => {
@@ -49,8 +58,8 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
             });
           }}
         />
-      </DrawerContent>
-    </Drawer>
+      </div>
+    </div>
   );
 };
 
