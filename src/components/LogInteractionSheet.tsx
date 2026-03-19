@@ -122,6 +122,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
               onOpenChange(true);
             });
           }}
+          addLog={addLog}
         />
       </div>
     </div>,

@@ -82,6 +82,7 @@ const LogInteractionContent = ({ state, onKeepEditing, addLog }: LogInteractionC
               showDateRow={skipFollowupStep}
               connectDate={connectDate}
               setConnectDate={setConnectDate}
+              addLog={addLog}
             />
           </div>
         ) : (
