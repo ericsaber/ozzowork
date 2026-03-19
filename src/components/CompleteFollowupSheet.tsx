@@ -48,20 +48,28 @@ const CompleteFollowupSheet = ({
   const logMutation = useMutation({
     mutationFn: async () => {
       const now = new Date().toISOString();
-      const payload = {
-        status: "completed",
-        completed_at: now,
+
+      // 1) Mark the OLD record as completed — preserve its original data
+      console.log('[completion] marking old record complete:', taskRecordId);
+      const { error: updateErr } = await supabase.from("task_records" as any)
+        .update({ status: "completed", completed_at: now })
+        .eq("id", taskRecordId);
+      if (updateErr) throw updateErr;
+
+      // 2) Create a NEW record for today's interaction
+      const newRecord = {
+        contact_id: contactId,
+        user_id: userId,
         connect_type: connectType || null,
         connect_date: now,
         note: note || null,
-        planned_follow_up_type: connectType || null,
-        planned_follow_up_date: now,
+        status: "completed",
+        completed_at: now,
       };
-      console.log('[completion] saving interaction:', { connect_type: payload.connect_type, note: payload.note, connect_date: payload.connect_date, taskRecordId });
-      const { error } = await supabase.from("task_records" as any)
-        .update(payload)
-        .eq("id", taskRecordId);
-      if (error) throw error;
+      console.log('[completion] creating new record:', { connect_type: newRecord.connect_type, note: newRecord.note, connect_date: newRecord.connect_date });
+      const { error: insertErr } = await supabase.from("task_records" as any)
+        .insert(newRecord);
+      if (insertErr) throw insertErr;
     },
     onSuccess: () => {
       invalidateAll();
