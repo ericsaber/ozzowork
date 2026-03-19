@@ -81,6 +81,14 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         justifyContent: "flex-end",
       }}
     >
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+        background: 'black', color: 'lime', fontSize: 10, padding: 4,
+        fontFamily: 'monospace', maxHeight: 120, overflowY: 'auto',
+        pointerEvents: 'none',
+      }}>
+        {debugLog.map((l, i) => <div key={i}>{l}</div>)}
+      </div>
       {/* Overlay */}
       <div
         className="animate-fade-in"
