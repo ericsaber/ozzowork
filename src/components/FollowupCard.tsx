@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Check, Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon } from "lucide-react";
+import { Check, Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ClipboardList } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
