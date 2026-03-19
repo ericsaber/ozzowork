@@ -48,16 +48,18 @@ const CompleteFollowupSheet = ({
   const logMutation = useMutation({
     mutationFn: async () => {
       const now = new Date().toISOString();
+      const payload = {
+        status: "completed",
+        completed_at: now,
+        connect_type: connectType || null,
+        connect_date: now,
+        note: note || null,
+        planned_follow_up_type: connectType || null,
+        planned_follow_up_date: now,
+      };
+      console.log('[completion] saving interaction:', { connect_type: payload.connect_type, note: payload.note, connect_date: payload.connect_date, taskRecordId });
       const { error } = await supabase.from("task_records" as any)
-        .update({
-          status: "completed",
-          completed_at: now,
-          connect_type: connectType || null,
-          connect_date: now,
-          note: note || null,
-          planned_follow_up_type: connectType || null,
-          planned_follow_up_date: now,
-        })
+        .update(payload)
         .eq("id", taskRecordId);
       if (error) throw error;
     },
@@ -70,17 +72,19 @@ const CompleteFollowupSheet = ({
 
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
+      const newRecord = {
+        contact_id: contactId,
+        user_id: userId,
+        connect_type: connectType || null,
+        connect_date: new Date().toISOString(),
+        note: note || null,
+        planned_follow_up_type: type || null,
+        planned_follow_up_date: date,
+        status: "active",
+      };
+      console.log('[completion] creating follow-up record:', { connect_type: newRecord.connect_type, note: newRecord.note, connect_date: newRecord.connect_date });
       const { error } = await supabase.from("task_records" as any)
-        .insert({
-          contact_id: contactId,
-          user_id: userId,
-          connect_type: connectType || null,
-          connect_date: new Date().toISOString(),
-          note: note || null,
-          planned_follow_up_type: type || null,
-          planned_follow_up_date: date,
-          status: "active",
-        });
+        .insert(newRecord);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -102,15 +106,17 @@ const CompleteFollowupSheet = ({
   };
 
   const handleSkip = async () => {
+    const skipRecord = {
+      contact_id: contactId,
+      user_id: userId,
+      connect_type: connectType || null,
+      connect_date: new Date().toISOString(),
+      note: note || null,
+      status: "active",
+    };
+    console.log('[completion] handleSkip record:', { connect_type: skipRecord.connect_type, note: skipRecord.note, connect_date: skipRecord.connect_date });
     const { error } = await supabase.from("task_records" as any)
-      .insert({
-        contact_id: contactId,
-        user_id: userId,
-        connect_type: connectType || null,
-        connect_date: new Date().toISOString(),
-        note: note || null,
-        status: "active",
-      });
+      .insert(skipRecord);
     if (error) { toast.error(error.message); return; }
     invalidateAll();
     toast.success("Interaction logged");
@@ -120,6 +126,13 @@ const CompleteFollowupSheet = ({
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
+    // Persist edits to the completed record
+    const { error } = await supabase.from("task_records" as any).update({
+      connect_type: newConnectType || null,
+      note: newNote || null,
+    }).eq("id", taskRecordId);
+    if (error) console.error('[completion] failed to update log:', error);
+    else invalidateAll();
   };
 
   return (
