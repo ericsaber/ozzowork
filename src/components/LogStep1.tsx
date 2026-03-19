@@ -511,7 +511,7 @@ const LogStep1 = ({
             </div>
           ) : (
             /* Typing / note populated */
-            <div className="relative">
+            <div className="relative py-4">
               <div className="flex items-start gap-2">
                 <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
                   <Mic size={18} className="text-muted-foreground" />
