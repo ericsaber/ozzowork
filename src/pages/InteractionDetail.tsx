@@ -282,7 +282,11 @@ const InteractionDetail = () => {
         open={logSheetOpen}
         onOpenChange={(o) => {
           setLogSheetOpen(o);
-          if (!o) queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+          if (!o) {
+            console.log('[InteractionDetail] invalidating on sheet close, id:', id);
+            queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+            queryClient.invalidateQueries({ queryKey: ["task-records"] });
+          }
         }}
         preselectedContactId={task.contact_id}
         skipFollowupStep={true}
