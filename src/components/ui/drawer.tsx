@@ -48,22 +48,31 @@ const DrawerOverlay = React.forwardRef<
 ));
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
-// Fix: Capture viewport height once on mount, freeze it to prevent keyboard-triggered resizing
+// Stable viewport height — capture on mount, only update when viewport grows back
 function useVisualViewportHeight() {
   const [height, setHeight] = React.useState<number | undefined>(undefined);
   React.useEffect(() => {
-    // Capture once on mount — never update
-    setHeight(window.visualViewport?.height ?? window.innerHeight);
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const initialHeight = vv.height;
+    setHeight(initialHeight);
+    const update = () => {
+      if (vv.height >= initialHeight) {
+        setHeight(vv.height);
+      }
+    };
+    vv.addEventListener("resize", update);
+    return () => vv.removeEventListener("resize", update);
   }, []);
   return height;
 }
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { maxHeightRatio?: number }
->(({ className, children, maxHeightRatio = 0.9, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
+>(({ className, children, ...props }, ref) => {
   const vvHeight = useVisualViewportHeight();
-  const maxH = vvHeight ? `${vvHeight * maxHeightRatio}px` : undefined;
+  const maxH = vvHeight ? `${vvHeight * 0.9}px` : undefined;
 
   return (
     <DrawerPortal>
@@ -77,7 +86,6 @@ const DrawerContent = React.forwardRef<
         )}
         style={{
           ...(maxH ? { maxHeight: maxH } : {}),
-          ...(maxH && maxHeightRatio > 0.9 ? { minHeight: maxH } : {}),
           outline: "none",
           touchAction: "none",
           overscrollBehavior: "none",
