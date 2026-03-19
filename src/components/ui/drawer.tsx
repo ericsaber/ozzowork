@@ -89,6 +89,8 @@ const DrawerContent = React.forwardRef<
         style={{
           ...(maxH ? { maxHeight: maxH } : {}),
           outline: "none",
+          touchAction: "none",
+          overscrollBehavior: "none",
         }}
         {...props}
       >
