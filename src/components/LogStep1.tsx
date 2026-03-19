@@ -419,10 +419,12 @@ const LogStep1 = ({
           </span>
         </div>
 
-        {/* Note / mic area — Bug 10: stable min-height */}
-        <div className="px-[14px] py-[12px]" style={{ minHeight: "180px" }}>
-          {!isTyping && !note && !isRecording && !isTranscribing ? (
-            /* Default: centered mic CTA */
+        {/* Note / mic area — mic CTA always in flow to hold height */}
+        <div className="px-[14px] py-[12px] relative">
+          {/* Mic CTA — ALWAYS in flow, holds container height */}
+          <div style={{
+            visibility: (!isTyping && !note && !isRecording && !isTranscribing) ? 'visible' : 'hidden',
+          }}>
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 onClick={handleRecordingCTA}
@@ -451,90 +453,101 @@ const LogStep1 = ({
                 or tap here to type…
               </button>
             </div>
-          ) : isRecording ? (
-            /* Bug 10: Recording mode — same layout, labels stay */
-            <div className="flex flex-col items-center py-4 gap-2">
-              <button
-                onClick={stopRecording}
-                className="rounded-full flex items-center justify-center shrink-0 transition-colors animate-pulse"
-                style={{
-                  width: 48,
-                  height: 48,
-                  background: "hsl(var(--destructive))",
-                }}
-              >
-                <Square size={16} className="text-destructive-foreground" />
-              </button>
-              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                Recording… tap to stop
-              </span>
-              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                AI will sum it up
-              </span>
-              <div className="w-12 border-t border-border my-1" />
-              <button
-                onClick={() => setIsTyping(true)}
-                className="text-[14px] italic text-muted-foreground"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                or tap here to type…
-              </button>
-            </div>
-          ) : isTranscribing ? (
-            /* Bug 10: Transcribing — pulsing placeholder in note position */
-            <div className="flex flex-col items-center py-4 gap-2">
-              <button
-                disabled
-                className="rounded-full flex items-center justify-center shrink-0"
-                style={{
-                  width: 48,
-                  height: 48,
-                  background: "hsl(var(--secondary))",
-                  border: "1px solid hsl(var(--border))",
-                }}
-              >
-                <Mic size={20} className="text-muted-foreground" />
-              </button>
-              <span
-                className="text-[13px] italic animate-pulse"
-                style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-heading)" }}
-              >
-                Transcribing…
-              </span>
-              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                AI will sum it up
-              </span>
-              <div className="w-12 border-t border-border my-1" />
-              <span className="text-[14px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
-                or tap here to type…
-              </span>
-            </div>
-          ) : (
-            /* Typing / note populated */
-            <div className="relative">
-              <div className="flex items-start gap-2">
-                <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
-                  <Mic size={18} className="text-muted-foreground" />
+          </div>
+
+          {/* Recording — absolute overlay */}
+          {isRecording && (
+            <div className="absolute inset-0 px-[14px] py-[12px]">
+              <div className="flex flex-col items-center py-4 gap-2">
+                <button
+                  onClick={stopRecording}
+                  className="rounded-full flex items-center justify-center shrink-0 transition-colors animate-pulse"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    background: "hsl(var(--destructive))",
+                  }}
+                >
+                  <Square size={16} className="text-destructive-foreground" />
                 </button>
-                <div className="flex-1">
-                  <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
-                    {isRawTranscript ? "Transcript" : "Note"}
-                  </span>
-                  <textarea
-                    ref={textareaRef}
-                    placeholder="What happened?"
-                    value={note}
-                    onChange={(e) => {
-                      setNote(e.target.value);
-                      // Auto-grow
-                      const el = e.target;
-                      el.style.height = "auto";
-                      el.style.height = el.scrollHeight + "px";
-                    }}
-                    onFocus={preventScrollOnFocus}
-                    className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
-                    style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
-                  />
+                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  Recording… tap to stop
+                </span>
+                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  AI will sum it up
+                </span>
+                <div className="w-12 border-t border-border my-1" />
+                <button
+                  onClick={() => setIsTyping(true)}
+                  className="text-[14px] italic text-muted-foreground"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  or tap here to type…
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Transcribing — absolute overlay */}
+          {isTranscribing && (
+            <div className="absolute inset-0 px-[14px] py-[12px]">
+              <div className="flex flex-col items-center py-4 gap-2">
+                <button
+                  disabled
+                  className="rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    background: "hsl(var(--secondary))",
+                    border: "1px solid hsl(var(--border))",
+                  }}
+                >
+                  <Mic size={20} className="text-muted-foreground" />
+                </button>
+                <span
+                  className="text-[13px] italic animate-pulse"
+                  style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-heading)" }}
+                >
+                  Transcribing…
+                </span>
+                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  AI will sum it up
+                </span>
+                <div className="w-12 border-t border-border my-1" />
+                <span className="text-[14px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                  or tap here to type…
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Typing / note populated — absolute overlay */}
+          {(isTyping || note) && !isRecording && !isTranscribing && (
+            <div className="absolute inset-0 px-[14px] py-[12px]">
+              <div className="relative py-4">
+                <div className="flex items-start gap-2">
+                  <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
+                    <Mic size={18} className="text-muted-foreground" />
+                  </button>
+                  <div className="flex-1">
+                    <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                      {isRawTranscript ? "Transcript" : "Note"}
+                    </span>
+                    <textarea
+                      ref={textareaRef}
+                      placeholder="What happened?"
+                      value={note}
+                      onChange={(e) => {
+                        setNote(e.target.value);
+                        const el = e.target;
+                        el.style.height = "auto";
+                        el.style.height = el.scrollHeight + "px";
+                      }}
+                      onFocus={preventScrollOnFocus}
+                      className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
+                      style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
