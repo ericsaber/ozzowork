@@ -419,10 +419,15 @@ const LogStep1 = ({
           </span>
         </div>
 
-        {/* Note / mic area — Bug 10: stable min-height */}
-        <div className="px-[14px] py-[12px]" style={{ minHeight: 180, transition: 'height 0.15s ease' }}>
-          {!isTyping && !note && !isRecording && !isTranscribing ? (
-            /* Default: centered mic CTA */
+        {/* Note / mic area — both states always in DOM for stable height */}
+        <div className="px-[14px] py-[12px] relative">
+          {/* Mic CTA — always in DOM, hidden when typing or note exists */}
+          <div style={{
+            visibility: (!isTyping && !note && !isRecording && !isTranscribing) ? 'visible' : 'hidden',
+            position: (!isTyping && !note && !isRecording && !isTranscribing) ? 'relative' : 'absolute',
+            top: 0, left: 0, right: 0,
+            padding: (!isTyping && !note && !isRecording && !isTranscribing) ? undefined : '0 14px',
+          }}>
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 onClick={handleRecordingCTA}
@@ -451,8 +456,10 @@ const LogStep1 = ({
                 or tap here to type…
               </button>
             </div>
-          ) : isRecording ? (
-            /* Bug 10: Recording mode — same layout, labels stay */
+          </div>
+
+          {/* Recording state */}
+          {isRecording && (
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 onClick={stopRecording}
@@ -480,8 +487,10 @@ const LogStep1 = ({
                 or tap here to type…
               </button>
             </div>
-          ) : isTranscribing ? (
-            /* Bug 10: Transcribing — pulsing placeholder in note position */
+          )}
+
+          {/* Transcribing state */}
+          {isTranscribing && (
             <div className="flex flex-col items-center py-4 gap-2">
               <button
                 disabled
@@ -509,8 +518,10 @@ const LogStep1 = ({
                 or tap here to type…
               </span>
             </div>
-          ) : (
-            /* Typing / note populated */
+          )}
+
+          {/* Typing / note populated */}
+          {(isTyping || note) && !isRecording && !isTranscribing && (
             <div className="relative py-4">
               <div className="flex items-start gap-2">
                 <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
@@ -526,12 +537,10 @@ const LogStep1 = ({
                     value={note}
                     onChange={(e) => {
                       setNote(e.target.value);
-                      // Auto-grow
                       const el = e.target;
                       el.style.height = "auto";
                       el.style.height = el.scrollHeight + "px";
                     }}
-                    
                     className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
                     style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
                   />
