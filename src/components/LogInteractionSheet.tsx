@@ -13,6 +13,7 @@ interface LogInteractionSheetProps {
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
   const mountHeightRef = useRef(window.innerHeight);
+  const hasAnimated = useRef(false);
 
   const state = useLogInteraction({
     open,
@@ -21,6 +22,16 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     skipFollowupStep,
     existingTaskRecordId,
   });
+
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        hasAnimated.current = true;
+      });
+    } else {
+      hasAnimated.current = false;
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -79,10 +90,11 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       />
       {/* Sheet panel */}
       <div
-        className="relative rounded-t-[10px] bg-background animate-slide-up"
+        className="relative rounded-t-[10px] bg-background"
         style={{
           maxHeight: `${mountHeightRef.current * 0.9}px`,
           overflowY: "auto",
+          animation: hasAnimated.current ? 'none' : 'slide-up 300ms ease-out',
         }}
       >
         {/* Drag handle — decorative only */}
