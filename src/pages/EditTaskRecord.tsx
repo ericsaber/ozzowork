@@ -60,7 +60,7 @@ const EditTaskRecord = () => {
   useEffect(() => {
     if (task && !initialized.current) {
       initialized.current = true;
-      setInteractionOn(!!task.connect_type);
+      setInteractionOn(!!(task.connect_type || task.note));
       setConnectType(task.connect_type || "");
       setConnectDate(task.connect_date ? format(parseISO(task.connect_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"));
       setNote(task.note || "");
