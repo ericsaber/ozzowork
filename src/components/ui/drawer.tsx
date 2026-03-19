@@ -48,20 +48,10 @@ const DrawerOverlay = React.forwardRef<
 ));
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
-function useVisualViewportHeight() {
-  const [height] = React.useState(
-    () => window.visualViewport?.height ?? window.innerHeight
-  );
-  return height;
-}
-
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const vvHeight = useVisualViewportHeight();
-  const maxH = vvHeight ? `${vvHeight * 0.9}px` : undefined;
-
   return (
     <DrawerPortal>
       <DrawerOverlay />
@@ -73,7 +63,7 @@ const DrawerContent = React.forwardRef<
           className,
         )}
         style={{
-          ...(maxH ? { maxHeight: maxH } : {}),
+          maxHeight: "min(90vh, 90lvh)",
           outline: "none",
           touchAction: "none",
           overscrollBehavior: "none",
