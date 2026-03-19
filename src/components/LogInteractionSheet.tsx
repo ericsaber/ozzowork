@@ -56,7 +56,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   const handleOpen = (o: boolean) => {
-    console.log('[Sheet] handleOpen called', { o });
+    addLog(`handleOpen o=${o}`);
     if (!o) {
       state.handleRequestClose();
       return;
