@@ -20,11 +20,11 @@ type LogInteractionState = ReturnType<typeof useLogInteraction>;
 
 interface LogInteractionContentProps {
   state: LogInteractionState;
-  /** Called after "Keep editing" in discard dialog — wrapper may need to re-assert open state */
   onKeepEditing?: () => void;
+  addLog?: (msg: string) => void;
 }
 
-const LogInteractionContent = ({ state, onKeepEditing }: LogInteractionContentProps) => {
+const LogInteractionContent = ({ state, onKeepEditing, addLog }: LogInteractionContentProps) => {
   const {
     step, contactId, setContactId, connectType, setConnectType,
     note, setNote, contactName, isContactPrefilled, contacts,
