@@ -183,15 +183,17 @@ const InteractionDetail = () => {
           {hasInteraction ? (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f0ede8" }}>
-                {ConnectIcon && <ConnectIcon size={14} className="text-muted-foreground" />}
+                {ConnectIcon ? <ConnectIcon size={14} className="text-muted-foreground" /> : <ClipboardList size={14} className="text-muted-foreground" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
-                  {typeLabels[task.connect_type] || task.connect_type}
+                  {task.connect_type ? (typeLabels[task.connect_type] || task.connect_type) : "Interacted"}
                 </p>
-                <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                  {task.connect_date ? `${format(parseISO(task.connect_date), "MMM d")} · ${formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago` : ""}
-                </p>
+                {task.connect_date && (
+                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                    {format(parseISO(task.connect_date), "MMM d")} · {formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago
+                  </p>
+                )}
                 {task.note && (
                   <p className="mt-1 italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "18px", color: "#6b6b67" }}>
                     {task.note}
