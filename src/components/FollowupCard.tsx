@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Check, Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon } from "lucide-react";
+import { Check, Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ClipboardList } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
@@ -33,7 +33,7 @@ const FollowupCard = ({
   const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || CalendarIcon) : CalendarIcon;
   const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
   // Fix 3: fallback icon and verb when no connect type
-  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || MessageSquare) : MessageSquare;
+  const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || ClipboardList) : ClipboardList;
   const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : "Interacted";
 
   const badgeLabel = variant === "today" ? "Today" : `Due ${format(parseISO(dueDate), "MMM d")}`;

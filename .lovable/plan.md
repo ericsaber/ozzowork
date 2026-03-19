@@ -1,85 +1,83 @@
+## Log Flow Redesign — Full Plan
 
+### Task 1: New Toast Component (replaces CelebrationHeader) — pending
 
-## Bug Fixes Round 4 — 4 Changes
+**File: `src/components/CelebrationHeader.tsx`** — Full rewrite
 
-### Fix 1: Date not saving + task record not refreshing in skipFollowupStep mode
+- Background `#fdf5f0`, border-radius 6px, padding `7px 12px 8px 14px`, margin-bottom 18px
+- Left accent: absolutely-positioned 3px-wide `#c8622a` div (NOT border-left)
+- **Variant A ("Nice work.")** — first interaction only:
+  - Border animates height 0→100% (280ms), text fades up with delays
+  - "Nice work." in Crimson Pro 20px `#c8622a`, subline "[Name] · First interaction" 11px `#7a746c`
+- **Variant B ("Done.")** — repeat interactions:
+  - Static border, only "✓" pops in (spring 220ms)
+  - "Done." + "✓" baseline row, subline "[Name] · Nth interaction"
+- Interaction count query unchanged
 
-**Problem (a):** `connectDate` state lives in `LogInteractionSheet` and is passed to `LogStep1` for display, but the mutation reads `connectDate` from the component state. The issue is that `setConnectDate` from `LogStep1` calls back to the parent correctly — the prop chain looks intact. The likely issue is the `connectDate` reset in `clearAndClose()` racing with the mutation, or the initial value not updating. Will add the requested console.log before the update and trace.
+### Task 2: Redesigned Stepper ✅
 
-**Problem (b):** The invalidation on success uses `queryKey: ["task-record"]` (no ID) which won't match the query `["task-record", id]`. Also, `InteractionDetail.tsx` invalidation on close is missing `["task-records"]`.
+**File: `src/components/StepIndicator.tsx`** — Done
 
-**File: `src/components/LogInteractionSheet.tsx`**
-- Line 165: Add `console.log('[skipFollowupStep] update payload:', { connect_type: connectType || null, note: note || null, connect_date: connectDate })` before mutation fires (already exists but verify format matches request)
-- Line 190: Change `queryClient.invalidateQueries({ queryKey: ["task-record"] })` → `queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] })` — this is the key mismatch causing no refresh
-- Add `queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] })` after the existing invalidations
-- Add `console.log('[skipFollowupStep] invalidating queries for task-record:', existingTaskRecordId)`
+- 22px circles, always number, never checkmark
+- Active: transparent + 1.5px `#c8622a` border, sienna number
+- Completed: solid `#c8622a`, white number
+- Inactive: muted gray fill, gray number
+- Identical structure on both steps — no expansion, no `expandStep2` prop
+- Labels: 9px uppercase below circles
 
-**File: `src/pages/InteractionDetail.tsx`**
-- Lines 283-286: Update `onOpenChange` to also invalidate `["task-records"]` and add console.log:
-```tsx
-onOpenChange={(o) => {
-  setLogSheetOpen(o);
-  if (!o) {
-    console.log('[InteractionDetail] invalidating on sheet close, id:', id);
-    queryClient.invalidateQueries({ queryKey: ["task-record", id] });
-    queryClient.invalidateQueries({ queryKey: ["task-records"] });
-  }
-}}
-```
+### Task 3: Unified Note Card (LogStep1 redesign) — pending
 
-### Fix 2: connectType undefined not caught by fallback
+**File: `src/components/LogStep1.tsx`** — Major rewrite
 
-**File: `src/components/LogStep2.tsx`**
-- Line 56: `useState(connectType || "")` — already handles undefined via `||`. But line 63 `useState(!!connectType)` — this correctly treats undefined as falsy. The checks look correct already. Will verify no `=== ""` comparisons exist elsewhere.
+- Single card: white bg, 0.5px border, 14px radius
+- **Contact header row** (46px): prefilled (avatar + name) or empty (dashed avatar + search). "Change" link only in FAB flow after selection
+- **Note/mic area**: default centered mic CTA (38px circle), typing mode (mic to corner, textarea), recording mode (CTA → "Done recording →", always active)
+- **Connect type chips** below card: dimmed until contact selected, 100px radius pills
+- **CTA**: "Next →", disabled until contact + type selected; "Done recording →" during recording
+- **Skip link**: "Set a follow-up without logging"
 
-**File: `src/pages/ContactHistory.tsx`**
-- Line 273: Already uses `type ? ... : MessageSquare` — handles falsy. No change needed.
-- Line 274: Already uses `type ? ... : "Interacted"` — handles falsy. No change needed.
+### Task 4: LogStep2 Redesign — pending
 
-**File: `src/components/FollowupCard.tsx`**
-- Line 36: Already uses `connectType ? ... : MessageSquare` — handles falsy. No change needed.
-- Line 37: Already uses `connectType ? ... : "Interacted"` — handles falsy. No change needed.
+**File: `src/components/LogStep2.tsx`** — Moderate rewrite
 
-These all use truthy checks (`?`), not `=== ""`, so they already handle undefined. No changes needed for Fix 2 beyond confirming.
+- Remove standalone "What's next?" heading — stepper label is sufficient
+- Remove "← Edit log" back link entirely
+- **Green confirmation card**: `#eaf4ed` bg, green check + type/name/date, note italic serif, "Tap to edit"
+- **Inline edit**: card bg → white, chips + textarea inside, "Done editing" link to collapse
+- **Follow-up chips**: 100px radius pills, "How will you follow up?" + "When?" labels
+- **CTA**: "Save →" (dims until type + date selected), "Skip follow-up" link
 
-### Fix 3: Replace MessageSquare fallback with ClipboardList
+### Task 5: LogInteraction Page Updates — pending
 
-No `ClipboardList` currently imported anywhere. Replace `MessageSquare` fallback (not the Text type icon) with `ClipboardList` in:
+**File: `src/pages/LogInteraction.tsx`**
 
-**File: `src/pages/ContactHistory.tsx`**
-- Add `ClipboardList` to lucide-react import
-- Line 273: Change fallback from `MessageSquare` to `ClipboardList`
+- Remove h1 heading and back arrow
+- Merge ContactCombobox into LogStep1 (pass contacts, handlers)
+- Remove separate combobox + quick-add button
+- Pass `isContactPrefilled` based on `preselectedContact`
 
-**File: `src/components/FollowupCard.tsx`**
-- Add `ClipboardList` to lucide-react import
-- Line 36: Change fallback from `MessageSquare` to `ClipboardList`
+### Task 6: CompleteFollowupSheet Updates — pending
 
-**File: `src/pages/InteractionDetail.tsx`**
-- No fallback icon for missing connect_type in the "What happened" section currently — it only renders `ConnectIcon` when `hasInteraction` is true. No change needed here since the empty state shows the nudge text instead.
+**File: `src/components/CompleteFollowupSheet.tsx`**
 
-### Fix 4: Nudge styling consistency
+- Toast above stepper only when completing a follow-up (Today check tap, contact record checkmark)
+- No toast for fresh interactions via FAB or contact Log button
+- Contact always prefilled
 
-**File: `src/pages/InteractionDetail.tsx`**
+### Task 7: Entry Point Wiring — pending
 
-The "What's next" empty state (lines 248-255) already has the correct styling (`#fdf5f0`, border, rounded-[10px], etc.).
+| Entry | Contact | Toast | Chips dim? | CTA dims until |
+|-------|---------|-------|------------|----------------|
+| FAB (+) | Empty, searchable | No | Yes | Contact + type |
+| Contact Log btn | Prefilled | No | No | Type only |
+| Today/Contact check | Prefilled | Yes | No | Type only |
 
-The "What happened" empty state (lines 201-208) is a plain `<p>` without the card styling. Wrap it in the same styled div:
+### Files Changed Summary
 
-```tsx
-<div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
-  <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
-    No interaction logged.{" "}
-    <button onClick={() => setLogSheetOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
-      Want to add one?
-    </button>
-  </p>
-</div>
-```
-
-### Summary of file changes
-
-1. **`src/components/LogInteractionSheet.tsx`** — Fix query key mismatch (`["task-record", existingTaskRecordId]`), add contact-task-records invalidation, add console.logs
-2. **`src/pages/InteractionDetail.tsx`** — Add `["task-records"]` invalidation + console.log on sheet close, wrap "What happened" nudge in styled card
-3. **`src/pages/ContactHistory.tsx`** — Import `ClipboardList`, use as fallback icon
-4. **`src/components/FollowupCard.tsx`** — Import `ClipboardList`, use as fallback icon
-
+1. `src/components/CelebrationHeader.tsx` — Full rewrite → toast
+2. `src/components/StepIndicator.tsx` — Done ✅
+3. `src/components/LogStep1.tsx` — Major rewrite, unified card + inline search
+4. `src/components/LogStep2.tsx` — Rewrite, inline edit, no heading
+5. `src/pages/LogInteraction.tsx` — Remove title/back, merge combobox
+6. `src/components/CompleteFollowupSheet.tsx` — Wire toast, new props
+7. `src/components/ContactCombobox.tsx` — Absorbed into LogStep1 or adapted

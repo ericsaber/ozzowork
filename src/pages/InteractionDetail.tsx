@@ -199,12 +199,14 @@ const InteractionDetail = () => {
               </div>
             </div>
           ) : (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#7a746c" }}>
-              No interaction logged.{" "}
-              <button onClick={() => setLogSheetOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
-                Want to add one?
-              </button>
-            </p>
+            <div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
+              <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+                No interaction logged.{" "}
+                <button onClick={() => setLogSheetOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+                  Want to add one?
+                </button>
+              </p>
+            </div>
           )}
         </div>
 
@@ -282,7 +284,11 @@ const InteractionDetail = () => {
         open={logSheetOpen}
         onOpenChange={(o) => {
           setLogSheetOpen(o);
-          if (!o) queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+          if (!o) {
+            console.log('[InteractionDetail] invalidating on sheet close, id:', id);
+            queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+            queryClient.invalidateQueries({ queryKey: ["task-records"] });
+          }
         }}
         preselectedContactId={task.contact_id}
         skipFollowupStep={true}

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
+  ArrowLeft, Phone, Mail, MessageSquare, Users, Video, ClipboardList,
   Plus, Pencil, Trash2, X, MoreHorizontal, ArrowRight, ChevronRight, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -270,7 +270,7 @@ const ContactHistory = () => {
             {historyRecords.map((record: any) => {
               const type = record.connect_type;
               // Fix 3: fallback icon and verb when no connect type
-              const TypeIcon = type ? (typeIcons[type] || MessageSquare) : MessageSquare;
+              const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
               const thread = getThreadLine(record);
 
