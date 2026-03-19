@@ -270,7 +270,7 @@ const ContactHistory = () => {
             {historyRecords.map((record: any) => {
               const type = record.connect_type;
               // Fix 3: fallback icon and verb when no connect type
-              const TypeIcon = type ? (typeIcons[type] || MessageSquare) : MessageSquare;
+              const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
               const thread = getThreadLine(record);
 
