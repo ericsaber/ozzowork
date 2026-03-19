@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLogInteraction } from "@/hooks/useLogInteraction";
 import LogInteractionContent from "@/components/LogInteractionContent";
@@ -12,7 +12,9 @@ interface LogInteractionSheetProps {
 }
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
-  console.log('[Sheet] render', { open });
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const addLog = (msg: string) => setDebugLog(prev => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
+  addLog(`render open=${open}`);
   const mountHeightRef = useRef(window.innerHeight);
   const hasAnimated = useRef(false);
 
@@ -35,7 +37,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   useEffect(() => {
-    console.log('[Sheet] body lock effect fired', { open });
+    addLog(`body lock effect open=${open}`);
     if (!open) return;
 
     document.body.style.overflow = "hidden";
@@ -54,7 +56,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   const handleOpen = (o: boolean) => {
-    console.log('[Sheet] handleOpen called', { o });
+    addLog(`handleOpen o=${o}`);
     if (!o) {
       state.handleRequestClose();
       return;
@@ -62,7 +64,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     onOpenChange(true);
   };
 
-  console.log('[Sheet] before open check', { open });
+  addLog(`before open check open=${open}`);
   if (!open) return null;
 
   return createPortal(
@@ -79,6 +81,14 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         justifyContent: "flex-end",
       }}
     >
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+        background: 'black', color: 'lime', fontSize: 10, padding: 4,
+        fontFamily: 'monospace', maxHeight: 120, overflowY: 'auto',
+        pointerEvents: 'none',
+      }}>
+        {debugLog.map((l, i) => <div key={i}>{l}</div>)}
+      </div>
       {/* Overlay */}
       <div
         className="animate-fade-in"
@@ -112,6 +122,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
               onOpenChange(true);
             });
           }}
+          addLog={addLog}
         />
       </div>
     </div>,
