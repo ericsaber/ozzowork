@@ -3,9 +3,21 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
-const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
-);
+const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  const isOpen = props.open;
+
+  // Fix: Lock body overscroll when drawer is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overscrollBehavior = "none";
+      return () => {
+        document.body.style.overscrollBehavior = "";
+      };
+    }
+  }, [isOpen]);
+
+  return <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />;
+};
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
