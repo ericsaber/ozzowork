@@ -305,6 +305,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
                   showDateRow={skipFollowupStep}
                   connectDate={connectDate}
                   setConnectDate={setConnectDate}
+                  autoFocusSearch={!isContactPrefilled}
                 />
               </div>
             ) : (

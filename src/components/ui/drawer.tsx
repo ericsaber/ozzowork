@@ -81,6 +81,7 @@ const DrawerContent = React.forwardRef<
           outline: "none",
           touchAction: "none",
           overscrollBehavior: "none",
+          contain: "layout size style",
         }}
         {...props}
       >
