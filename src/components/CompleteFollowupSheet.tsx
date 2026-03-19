@@ -106,15 +106,17 @@ const CompleteFollowupSheet = ({
   };
 
   const handleSkip = async () => {
+    const skipRecord = {
+      contact_id: contactId,
+      user_id: userId,
+      connect_type: connectType || null,
+      connect_date: new Date().toISOString(),
+      note: note || null,
+      status: "active",
+    };
+    console.log('[completion] handleSkip record:', { connect_type: skipRecord.connect_type, note: skipRecord.note, connect_date: skipRecord.connect_date });
     const { error } = await supabase.from("task_records" as any)
-      .insert({
-        contact_id: contactId,
-        user_id: userId,
-        connect_type: connectType || null,
-        connect_date: new Date().toISOString(),
-        note: note || null,
-        status: "active",
-      });
+      .insert(skipRecord);
     if (error) { toast.error(error.message); return; }
     invalidateAll();
     toast.success("Interaction logged");
