@@ -273,7 +273,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
 
   return (
     <>
-      <Drawer open={open} onOpenChange={handleOpen}>
+      <Drawer open={open} onOpenChange={handleOpen} handleOnly={true}>
         <DrawerContent onContextMenu={(e) => e?.preventDefault?.()} onFocusCapture={handleDrawerFocusCapture}>
           <div className="overflow-y-auto px-5 pb-6">
             {!skipFollowupStep && <StepIndicator currentStep={step} />}
