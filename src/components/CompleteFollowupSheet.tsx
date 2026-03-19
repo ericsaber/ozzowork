@@ -48,16 +48,18 @@ const CompleteFollowupSheet = ({
   const logMutation = useMutation({
     mutationFn: async () => {
       const now = new Date().toISOString();
+      const payload = {
+        status: "completed",
+        completed_at: now,
+        connect_type: connectType || null,
+        connect_date: now,
+        note: note || null,
+        planned_follow_up_type: connectType || null,
+        planned_follow_up_date: now,
+      };
+      console.log('[completion] saving interaction:', { connect_type: payload.connect_type, note: payload.note, connect_date: payload.connect_date, taskRecordId });
       const { error } = await supabase.from("task_records" as any)
-        .update({
-          status: "completed",
-          completed_at: now,
-          connect_type: connectType || null,
-          connect_date: now,
-          note: note || null,
-          planned_follow_up_type: connectType || null,
-          planned_follow_up_date: now,
-        })
+        .update(payload)
         .eq("id", taskRecordId);
       if (error) throw error;
     },
