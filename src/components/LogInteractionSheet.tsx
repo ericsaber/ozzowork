@@ -24,6 +24,16 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   });
 
   useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        hasAnimated.current = true;
+      });
+    } else {
+      hasAnimated.current = false;
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
 
     document.body.style.overflow = "hidden";
