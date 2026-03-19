@@ -129,8 +129,8 @@ const ContactHistory = () => {
   };
 
   const getThreadLine = (record: any) => {
-    if (!record.planned_follow_up_type) return { text: "→ No follow-up", color: "#9e9e99" };
-    const typeLbl = typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type;
+    if (!record.planned_follow_up_type && !record.planned_follow_up_date) return { text: "→ No follow-up", color: "#9e9e99" };
+    const typeLbl = record.planned_follow_up_type ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type) : "Planned";
     const dateStr = record.planned_follow_up_date ? format(parseISO(record.planned_follow_up_date), "MMM d") : "";
     if (record.status === "completed") return { text: `→ ${typeLbl} ${dateStr} · Done`, color: "#3d7a4a" };
     if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) return { text: `→ ${typeLbl} ${dateStr} · Overdue`, color: "#a32d2d" };
