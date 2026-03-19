@@ -50,25 +50,14 @@ const CompleteFollowupSheet = ({
       const connectDate = new Date().toISOString();
       connectDateRef.current = connectDate;
 
-      const payload = {
-        connect_type: connectType || null,
-        note: note || null,
-        connect_date: connectDate,
-        completed_at: connectDate,
-        status: "completed",
-      };
-
-      console.log("[completion] updating existing record:", taskRecordId, {
-        connect_type: payload.connect_type,
-        note: payload.note,
-        connect_date: payload.connect_date,
-        new_followup_type: null,
-        new_followup_date: null,
-      });
+      console.log("[completion] op1 UPDATE:", taskRecordId, { status: "completed" });
 
       const { error } = await supabase
         .from("task_records" as any)
-        .update(payload)
+        .update({
+          status: "completed",
+          completed_at: connectDate,
+        })
         .eq("id", taskRecordId);
 
       if (error) throw error;
@@ -80,30 +69,43 @@ const CompleteFollowupSheet = ({
     onError: (e: any) => toast.error(e.message),
   });
 
+  const insertCompletionRecord = async ({
+    plannedFollowUpType,
+    plannedFollowUpDate,
+  }: {
+    plannedFollowUpType: string | null;
+    plannedFollowUpDate: string | null;
+  }) => {
+    const connectDate = connectDateRef.current ?? new Date().toISOString();
+
+    console.log("[completion] op2 INSERT:", {
+      connect_type: connectType || null,
+      note: note || null,
+      connect_date: connectDate,
+      planned_follow_up_type: plannedFollowUpType,
+      planned_follow_up_date: plannedFollowUpDate,
+    });
+
+    const { error } = await supabase.from("task_records" as any).insert({
+      contact_id: contactId,
+      user_id: userId,
+      connect_type: connectType || null,
+      note: note || null,
+      connect_date: connectDate,
+      planned_follow_up_type: plannedFollowUpType,
+      planned_follow_up_date: plannedFollowUpDate,
+      status: plannedFollowUpDate ? "active" : "completed",
+    });
+
+    if (error) throw error;
+  };
+
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      const connectDate = connectDateRef.current ?? new Date().toISOString();
-      const payload = {
-        planned_follow_up_type: type || null,
-        planned_follow_up_date: date || null,
-        status: date ? "active" : "completed",
-        completed_at: connectDate,
-      };
-
-      console.log("[completion] updating existing record:", taskRecordId, {
-        connect_type: connectType || null,
-        note: note || null,
-        connect_date: connectDate,
-        new_followup_type: payload.planned_follow_up_type,
-        new_followup_date: payload.planned_follow_up_date,
+      await insertCompletionRecord({
+        plannedFollowUpType: type || null,
+        plannedFollowUpDate: date || null,
       });
-
-      const { error } = await supabase
-        .from("task_records" as any)
-        .update(payload)
-        .eq("id", taskRecordId);
-
-      if (error) throw error;
     },
     onSuccess: () => {
       invalidateAll();
@@ -124,58 +126,23 @@ const CompleteFollowupSheet = ({
   };
 
   const handleSkip = async () => {
-    const connectDate = connectDateRef.current ?? new Date().toISOString();
+    try {
+      await insertCompletionRecord({
+        plannedFollowUpType: null,
+        plannedFollowUpDate: null,
+      });
 
-    console.log("[completion] updating existing record:", taskRecordId, {
-      connect_type: connectType || null,
-      note: note || null,
-      connect_date: connectDate,
-      new_followup_type: null,
-      new_followup_date: null,
-    });
-
-    const { error } = await supabase
-      .from("task_records" as any)
-      .update({
-        planned_follow_up_type: null,
-        planned_follow_up_date: null,
-        status: "completed",
-        completed_at: connectDate,
-      })
-      .eq("id", taskRecordId);
-
-    if (error) {
+      invalidateAll();
+      toast.success("Interaction logged");
+      handleClose();
+    } catch (error: any) {
       toast.error(error.message);
-      return;
     }
-
-    invalidateAll();
-    toast.success("Interaction logged");
-    handleClose();
   };
 
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
-
-    console.log("[completion] updating existing record:", taskRecordId, {
-      connect_type: newConnectType || null,
-      note: newNote || null,
-      connect_date: connectDateRef.current,
-      new_followup_type: null,
-      new_followup_date: null,
-    });
-
-    const { error } = await supabase
-      .from("task_records" as any)
-      .update({
-        connect_type: newConnectType || null,
-        note: newNote || null,
-      })
-      .eq("id", taskRecordId);
-
-    if (error) console.error("[completion] failed to update log:", error);
-    else invalidateAll();
   };
 
   return (
