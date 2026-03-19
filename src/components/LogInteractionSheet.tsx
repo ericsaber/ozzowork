@@ -43,22 +43,7 @@ const LogInteractionSheet = ({
   }, [open]);
 
   useEffect(() => {
-    addLog(`body lock effect open=${open}`);
-    if (!open) return;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.height = `${mountHeightRef.current}px`;
-    document.body.style.position = "fixed";
-    document.body.style.width = "100%";
-    document.body.style.top = "0";
-
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.height = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.style.top = "";
-    };
+    // disabled for debugging
   }, [open]);
 
   const handleOpen = (o: boolean) => {
