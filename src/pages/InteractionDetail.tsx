@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video,
-  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw, Calendar as CalendarIcon,
+  MoreHorizontal, Pencil, Clock, ArrowRight, RotateCcw, Calendar as CalendarIcon, ClipboardList,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow, isPast, isToday as isDateToday } from "date-fns";
 import {
@@ -90,6 +90,7 @@ const InteractionDetail = () => {
   const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
   const initials = contactName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const hasInteraction = !!(task.connect_type || task.note);
+  console.log('[InteractionDetail] task data:', { connect_type: task.connect_type, note: task.note, hasInteraction: !!(task.connect_type || task.note) });
   const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
   
@@ -182,15 +183,17 @@ const InteractionDetail = () => {
           {hasInteraction ? (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f0ede8" }}>
-                {ConnectIcon && <ConnectIcon size={14} className="text-muted-foreground" />}
+                {ConnectIcon ? <ConnectIcon size={14} className="text-muted-foreground" /> : <ClipboardList size={14} className="text-muted-foreground" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
-                  {typeLabels[task.connect_type] || task.connect_type}
+                  {task.connect_type ? (typeLabels[task.connect_type] || task.connect_type) : "Interacted"}
                 </p>
-                <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                  {task.connect_date ? `${format(parseISO(task.connect_date), "MMM d")} · ${formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago` : ""}
-                </p>
+                {task.connect_date && (
+                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                    {format(parseISO(task.connect_date), "MMM d")} · {formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago
+                  </p>
+                )}
                 {task.note && (
                   <p className="mt-1 italic" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "18px", color: "#6b6b67" }}>
                     {task.note}
