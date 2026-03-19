@@ -67,7 +67,7 @@ const Today = () => {
       contactName,
       followUpType: item.planned_follow_up_type || "",
       userId: item.user_id,
-      hasInteraction: !!item.connect_type,
+      hasInteraction: !!(item.connect_type || item.note),
     });
   };
 
