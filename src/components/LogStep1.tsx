@@ -45,6 +45,7 @@ interface LogStep1Props {
   showDateRow?: boolean;
   connectDate?: string;
   setConnectDate?: (v: string) => void;
+  autoFocusSearch?: boolean;
 }
 
 const LogStep1 = ({
