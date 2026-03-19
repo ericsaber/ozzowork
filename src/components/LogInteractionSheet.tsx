@@ -12,7 +12,9 @@ interface LogInteractionSheetProps {
 }
 
 const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
-  console.log('[Sheet] render', { open });
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const addLog = (msg: string) => setDebugLog(prev => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
+  addLog(`render open=${open}`);
   const mountHeightRef = useRef(window.innerHeight);
   const hasAnimated = useRef(false);
 
