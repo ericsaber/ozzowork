@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useLogInteraction } from "@/hooks/useLogInteraction";
 import LogInteractionContent from "@/components/LogInteractionContent";
 
@@ -21,6 +22,24 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     existingTaskRecordId,
   });
 
+  useEffect(() => {
+    if (!open) return;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.height = `${mountHeightRef.current}px`;
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.top = "0";
+
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.top = "";
+    };
+  }, [open]);
+
   const handleOpen = (o: boolean) => {
     if (!o) {
       state.handleRequestClose();
@@ -31,15 +50,31 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed left-0 right-0 top-0 z-50 flex flex-col justify-end"
-      style={{ height: mountHeightRef.current }}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: mountHeightRef.current,
+        zIndex: 50,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+      }}
     >
       {/* Overlay */}
       <div
-        className="absolute left-0 right-0 top-0 z-0 bg-black/40 animate-fade-in"
-        style={{ height: mountHeightRef.current }}
+        className="animate-fade-in"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: mountHeightRef.current,
+          backgroundColor: "hsl(0 0% 0% / 0.4)",
+        }}
         onClick={() => handleOpen(false)}
       />
       {/* Sheet panel */}
@@ -63,7 +98,8 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
           }}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
