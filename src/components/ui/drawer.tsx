@@ -71,10 +71,10 @@ function useVisualViewportHeight() {
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & { maxHeightRatio?: number }
+>(({ className, children, maxHeightRatio = 0.9, ...props }, ref) => {
   const vvHeight = useVisualViewportHeight();
-  const maxH = vvHeight ? `${vvHeight * 0.9}px` : undefined;
+  const maxH = vvHeight ? `${vvHeight * maxHeightRatio}px` : undefined;
 
   return (
     <DrawerPortal>

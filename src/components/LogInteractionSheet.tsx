@@ -262,7 +262,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
-        <DrawerContent className={isContactPrefilled ? "max-h-[90vh]" : "max-h-[95vh]"} onContextMenu={(e) => e?.preventDefault?.()}>
+        <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
             {!skipFollowupStep && <StepIndicator currentStep={step} />}
 
