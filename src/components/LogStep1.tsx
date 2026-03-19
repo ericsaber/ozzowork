@@ -45,7 +45,6 @@ interface LogStep1Props {
   showDateRow?: boolean;
   connectDate?: string;
   setConnectDate?: (v: string) => void;
-  autoFocusSearch?: boolean;
 }
 
 const LogStep1 = ({
@@ -69,7 +68,6 @@ const LogStep1 = ({
   showDateRow,
   connectDate,
   setConnectDate,
-  autoFocusSearch,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -121,13 +119,6 @@ const LogStep1 = ({
       })
       .slice(0, 5);
   }, [contacts, searchQuery]);
-
-  // Auto-focus search input on FAB open
-  useEffect(() => {
-    if (autoFocusSearch) {
-      searchInputRef.current?.focus();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close search on outside click
   useEffect(() => {
