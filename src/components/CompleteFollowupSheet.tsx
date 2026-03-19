@@ -37,6 +37,7 @@ const CompleteFollowupSheet = ({
   const [connectType, setConnectType] = useState(followUpType || "");
   const [note, setNote] = useState("");
   const didMarkComplete = useRef(false);
+  const newRecordId = useRef<string | null>(null);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["task-records"] });
@@ -67,9 +68,13 @@ const CompleteFollowupSheet = ({
         completed_at: now,
       };
       console.log('[completion] creating new record:', { connect_type: newRecord.connect_type, note: newRecord.note, connect_date: newRecord.connect_date });
-      const { error: insertErr } = await supabase.from("task_records" as any)
-        .insert(newRecord);
+      const { data, error: insertErr } = await supabase.from("task_records" as any)
+        .insert(newRecord)
+        .select("id")
+        .single();
       if (insertErr) throw insertErr;
+      newRecordId.current = (data as any)?.id ?? null;
+      console.log('[completion] new record id:', newRecordId.current);
     },
     onSuccess: () => {
       invalidateAll();
@@ -80,19 +85,17 @@ const CompleteFollowupSheet = ({
 
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      const newRecord = {
+      // Create a tails-only active record for the next follow-up
+      const followupRecord = {
         contact_id: contactId,
         user_id: userId,
-        connect_type: connectType || null,
-        connect_date: new Date().toISOString(),
-        note: note || null,
         planned_follow_up_type: type || null,
         planned_follow_up_date: date,
         status: "active",
       };
-      console.log('[completion] creating follow-up record:', { connect_type: newRecord.connect_type, note: newRecord.note, connect_date: newRecord.connect_date });
+      console.log('[completion] creating follow-up record:', followupRecord);
       const { error } = await supabase.from("task_records" as any)
-        .insert(newRecord);
+        .insert(followupRecord);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -110,23 +113,12 @@ const CompleteFollowupSheet = ({
       setConnectType(followUpType || "");
       setNote("");
       didMarkComplete.current = false;
+      newRecordId.current = null;
     }, 300);
   };
 
   const handleSkip = async () => {
-    const skipRecord = {
-      contact_id: contactId,
-      user_id: userId,
-      connect_type: connectType || null,
-      connect_date: new Date().toISOString(),
-      note: note || null,
-      status: "active",
-    };
-    console.log('[completion] handleSkip record:', { connect_type: skipRecord.connect_type, note: skipRecord.note, connect_date: skipRecord.connect_date });
-    const { error } = await supabase.from("task_records" as any)
-      .insert(skipRecord);
-    if (error) { toast.error(error.message); return; }
-    invalidateAll();
+    // Interaction was already saved in logMutation — just close
     toast.success("Interaction logged");
     handleClose();
   };
@@ -134,11 +126,17 @@ const CompleteFollowupSheet = ({
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
-    // Persist edits to the completed record
+    // Persist edits to the NEW interaction record (not the old follow-up)
+    const targetId = newRecordId.current;
+    if (!targetId) {
+      console.error('[completion] no new record id to update');
+      return;
+    }
+    console.log('[completion] updating new record:', targetId, { connect_type: newConnectType, note: newNote });
     const { error } = await supabase.from("task_records" as any).update({
       connect_type: newConnectType || null,
       note: newNote || null,
-    }).eq("id", taskRecordId);
+    }).eq("id", targetId);
     if (error) console.error('[completion] failed to update log:', error);
     else invalidateAll();
   };
