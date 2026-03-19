@@ -37,7 +37,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   }, [open]);
 
   useEffect(() => {
-    console.log('[Sheet] body lock effect fired', { open });
+    addLog(`body lock effect open=${open}`);
     if (!open) return;
 
     document.body.style.overflow = "hidden";
