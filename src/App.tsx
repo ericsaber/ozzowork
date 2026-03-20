@@ -34,6 +34,21 @@ const AppContent = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Draft cleanup on app load: delete orphaned drafts older than 2 hours
+  useEffect(() => {
+    if (!session) return;
+    const cleanup = async () => {
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const { error } = await supabase
+        .from("task_records" as any)
+        .delete()
+        .eq("status", "draft")
+        .lt("created_at", twoHoursAgo);
+      console.log("[draft] cleanup — deleted orphaned drafts older than 2 hours", { error });
+    };
+    cleanup();
+  }, [session]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
