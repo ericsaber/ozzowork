@@ -62,6 +62,25 @@ const Contacts = () => {
     onError: (e) => toast.error(e.message),
   });
 
+  const deleteAllContacts = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      // Delete associated data first
+      await supabase.from("follow_up_edits").delete().eq("user_id", user.id);
+      await supabase.from("follow_ups").delete().eq("user_id", user.id);
+      await supabase.from("interactions").delete().eq("user_id", user.id);
+      await supabase.from("task_records").delete().eq("user_id", user.id);
+      const { error } = await supabase.from("contacts").delete().eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("All contacts and associated data deleted");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const bulkAddContacts = useMutation({
     mutationFn: async (rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[]) => {
       const { data: { user } } = await supabase.auth.getUser();
