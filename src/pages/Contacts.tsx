@@ -2,10 +2,21 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, X, UserPlus, Upload } from "lucide-react";
+import { Search, Plus, X, UserPlus, Upload, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Contacts = () => {
   const navigate = useNavigate();
@@ -47,6 +58,25 @@ const Contacts = () => {
       setShowAdd(false);
       setForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       toast.success("Contact added");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteAllContacts = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      // Delete associated data first
+      await supabase.from("follow_up_edits").delete().eq("user_id", user.id);
+      await supabase.from("follow_ups").delete().eq("user_id", user.id);
+      await supabase.from("interactions").delete().eq("user_id", user.id);
+      await supabase.from("task_records").delete().eq("user_id", user.id);
+      const { error } = await supabase.from("contacts").delete().eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("All contacts and associated data deleted");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -225,6 +255,28 @@ const Contacts = () => {
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-heading text-foreground">Contacts</h1>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="text-xs text-destructive underline">Delete All</button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete all your contacts and their associated interactions, follow-ups, and task records. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteAllContacts.mutate()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteAllContacts.isPending ? "Deleting..." : "Delete Everything"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="relative mb-4">
