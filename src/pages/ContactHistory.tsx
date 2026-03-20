@@ -271,6 +271,36 @@ const ContactHistory = () => {
           <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>History</p>
           <div className="space-y-0">
             {historyRecords.map((record: any) => {
+              // Cleared record rendering
+              if (record.status === 'cleared') {
+                const typeLbl = record.planned_follow_up_type
+                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
+                  : "Planned";
+                const dateStr = record.planned_follow_up_date
+                  ? format(parseISO(record.planned_follow_up_date), "MMM d")
+                  : "";
+                return (
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.55 }}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                      <Calendar size={14} className="text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                        {typeLbl} follow-up{dateStr ? ` · ${dateStr}` : ""}
+                      </span>
+                      <div className="mt-1">
+                        <span
+                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                          style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
+                        >
+                          Cleared
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               const type = record.connect_type;
               // Fix 3: fallback icon and verb when no connect type
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;

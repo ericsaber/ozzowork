@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import {
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
+import InterstitialScreen from "@/components/InterstitialScreen";
 
 interface LogInteractionSheetProps {
   open: boolean;
@@ -28,62 +29,77 @@ interface LogInteractionSheetProps {
   existingTaskRecordId?: string;
 }
 
-// Bug 10: Module-level draft persistence
-let savedDraft: { contactId: string; connectType: string; note: string } | null = null;
-
-const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId }: LogInteractionSheetProps) => {
+const LogInteractionSheet = ({
+  open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId,
+}: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | "interstitial" | 2>(1);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
-  const [savedTaskRecordId, setSavedTaskRecordId] = useState<string | null>(null);
-  const [skippedInteraction, setSkippedInteraction] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  // Bug 3: Track if prefilled contact was cleared by user
   const [contactCleared, setContactCleared] = useState(false);
-
-  // Fix 1: connect date for skipFollowupStep mode (defaults to today)
   const [connectDate, setConnectDate] = useState(format(new Date(), "yyyy-MM-dd"));
-
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [skippedInteraction, setSkippedInteraction] = useState(false);
 
-  // Bug 2: Sync contactId when preselectedContactId changes (route navigation)
+  // Draft state (FAB / Log button flows only — not completion flow)
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [linkedRecordId, setLinkedRecordId] = useState<string | null>(null);
+  const [interstitialPath, setInterstitialPath] = useState<"link" | "clear" | "keep" | null>(null);
+  const [existingFollowup, setExistingFollowup] = useState<any | null>(null);
+
+  // skipFollowupStep mode keeps its own record reference (unchanged)
+  const [savedTaskRecordId, setSavedTaskRecordId] = useState<string | null>(null);
+
+  // isDirty tied to draft existence (spec: false before Next →, true after)
+  const isDirty = !!draftId;
+
+  // Sync contactId when preselectedContactId changes
   useEffect(() => {
-    if (!open) {
-      // When sheet is closed, always sync to current route context
-      if (!savedDraft) {
-        setContactId(preselectedContactId || "");
-        setContactCleared(false);
-      }
+    if (!open && !draftId) {
+      setContactId(preselectedContactId || "");
+      setContactCleared(false);
     }
   }, [preselectedContactId, open]);
 
-  // Bug 10: Restore draft on open
   useEffect(() => {
-    if (open && savedDraft && !preselectedContactId) {
-      setContactId(savedDraft.contactId);
-      setConnectType(savedDraft.connectType);
-      setNote(savedDraft.note);
-      savedDraft = null;
-    } else if (open && !savedDraft && !contactCleared) {
-      // Fresh open — sync to preselected
+    if (open && !draftId && !contactCleared) {
       setContactId(preselectedContactId || "");
     }
   }, [open, preselectedContactId]);
 
-  const isDirty = !!note || !!connectType || (!!contactId && contactId !== (preselectedContactId || ""));
+  // Reactive query: check if selected contact has an active follow-up
+  const { data: activeFollowup } = useQuery({
+    queryKey: ["active-followup", contactId],
+    queryFn: async () => {
+      if (!contactId) return null;
+      const { data } = await supabase
+        .from("task_records" as any)
+        .select("id, planned_follow_up_type, planned_follow_up_date, connect_type, note")
+        .eq("contact_id", contactId)
+        .eq("status", "active")
+        .not("planned_follow_up_date", "is", null)
+        .limit(1)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: open && !!contactId,
+  });
 
   const clearAndClose = () => {
-    savedDraft = null;
     onOpenChange(false);
     setTimeout(() => {
       setStep(1);
       setContactId(preselectedContactId || "");
       setConnectType("");
       setNote("");
+      setDraftId(null);
+      setLinkedRecordId(null);
+      setInterstitialPath(null);
+      setExistingFollowup(null);
       setSavedTaskRecordId(null);
       setSkippedInteraction(false);
       setContactCleared(false);
@@ -93,13 +109,11 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     }, 300);
   };
 
-  // Bug 7: Intercept dismiss — do NOT close the drawer while showing dialog
+  // Dismiss interceptor: show discard dialog when draft exists
   const handleOpen = (o: boolean) => {
     if (!o) {
-      if (isDirty && step === 1) {
-        savedDraft = { contactId, connectType, note };
+      if (isDirty) {
         setShowDiscardDialog(true);
-        // Do NOT call onOpenChange(false) — keep drawer open
         return;
       }
       clearAndClose();
@@ -120,7 +134,6 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
 
   const selectedContact = contacts?.find((c) => c.id === contactId);
   const contactName = selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "";
-  // Bug 3: isContactPrefilled is false if user cleared it
   const isContactPrefilled = !!preselectedContactId && !contactCleared;
 
   const quickAddContact = useMutation({
@@ -129,14 +142,16 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       if (!user) throw new Error("Not authenticated");
       const { data, error } = await supabase.from("contacts").insert({
         first_name: quickForm.first_name, last_name: quickForm.last_name,
-        company: quickForm.company || null, phone: quickForm.phone || null, email: quickForm.email || null, user_id: user.id,
+        company: quickForm.company || null, phone: quickForm.phone || null,
+        email: quickForm.email || null, user_id: user.id,
       }).select("id").single();
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      setContactId(data.id); setShowQuickAdd(false);
+      setContactId(data.id);
+      setShowQuickAdd(false);
       setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       toast.success("Contact created & selected");
     },
@@ -147,22 +162,27 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
     queryClient.invalidateQueries({ queryKey: ["task-records"] });
     queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
     queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["active-followup"] });
   };
 
+  // ── Main log mutation: creates or updates draft ──
   const logMutation = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
-      // skipFollowupStep mode: ONLY update existing task record — no insert
+      const computedConnectDate =
+        connectDate === format(new Date(), "yyyy-MM-dd")
+          ? new Date().toISOString()
+          : new Date(connectDate + "T12:00:00").toISOString();
+
+      // skipFollowupStep mode — unchanged behavior (no draft)
       if (skipFollowupStep && existingTaskRecordId) {
         const updatePayload = {
           connect_type: connectType || null,
           note: note || null,
-          connect_date: connectDate === format(new Date(), 'yyyy-MM-dd')
-            ? new Date().toISOString()
-            : new Date(connectDate + 'T12:00:00').toISOString(),
+          connect_date: computedConnectDate,
         };
         console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
         const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
@@ -170,65 +190,160 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
         return { id: existingTaskRecordId, skipMode: true };
       }
 
-      if (savedTaskRecordId) {
+      // Update existing draft
+      if (draftId) {
         const { error } = await supabase.from("task_records" as any).update({
-          connect_type: connectType || null, note: note || null,
-        }).eq("id", savedTaskRecordId);
+          connect_type: connectType || null,
+          note: note || null,
+          connect_date: computedConnectDate,
+        }).eq("id", draftId);
         if (error) throw error;
-        return { id: savedTaskRecordId, skipMode: false };
+        console.log("[draft] updated:", { draftId, connect_type: connectType, note, connect_date: computedConnectDate });
+        return { id: draftId, skipMode: false };
       }
 
+      // Create new draft
       const { data, error } = await supabase.from("task_records" as any).insert({
-        contact_id: contactId, user_id: user.id,
-        connect_type: connectType || null, connect_date: connectDate === format(new Date(), 'yyyy-MM-dd') ? new Date().toISOString() : new Date(connectDate + 'T12:00:00').toISOString(),
-        note: note || null, status: "active",
+        contact_id: contactId,
+        user_id: user.id,
+        connect_type: connectType || null,
+        connect_date: computedConnectDate,
+        note: note || null,
+        status: "draft",
       }).select("id").single();
       if (error) throw error;
+      console.log("[draft] created:", { draftId: (data as any).id, connect_type: connectType, note, connect_date: computedConnectDate });
       return { id: (data as any).id, skipMode: false };
     },
-    onSuccess: async (data: any) => {
-      if (data.skipMode) {
-        console.log('[LogInteractionSheet] invalidating:', existingTaskRecordId, 'type:', typeof existingTaskRecordId);
+    onSuccess: (result: any) => {
+      // skipFollowupStep mode — close immediately
+      if (result.skipMode) {
+        console.log("[LogInteractionSheet] invalidating:", existingTaskRecordId, "type:", typeof existingTaskRecordId);
         invalidateAll();
-        await queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] });
-        await queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] });
+        queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] });
+        queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] });
         toast.success("Interaction logged");
-        savedDraft = null;
         clearAndClose();
         return;
       }
-      setSavedTaskRecordId(data.id);
-      invalidateAll();
+
+      // Store draft ID
+      setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
-      setStep(2);
+
+      // Check for active follow-up on the contact
+      if (activeFollowup && !skipFollowupStep) {
+        setExistingFollowup(activeFollowup);
+        console.log("[interstitial] active follow-up found:", {
+          taskRecordId: activeFollowup.id,
+          type: activeFollowup.planned_follow_up_type,
+          date: activeFollowup.planned_follow_up_date,
+          hasPriorInteraction: !!(activeFollowup.connect_type || activeFollowup.note),
+        });
+        setStep("interstitial");
+      } else {
+        setStep(2);
+      }
     },
     onError: (e: any) => toast.error(e.message),
   });
 
+  // ── Follow-up mutation: promotes draft or updates linked record ──
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      if (!savedTaskRecordId) throw new Error("No task record to update");
-      const { error } = await supabase.from("task_records" as any).update({
-        planned_follow_up_type: type || null, planned_follow_up_date: date,
-      }).eq("id", savedTaskRecordId);
+      const recordId = interstitialPath === "link" ? linkedRecordId : draftId;
+      if (!recordId) throw new Error("No record to update");
+
+      const updatePayload: any = {
+        planned_follow_up_type: type || null,
+        planned_follow_up_date: date,
+      };
+
+      // For non-link paths, promote draft to active
+      if (interstitialPath !== "link") {
+        updatePayload.status = "active";
+      }
+
+      const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", recordId);
       if (error) throw error;
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success("Follow-up set");
-      savedDraft = null;
+      toast.success(interstitialPath === "link" ? "Follow-up updated" : "Follow-up set");
       clearAndClose();
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleSkip = () => {
+  // ── Skip follow-up: promote draft to completed (heads-only) ──
+  const handleSkip = async () => {
+    if (draftId) {
+      await supabase.from("task_records" as any).update({ status: "completed" }).eq("id", draftId);
+    }
     invalidateAll();
     toast.success("Interaction logged");
-    savedDraft = null;
     clearAndClose();
   };
 
+  // ── Keep-separate save: promote draft to completed (heads-only) ──
+  const handleSaveHeadsOnly = async () => {
+    if (draftId) {
+      await supabase.from("task_records" as any).update({ status: "completed" }).eq("id", draftId);
+      console.log("[interstitial] keep separate — saved heads-only:", draftId);
+    }
+    invalidateAll();
+    toast.success("Interaction saved");
+    clearAndClose();
+  };
+
+  // ── Interstitial handlers ──
+  const handleLinkAndUpdate = async () => {
+    if (!draftId || !existingFollowup) return;
+
+    const computedConnectDate =
+      connectDate === format(new Date(), "yyyy-MM-dd")
+        ? new Date().toISOString()
+        : new Date(connectDate + "T12:00:00").toISOString();
+
+    // Update existing record with draft's interaction data
+    await supabase.from("task_records" as any).update({
+      connect_type: connectType || null,
+      note: note || null,
+      connect_date: computedConnectDate,
+    }).eq("id", existingFollowup.id);
+
+    // Delete draft (absorbed into existing record)
+    await supabase.from("task_records" as any).delete().eq("id", draftId);
+
+    console.log("[interstitial] link and update — updating:", existingFollowup.id, "deleting draft:", draftId);
+
+    setLinkedRecordId(existingFollowup.id);
+    setDraftId(null);
+    setInterstitialPath("link");
+    invalidateAll();
+    setStep(2);
+  };
+
+  const handleClearAndSetNew = async () => {
+    if (!existingFollowup) return;
+
+    // Clear existing record — permanent, not reverted
+    await supabase.from("task_records" as any).update({ status: "cleared" }).eq("id", existingFollowup.id);
+
+    console.log("[interstitial] clear and set new — cleared:", existingFollowup.id, "draft continues:", draftId);
+
+    setInterstitialPath("clear");
+    invalidateAll();
+    setStep(2);
+  };
+
+  const handleKeepSeparate = () => {
+    console.log("[interstitial] keep separate — draft will be heads-only:", draftId);
+    setInterstitialPath("keep");
+    setStep(2);
+  };
+
+  // ── Contact & UI helpers ──
   const handleAddNewContact = (name: string) => {
     const parts = name.trim().split(" ");
     setQuickForm({ ...quickForm, first_name: parts[0] || "", last_name: parts.slice(1).join(" ") || "" });
@@ -238,25 +353,44 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
-    if (savedTaskRecordId) {
+    const recordId = interstitialPath === "link" ? linkedRecordId : draftId;
+    if (recordId) {
       await supabase.from("task_records" as any).update({
-        connect_type: newConnectType || null, note: newNote || null,
-      }).eq("id", savedTaskRecordId);
+        connect_type: newConnectType || null,
+        note: newNote || null,
+      }).eq("id", recordId);
     }
   };
 
-  // Bug 3: Handle "Change" from prefilled contact
-  const handleChangeContact = () => {
+  const handleChangeContact = async () => {
+    // Delete existing draft if any
+    if (draftId) {
+      await supabase.from("task_records" as any).delete().eq("id", draftId);
+      console.log("[draft] contact changed — deleted draft:", draftId);
+      setDraftId(null);
+    }
     setContactCleared(true);
     setContactId("");
+    setInterstitialPath(null);
+    setLinkedRecordId(null);
+    setExistingFollowup(null);
   };
 
-  // Fix 1: "Want to add one?" — reset to step 1 with contact preserved
+  // "Want to add one?" — go back to step 1 with contact preserved
   const handleAddInteraction = () => {
     setStep(1);
     setSkippedInteraction(false);
-    setSavedTaskRecordId(null);
-    // contactId remains set — contact stays pre-filled
+    setInterstitialPath(null);
+    setExistingFollowup(null);
+  };
+
+  const handleStepBack = () => {
+    if (step === "interstitial") {
+      setStep(1);
+    } else {
+      setStep(1);
+      setInterstitialPath(null);
+    }
   };
 
   return (
@@ -264,7 +398,9 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
       <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
         <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
-            {!skipFollowupStep && <StepIndicator currentStep={step} />}
+            {!skipFollowupStep && step !== "interstitial" && (
+              <StepIndicator currentStep={step === 2 ? 2 : 1} />
+            )}
 
             {step === 1 ? (
               <div className="space-y-5">
@@ -299,7 +435,7 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={skipFollowupStep ? undefined : () => logMutation.mutate()}
+                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : () => logMutation.mutate()}
                   onChangeContact={handleChangeContact}
                   submitLabel={skipFollowupStep ? "Save →" : undefined}
                   showDateRow={skipFollowupStep}
@@ -307,26 +443,41 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
                   setConnectDate={setConnectDate}
                 />
               </div>
+            ) : step === "interstitial" ? (
+              <InterstitialScreen
+                existingFollowup={existingFollowup}
+                contactName={contactName}
+                onLinkAndUpdate={handleLinkAndUpdate}
+                onClearAndSetNew={handleClearAndSetNew}
+                onKeepSeparate={handleKeepSeparate}
+                onBack={() => setStep(1)}
+              />
             ) : (
               <LogStep2
                 connectType={connectType}
                 contactName={contactName}
                 note={note}
                 logDate={format(new Date(), "MMM d, yyyy")}
-                onBack={() => setStep(1)}
+                onBack={interstitialPath ? undefined : handleStepBack}
                 onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
                 onSkip={handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 skippedInteraction={skippedInteraction}
                 onAddInteraction={handleAddInteraction}
+                isKeepSeparatePath={interstitialPath === "keep"}
+                isLinkPath={interstitialPath === "link"}
+                isClearPath={interstitialPath === "clear"}
+                existingFollowupDate={existingFollowup?.planned_follow_up_date}
+                existingFollowupType={existingFollowup?.planned_follow_up_type}
+                onSaveHeadsOnly={handleSaveHeadsOnly}
               />
             )}
           </div>
         </DrawerContent>
       </Drawer>
 
-      {/* Bug 10: Discard confirmation dialog */}
+      {/* Discard dialog */}
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -338,16 +489,16 @@ const LogInteractionSheet = ({ open, onOpenChange, preselectedContactId, skipFol
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => {
               setShowDiscardDialog(false);
-              // Bug 7: Ensure drawer stays open + force layout reset after keyboard
-              requestAnimationFrame(() => {
-                onOpenChange(true);
-              });
+              requestAnimationFrame(() => onOpenChange(true));
             }}>
               Keep editing
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
+            <AlertDialogAction onClick={async () => {
               setShowDiscardDialog(false);
-              savedDraft = null;
+              if (draftId) {
+                await supabase.from("task_records" as any).delete().eq("id", draftId);
+                console.log("[draft] discarded:", draftId);
+              }
               clearAndClose();
             }}>
               Discard

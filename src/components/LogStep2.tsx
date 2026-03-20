@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, ClipboardList } from "lucide-react";
-import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
+import { addDays, addWeeks, format, parseISO, getYear, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,13 @@ interface LogStep2Props {
   onUpdateLog?: (connectType: string, note: string) => void;
   skippedInteraction?: boolean;
   onAddInteraction?: () => void;
+  // Interstitial path props
+  isKeepSeparatePath?: boolean;
+  isLinkPath?: boolean;
+  isClearPath?: boolean;
+  existingFollowupDate?: string;
+  existingFollowupType?: string;
+  onSaveHeadsOnly?: () => void;
 }
 
 const LogStep2 = ({
@@ -46,6 +53,12 @@ const LogStep2 = ({
   onUpdateLog,
   skippedInteraction = false,
   onAddInteraction,
+  isKeepSeparatePath = false,
+  isLinkPath = false,
+  isClearPath = false,
+  existingFollowupDate,
+  existingFollowupType,
+  onSaveHeadsOnly,
 }: LogStep2Props) => {
   // Fix 3: Log connectType on mount for verification
   useEffect(() => {
@@ -61,6 +74,38 @@ const LogStep2 = ({
   const [editNote, setEditNote] = useState(note);
   // Fix 3: viaActivated starts false when no connectType (row fully dimmed)
   const [viaActivated, setViaActivated] = useState(!!connectType);
+
+  // Pre-select date and via from existing follow-up on link path
+  useEffect(() => {
+    if (isLinkPath) {
+      if (existingFollowupType) {
+        setFollowUpType(existingFollowupType);
+        setViaActivated(true);
+      }
+      if (existingFollowupDate) {
+        const dateObj = startOfDay(parseISO(existingFollowupDate));
+        const todayStart = startOfDay(new Date());
+        if (dateObj >= todayStart) {
+          setSelectedDate(existingFollowupDate);
+          setViaActivated(true);
+        }
+        // If past, don't pre-select — user must pick a new date
+      }
+    }
+  }, [isLinkPath, existingFollowupDate, existingFollowupType]);
+
+  // Link banner text
+  const linkBannerText = useMemo(() => {
+    if (!isLinkPath || !existingFollowupDate) return "";
+    const dateObj = startOfDay(parseISO(existingFollowupDate));
+    const todayStart = startOfDay(new Date());
+    if (dateObj < todayStart) {
+      return `Follow-up was due ${format(dateObj, "MMM d")} — pick a new date below.`;
+    }
+    return "Linked to existing follow-up. Reschedule or keep the current date.";
+  }, [isLinkPath, existingFollowupDate]);
+
+  const hideSkipFollowup = isLinkPath || isClearPath || isKeepSeparatePath;
 
   const handlePillClick = (value: string) => {
     if (!viaActivated) setViaActivated(true);
@@ -81,6 +126,77 @@ const LogStep2 = ({
 
   const typeLabel = connectType ? connectType.charAt(0).toUpperCase() + connectType.slice(1) : "";
 
+  // ── Keep-separate path: confirmation card + "Save log →" ──
+  if (isKeepSeparatePath) {
+    return (
+      <div className="space-y-5">
+        {/* Interaction summary */}
+        {!skippedInteraction && (
+          <div
+            className="rounded-[14px] overflow-hidden"
+            style={{ background: "#eaf4ed", border: "0.5px solid rgba(42,112,72,0.2)", padding: "14px 16.5px" }}
+          >
+            {connectType ? (
+              <div className="flex items-center gap-2">
+                <div className="rounded-full flex items-center justify-center shrink-0" style={{ width: 21, height: 21, background: "hsl(var(--success))" }}>
+                  <Check size={12} className="text-white" strokeWidth={3} />
+                </div>
+                <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
+                  {typeLabel} · {contactName}
+                </span>
+                <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  {logDate}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="rounded-full flex items-center justify-center shrink-0" style={{ width: 21, height: 21, background: "hsl(var(--success))" }}>
+                  <Check size={12} className="text-white" strokeWidth={3} />
+                </div>
+                <ClipboardList size={14} style={{ color: "#2a7048" }} />
+                <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
+                  Interacted · {contactName}
+                </span>
+                <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  {logDate}
+                </span>
+              </div>
+            )}
+            {note && (
+              <p className="italic mt-1.5" style={{ fontFamily: "var(--font-heading)", fontSize: "14px", color: "#2a5c3a", paddingLeft: "29px" }}>
+                {note}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Keep-separate confirmation card */}
+        <div
+          className="rounded-[14px]"
+          style={{ background: "#f3f2f0", padding: "14px 16px" }}
+        >
+          <div className="font-semibold" style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "#1c1812", marginBottom: 4 }}>
+            Existing follow-up stays active
+          </div>
+          <div style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)", lineHeight: 1.4 }}>
+            This interaction will be saved as a standalone log. No new follow-up will be created.
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onSaveHeadsOnly}
+          disabled={isSaving}
+          className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+          style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+        >
+          {isSaving ? "Saving..." : "Save log →"}
+        </button>
+      </div>
+    );
+  }
+
+  // ── Normal path (with optional link/clear modifications) ──
   return (
     <div className="space-y-5">
       {/* Skipped interaction nudge */}
@@ -222,6 +338,22 @@ const LogStep2 = ({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Link-and-update banner */}
+      {isLinkPath && linkBannerText && (
+        <div
+          className="rounded-[10px]"
+          style={{
+            background: "#eaf4ed",
+            border: "0.5px solid rgba(42,112,72,0.2)",
+            padding: "10px 14px",
+          }}
+        >
+          <p style={{ fontSize: "12px", color: "#2a7048", fontFamily: "var(--font-body)" }}>
+            {linkBannerText}
+          </p>
         </div>
       )}
 
@@ -380,8 +512,8 @@ const LogStep2 = ({
         {isSaving ? "Saving..." : "Save →"}
       </button>
 
-      {/* Skip */}
-      {!skippedInteraction && (
+      {/* Skip follow-up — hidden for link, clear, and keep-separate paths */}
+      {!skippedInteraction && !hideSkipFollowup && (
         <button
           onClick={onSkip}
           disabled={isSaving}
