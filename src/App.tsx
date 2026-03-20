@@ -47,7 +47,7 @@ const AppContent = () => {
       console.log("[draft] cleanup — deleted orphaned drafts older than 2 hours", { error });
     };
     cleanup();
-  }, []);
+  }, [session]);
 
   if (loading) {
     return (
