@@ -184,9 +184,7 @@ const Contacts = () => {
     const rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const vals = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map((v) =>
-        v.trim().replace(/^"|"$/g, "")
-      ) || lines[i].split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const vals = parseCSVLine(lines[i]);
 
       let firstName = "";
       let lastName = "";
