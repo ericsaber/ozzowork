@@ -80,7 +80,7 @@ const ContactHistory = () => {
 
   // History: records with connect_type OR note (Fix 3: include note-only records)
   const historyRecords = (taskRecords || [])
-    .filter((r: any) => r.connect_type || r.note)
+    .filter((r: any) => r.connect_type || r.note || r.status === 'cleared')
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
   const interactionCount = historyRecords.length;
