@@ -65,7 +65,7 @@ const ContactHistory = () => {
     queryKey: ["task-records", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("task_records" as any)
-        .select("*").eq("contact_id", id!).order("created_at", { ascending: false });
+        .select("*").eq("contact_id", id!).not("status", "eq", "draft").order("created_at", { ascending: false });
       if (error) throw error;
       return data as any[];
     },
