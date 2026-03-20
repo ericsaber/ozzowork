@@ -255,6 +255,28 @@ const Contacts = () => {
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-heading text-foreground">Contacts</h1>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="text-xs text-destructive underline">Delete All</button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete all your contacts and their associated interactions, follow-ups, and task records. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteAllContacts.mutate()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteAllContacts.isPending ? "Deleting..." : "Delete Everything"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div className="relative mb-4">
