@@ -138,12 +138,36 @@ const Contacts = () => {
     fileInputRef.current?.click();
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === "," && !inQuotes) {
+        values.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    return values;
+  };
+
   const parseCSV = (text: string) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
     if (lines.length < 2) return [];
 
-    const headerLine = lines[0].toLowerCase();
-    const headers = headerLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+    const headers = parseCSVLine(lines[0].toLowerCase());
 
     const firstNameIdx = headers.findIndex((h) => h === "first name" || h === "first_name" || h === "firstname");
     const lastNameIdx = headers.findIndex((h) => h === "last name" || h === "last_name" || h === "lastname");
