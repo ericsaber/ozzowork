@@ -5,14 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
-import { format, endOfWeek, parseISO } from "date-fns";
+import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
 const Today = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
-  const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const windowEnd = format(addDays(new Date(), 14), "yyyy-MM-dd");
 
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
     onCompleted: () => {
@@ -29,7 +29,7 @@ const Today = () => {
         .select("*, contacts(*)")
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
-        .lte("planned_follow_up_date", weekEnd)
+        .lte("planned_follow_up_date", windowEnd)
         .order("planned_follow_up_date", { ascending: true });
       if (error) throw error;
       const records = data as any[];
@@ -48,15 +48,14 @@ const Today = () => {
           comingUp.push(item);
         }
       }
-      // Bug 6: Correct sort orders
-      overdue.sort((a: any, b: any) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date)); // ascending — oldest first
-      dueToday.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()); // descending — most recently modified first
+      overdue.sort((a: any, b: any) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date));
+      dueToday.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
       return { overdue, dueToday, comingUp };
     },
   });
 
   const { overdue = [], dueToday = [], comingUp = [] } = data || {};
-  const isEmpty = overdue.length === 0 && dueToday.length === 0 && comingUp.length === 0;
+  const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
 
   const handleComplete = (item: any) => {
@@ -88,6 +87,39 @@ const Today = () => {
     />
   );
 
+  const renderComingUp = () => {
+    if (comingUp.length === 0) {
+      return (
+        <div className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3">
+          <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
+          <div className="flex-1 min-w-0 text-left">
+            <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
+            <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>You're all caught up</p>
+          </div>
+        </div>
+      );
+    }
+
+    const sorted = [...comingUp].sort((a, b) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date));
+    const next = sorted[0];
+    const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
+    const nextDate = parseISO(next.planned_follow_up_date);
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const isTomorrow = format(nextDate, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
+    const dayLabel = isTomorrow ? "tomorrow" : format(nextDate, "EEEE");
+
+    return (
+      <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+        <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
+          <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
+        </div>
+        <span className="inline-flex items-center gap-1 bg-[#f5ede7] text-primary font-medium rounded-[20px] px-2.5 py-1 shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}><Eye size={16} />See all</span>
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
@@ -98,49 +130,35 @@ const Today = () => {
 
       {isLoading ? (
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
-      ) : isEmpty ? (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground text-lg font-heading italic">All clear for today</p>
-          <p className="text-sm text-muted-foreground mt-1">No follow-ups due. Nice work.</p>
-        </div>
       ) : (
         <div>
-          {dueToday.length > 0 && (
-            <section>
-              <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Due Today</h2>
-              <div className="space-y-3">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
-            </section>
+          {isEmpty ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground text-lg font-heading italic">All clear for today</p>
+              <p className="text-sm text-muted-foreground mt-1">No follow-ups due. Nice work.</p>
+            </div>
+          ) : (
+            <>
+              {dueToday.length > 0 && (
+                <section>
+                  <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Due Today</h2>
+                  <div className="space-y-3">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
+                </section>
+              )}
+
+              {overdue.length > 0 && (
+                <section>
+                  <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Overdue</h2>
+                  <div className="space-y-3">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
+                </section>
+              )}
+            </>
           )}
 
-          {comingUp.length > 0 && (() => {
-            const sorted = [...comingUp].sort((a, b) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date));
-            const next = sorted[0];
-            const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
-            const nextDate = parseISO(next.planned_follow_up_date);
-            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-            const isTomorrow = format(nextDate, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
-            const dayLabel = isTomorrow ? "tomorrow" : format(nextDate, "EEEE");
-            return (
-              <>
-                <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Coming Up</h2>
-                <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
-                  <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""} this week</p>
-                    <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 bg-[#f5ede7] text-primary font-medium rounded-[20px] px-2.5 py-1 shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}><Eye size={16} />See all</span>
-                </button>
-              </>
-            );
-          })()}
-
-          {overdue.length > 0 && (
-            <section>
-              <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Overdue</h2>
-              <div className="space-y-3">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
-            </section>
-          )}
+          <section>
+            <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Coming Up</h2>
+            {renderComingUp()}
+          </section>
         </div>
       )}
 
