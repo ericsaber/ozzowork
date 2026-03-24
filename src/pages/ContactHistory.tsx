@@ -80,7 +80,7 @@ const ContactHistory = () => {
 
   // History: records with connect_type OR note (Fix 3: include note-only records)
   const historyRecords = (taskRecords || [])
-    .filter((r: any) => r.connect_type || r.note || r.status === 'cleared')
+    .filter((r: any) => r.connect_type || r.note || r.status === 'cleared' || r.status === 'cancelled')
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
   const interactionCount = historyRecords.length;
@@ -129,15 +129,45 @@ const ContactHistory = () => {
   };
 
   const getThreadLine = (record: any) => {
-    if (!record.planned_follow_up_type && !record.planned_follow_up_date) return { text: "→ No follow-up", color: "#9e9e99" };
-    const typeLbl = record.planned_follow_up_type ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type) : "Planned";
-    const plannedDateStr = record.planned_follow_up_date ? format(parseISO(record.planned_follow_up_date), "MMM d") : "";
-    const completedDateStr = record.completed_at ? format(parseISO(record.completed_at), "MMM d") : "";
-    const showDate = record.status === "completed" ? (completedDateStr || plannedDateStr) : plannedDateStr;
-    console.log('[history row] follow-up display:', { status: record.status, planned_date: record.planned_follow_up_date, completed_at: record.completed_at, showing: record.status === "completed" ? record.completed_at : record.planned_follow_up_date });
-    if (record.status === "completed") return { text: `→ ${typeLbl} ${showDate} · Done`, color: "#3d7a4a" };
-    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) return { text: `→ ${typeLbl} ${showDate} · Overdue`, color: "#a32d2d" };
-    return { text: `→ ${typeLbl} ${showDate}`, color: "#c8622a" };
+    const typeLbl = record.planned_follow_up_type
+      ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
+      : null;
+    const plannedDateStr = record.planned_follow_up_date
+      ? format(parseISO(record.planned_follow_up_date), "MMM d")
+      : "";
+    const completedDateStr = record.completed_at
+      ? format(parseISO(record.completed_at), "MMM d")
+      : "";
+
+    console.log('[getThreadLine]', {
+      id: record.id,
+      status: record.status,
+      planned_follow_up_date: record.planned_follow_up_date,
+      completed_at: record.completed_at,
+      connect_type: record.connect_type,
+    });
+
+    if (!record.planned_follow_up_type && !record.planned_follow_up_date) {
+      return { text: "→ No follow-up", color: "#9e9e99" };
+    }
+
+    if (record.status === "completed") {
+      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
+        .filter(Boolean).join(" · ");
+      return { text: `→ ${parts}`, color: "#3d7a4a" };
+    }
+
+    if (record.status === "cancelled") {
+      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Cancelled"]
+        .filter(Boolean).join(" · ");
+      return { text: `→ ${parts}`, color: "#9e9e99" };
+    }
+
+    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
+      return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
+    }
+
+    return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")}`, color: "#c8622a" };
   };
 
   return (
@@ -294,6 +324,45 @@ const ContactHistory = () => {
                           style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
                         >
                           Cleared
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Cancelled tails-only record rendering
+              if (record.status === 'cancelled' && !record.connect_type && !record.note) {
+                const typeLbl = record.planned_follow_up_type
+                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
+                  : "Planned";
+                const plannedDateStr = record.planned_follow_up_date
+                  ? format(parseISO(record.planned_follow_up_date), "MMM d")
+                  : "";
+                const cancelledDateStr = record.completed_at
+                  ? format(parseISO(record.completed_at), "MMM d")
+                  : "";
+
+                return (
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.55 }}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                      <Calendar size={14} className="text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                        {typeLbl} follow-up{plannedDateStr ? ` · ${plannedDateStr}` : ""}
+                      </span>
+                      {cancelledDateStr && plannedDateStr && cancelledDateStr !== plannedDateStr && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
+                          Cancelled {cancelledDateStr} · Was due {plannedDateStr}
+                        </p>
+                      )}
+                      <div className="mt-1">
+                        <span
+                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                          style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
+                        >
+                          Cancelled
                         </span>
                       </div>
                     </div>
