@@ -6,6 +6,11 @@ interface InteractionItemProps {
   type: string;
   note: string | null;
   followUpDate?: string | null;
+  followUpType?: string | null;
+  status?: string;
+  completedAt?: string | null;
+  plannedFollowUpDate?: string | null;
+  rescheduledFrom?: string | null;
   onClick?: () => void;
 }
 
@@ -25,7 +30,7 @@ const typeLabels: Record<string, string> = {
   video: "Video",
 };
 
-const InteractionItem = ({ date, type, note, followUpDate, onClick }: InteractionItemProps) => {
+const InteractionItem = ({ date, type, note, followUpDate, followUpType, status, completedAt, plannedFollowUpDate, rescheduledFrom, onClick }: InteractionItemProps) => {
   const Wrapper = onClick ? "button" : "div";
 
   return (
@@ -46,9 +51,34 @@ const InteractionItem = ({ date, type, note, followUpDate, onClick }: Interactio
           </span>
         </div>
         {note && <p className="text-sm text-muted-foreground mt-0.5">{note}</p>}
-        {followUpDate && (
+
+        {/* Completed ghost row */}
+        {status === "completed" && completedAt && plannedFollowUpDate && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Follow-up completed · {format(parseISO(completedAt), "MMM d")} · Was due {format(parseISO(plannedFollowUpDate), "MMM d")}
+            {followUpType ? ` · ${typeLabels[followUpType] || followUpType} planned` : ""}
+          </p>
+        )}
+
+        {/* Cancelled ghost row */}
+        {status === "cancelled" && completedAt && plannedFollowUpDate && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Follow-up cancelled · {format(parseISO(completedAt), "MMM d")} · Was due {format(parseISO(plannedFollowUpDate), "MMM d")}
+            {followUpType ? ` · ${typeLabels[followUpType] || followUpType} planned` : ""}
+          </p>
+        )}
+
+        {/* Rescheduled annotation */}
+        {rescheduledFrom && followUpDate && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            → Rescheduled from {format(parseISO(rescheduledFrom), "MMM d")} to {format(parseISO(followUpDate), "MMM d")}
+          </p>
+        )}
+
+        {/* Normal active follow-up thread line */}
+        {followUpDate && !rescheduledFrom && status !== "completed" && status !== "cancelled" && (
           <p className="text-xs text-primary mt-0.5">
-            Follow-up: {format(parseISO(followUpDate), "MMM d, yyyy")}
+            → {format(parseISO(followUpDate), "MMM d, yyyy")}
           </p>
         )}
       </div>
