@@ -23,6 +23,7 @@ export interface TaskRecord {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  related_task_record_id: string | null;
 }
 
 export interface FollowUpEdit {
