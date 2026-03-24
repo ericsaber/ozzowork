@@ -129,15 +129,45 @@ const ContactHistory = () => {
   };
 
   const getThreadLine = (record: any) => {
-    if (!record.planned_follow_up_type && !record.planned_follow_up_date) return { text: "→ No follow-up", color: "#9e9e99" };
-    const typeLbl = record.planned_follow_up_type ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type) : "Planned";
-    const plannedDateStr = record.planned_follow_up_date ? format(parseISO(record.planned_follow_up_date), "MMM d") : "";
-    const completedDateStr = record.completed_at ? format(parseISO(record.completed_at), "MMM d") : "";
-    const showDate = record.status === "completed" ? (completedDateStr || plannedDateStr) : plannedDateStr;
-    console.log('[history row] follow-up display:', { status: record.status, planned_date: record.planned_follow_up_date, completed_at: record.completed_at, showing: record.status === "completed" ? record.completed_at : record.planned_follow_up_date });
-    if (record.status === "completed") return { text: `→ ${typeLbl} ${showDate} · Done`, color: "#3d7a4a" };
-    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) return { text: `→ ${typeLbl} ${showDate} · Overdue`, color: "#a32d2d" };
-    return { text: `→ ${typeLbl} ${showDate}`, color: "#c8622a" };
+    const typeLbl = record.planned_follow_up_type
+      ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
+      : null;
+    const plannedDateStr = record.planned_follow_up_date
+      ? format(parseISO(record.planned_follow_up_date), "MMM d")
+      : "";
+    const completedDateStr = record.completed_at
+      ? format(parseISO(record.completed_at), "MMM d")
+      : "";
+
+    console.log('[getThreadLine]', {
+      id: record.id,
+      status: record.status,
+      planned_follow_up_date: record.planned_follow_up_date,
+      completed_at: record.completed_at,
+      connect_type: record.connect_type,
+    });
+
+    if (!record.planned_follow_up_type && !record.planned_follow_up_date) {
+      return { text: "→ No follow-up", color: "#9e9e99" };
+    }
+
+    if (record.status === "completed") {
+      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
+        .filter(Boolean).join(" · ");
+      return { text: `→ ${parts}`, color: "#3d7a4a" };
+    }
+
+    if (record.status === "cancelled") {
+      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Cancelled"]
+        .filter(Boolean).join(" · ");
+      return { text: `→ ${parts}`, color: "#9e9e99" };
+    }
+
+    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
+      return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
+    }
+
+    return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")}`, color: "#c8622a" };
   };
 
   return (
