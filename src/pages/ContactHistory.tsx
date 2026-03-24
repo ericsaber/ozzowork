@@ -72,6 +72,28 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
+  const { data: followUpEdits } = useQuery({
+    queryKey: ["follow-up-edits", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("follow_up_edits" as any)
+        .select("task_record_id, previous_due_date, previous_type, changed_at")
+        .in(
+          "task_record_id",
+          (taskRecords || []).map((r: any) => r.id)
+        );
+      if (error) throw error;
+      console.log("[ContactHistory] follow_up_edits fetched:", data);
+      return (data || []) as any[];
+    },
+    enabled: !!id && !!(taskRecords && taskRecords.length > 0),
+  });
+
+  const rescheduleMap = (followUpEdits || []).reduce((acc: any, edit: any) => {
+    acc[edit.task_record_id] = edit;
+    return acc;
+  }, {});
+
   // Categorize
   const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active");
   const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
@@ -139,13 +161,21 @@ const ContactHistory = () => {
       ? format(parseISO(record.completed_at), "MMM d")
       : "";
 
-    console.log('[getThreadLine]', {
-      id: record.id,
-      status: record.status,
-      planned_follow_up_date: record.planned_follow_up_date,
-      completed_at: record.completed_at,
-      connect_type: record.connect_type,
-    });
+    // Standalone log linked to a rescheduled record
+    if (record.related_task_record_id) {
+      const relatedRecord = (taskRecords || []).find((r: any) => r.id === record.related_task_record_id);
+      if (relatedRecord) {
+        const relatedDateStr = relatedRecord.planned_follow_up_date
+          ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
+          : "";
+        if (relatedRecord.status === "cancelled") {
+          return { text: "→ Follow-up cancelled", color: "#9e9e99" };
+        }
+        if (relatedDateStr) {
+          return { text: `→ Follow-up rescheduled to ${relatedDateStr}`, color: "#c8622a" };
+        }
+      }
+    }
 
     if (!record.planned_follow_up_type && !record.planned_follow_up_date) {
       return { text: "→ No follow-up", color: "#9e9e99" };
@@ -166,6 +196,14 @@ const ContactHistory = () => {
     if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
       return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
     }
+
+    console.log('[getThreadLine]', {
+      id: record.id,
+      status: record.status,
+      planned_follow_up_date: record.planned_follow_up_date,
+      completed_at: record.completed_at,
+      related_task_record_id: record.related_task_record_id,
+    });
 
     return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")}`, color: "#c8622a" };
   };
@@ -392,6 +430,13 @@ const ContactHistory = () => {
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
                     </div>
+                    {rescheduleMap[record.id] && (
+                      <div className="mt-0.5">
+                        <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#c8622a" }}>
+                          Rescheduled from {format(parseISO(rescheduleMap[record.id].previous_due_date), "MMM d")}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
                 </button>

@@ -1,0 +1,1 @@
+ALTER TABLE task_records ADD COLUMN IF NOT EXISTS related_task_record_id uuid DEFAULT NULL;

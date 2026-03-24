@@ -424,9 +424,19 @@ const LogInteractionSheet = ({
     }
 
     // 3. Promote draft to active (heads-only standalone log)
+    // Set related_task_record_id to link this log to the rescheduled/kept record
     await supabase.from("task_records" as any)
-      .update({ status: "active" })
+      .update({
+        status: "active",
+        related_task_record_id: existingFollowup.id,
+      })
       .eq("id", draftId);
+
+    console.log("[handleOutstandingUpdate] standalone log linked to rescheduled record:", {
+      draftId,
+      relatedRecordId: existingFollowup.id,
+      isKeep,
+    });
 
     invalidateAll();
     toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
@@ -459,8 +469,16 @@ const LogInteractionSheet = ({
 
     // 2. Promote draft to active (standalone log, no follow-up)
     await supabase.from("task_records" as any)
-      .update({ status: "active" })
+      .update({
+        status: "active",
+        related_task_record_id: existingFollowup.id,
+      })
       .eq("id", draftId);
+
+    console.log("[handleOutstandingCancelConfirm] standalone log linked to cancelled record:", {
+      draftId,
+      relatedRecordId: existingFollowup.id,
+    });
 
     setShowCancelConfirmDialog(false);
     invalidateAll();

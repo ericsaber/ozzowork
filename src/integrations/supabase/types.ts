@@ -201,6 +201,7 @@ export type Database = {
           note: string | null
           planned_follow_up_date: string | null
           planned_follow_up_type: string | null
+          related_task_record_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -215,6 +216,7 @@ export type Database = {
           note?: string | null
           planned_follow_up_date?: string | null
           planned_follow_up_type?: string | null
+          related_task_record_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -229,6 +231,7 @@ export type Database = {
           note?: string | null
           planned_follow_up_date?: string | null
           planned_follow_up_type?: string | null
+          related_task_record_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
