@@ -430,6 +430,13 @@ const ContactHistory = () => {
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
                     </div>
+                    {rescheduleMap[record.id] && (
+                      <div className="mt-0.5">
+                        <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#c8622a" }}>
+                          Rescheduled from {format(parseISO(rescheduleMap[record.id].previous_due_date), "MMM d")}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
                 </button>
