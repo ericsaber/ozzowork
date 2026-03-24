@@ -72,6 +72,28 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
+  const { data: followUpEdits } = useQuery({
+    queryKey: ["follow-up-edits", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("follow_up_edits" as any)
+        .select("task_record_id, previous_due_date, previous_type, changed_at")
+        .in(
+          "task_record_id",
+          (taskRecords || []).map((r: any) => r.id)
+        );
+      if (error) throw error;
+      console.log("[ContactHistory] follow_up_edits fetched:", data);
+      return (data || []) as any[];
+    },
+    enabled: !!id && !!(taskRecords && taskRecords.length > 0),
+  });
+
+  const rescheduleMap = (followUpEdits || []).reduce((acc: any, edit: any) => {
+    acc[edit.task_record_id] = edit;
+    return acc;
+  }, {});
+
   // Categorize
   const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active");
   const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
