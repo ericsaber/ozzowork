@@ -161,13 +161,21 @@ const ContactHistory = () => {
       ? format(parseISO(record.completed_at), "MMM d")
       : "";
 
-    console.log('[getThreadLine]', {
-      id: record.id,
-      status: record.status,
-      planned_follow_up_date: record.planned_follow_up_date,
-      completed_at: record.completed_at,
-      connect_type: record.connect_type,
-    });
+    // Standalone log linked to a rescheduled record
+    if (record.related_task_record_id) {
+      const relatedRecord = (taskRecords || []).find((r: any) => r.id === record.related_task_record_id);
+      if (relatedRecord) {
+        const relatedDateStr = relatedRecord.planned_follow_up_date
+          ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
+          : "";
+        if (relatedRecord.status === "cancelled") {
+          return { text: "→ Follow-up cancelled", color: "#9e9e99" };
+        }
+        if (relatedDateStr) {
+          return { text: `→ Follow-up rescheduled to ${relatedDateStr}`, color: "#c8622a" };
+        }
+      }
+    }
 
     if (!record.planned_follow_up_type && !record.planned_follow_up_date) {
       return { text: "→ No follow-up", color: "#9e9e99" };
@@ -188,6 +196,14 @@ const ContactHistory = () => {
     if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
       return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
     }
+
+    console.log('[getThreadLine]', {
+      id: record.id,
+      status: record.status,
+      planned_follow_up_date: record.planned_follow_up_date,
+      completed_at: record.completed_at,
+      related_task_record_id: record.related_task_record_id,
+    });
 
     return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")}`, color: "#c8622a" };
   };
