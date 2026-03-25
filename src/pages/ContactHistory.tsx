@@ -260,7 +260,7 @@ const ContactHistory = () => {
         : `Follow-up planned for ${plannedDateStr}`;
       return { text: `→ ${rescheduleText}`, color: "#3d7a4a" };
     }
-    return { text: `→ ${[activeLbl, plannedDateStr].filter(Boolean).join(' ')}`, color: '#3d7a4a' };
+    return { text: `→ ${typeLbl ? `${typeLbl} planned for` : 'Follow-up planned for'} ${plannedDateStr}`, color: '#3d7a4a' };
   };
 
   return (
