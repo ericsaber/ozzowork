@@ -351,7 +351,6 @@ const ContactHistory = () => {
                 onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
                 menuOpen={openMenuId === `card-${r.id}`}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
-                rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}
               />
             ))}
           </div>
