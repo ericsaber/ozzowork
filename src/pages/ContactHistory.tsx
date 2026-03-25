@@ -431,7 +431,12 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.55 }}>
+                  <button
+                    key={record.id}
+                    className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
+                    style={{ opacity: 0.55 }}
+                    onClick={() => navigate(`/interaction/${record.id}`)}
+                  >
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                       <Calendar size={14} className="text-muted-foreground" />
                     </div>
@@ -444,16 +449,9 @@ const ContactHistory = () => {
                           Cancelled {cancelledDateStr} · Was due {plannedDateStr}
                         </p>
                       )}
-                      <div className="mt-1">
-                        <span
-                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                          style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
-                        >
-                          Cancelled
-                        </span>
-                      </div>
                     </div>
-                  </div>
+                    <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+                  </button>
                 );
               }
 
