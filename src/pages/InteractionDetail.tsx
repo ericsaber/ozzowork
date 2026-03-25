@@ -65,6 +65,51 @@ const InteractionDetail = () => {
     },
   });
 
+  const { data: activeFollowup } = useQuery({
+    queryKey: ["active-followup-check", task?.contact_id],
+    queryFn: async () => {
+      if (!task?.contact_id) return null;
+      const { data } = await supabase
+        .from("task_records" as any)
+        .select("id")
+        .eq("contact_id", task.contact_id)
+        .eq("status", "active")
+        .not("planned_follow_up_date", "is", null)
+        .neq("id", id!)
+        .limit(1)
+        .maybeSingle();
+      console.log("[InteractionDetail] active followup check:", {
+        contactId: task.contact_id,
+        hasActiveFollowup: !!data,
+        activeFollowupId: data?.id,
+      });
+      return data as any;
+    },
+    enabled: !!task?.contact_id,
+  });
+
+  const hasOtherActiveFollowup = !!activeFollowup;
+
+  const undoCancelMutation = useMutation({
+    mutationFn: async () => {
+      console.log("[InteractionDetail] undo cancel:", id);
+      const { error } = await supabase
+        .from("task_records" as any)
+        .update({ status: "active", completed_at: null })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-records"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["active-followup-check"] });
+      toast.success("Follow-up reactivated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
     onCompleted: () => {
       queryClient.invalidateQueries({ queryKey: ["task-record", id] });
