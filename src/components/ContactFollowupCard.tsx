@@ -38,6 +38,7 @@ const ContactFollowupCard = ({
   onReschedule,
   menuOpen,
   onMenuOpenChange,
+  hidePlannedFallback = false,
 }: ContactFollowupCardProps) => {
   const [checkHovered, setCheckHovered] = useState(false);
   const followUpDate = parseISO(taskRecord.planned_follow_up_date);
