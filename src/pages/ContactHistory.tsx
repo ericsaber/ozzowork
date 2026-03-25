@@ -201,14 +201,11 @@ const ContactHistory = () => {
             ? startOfDay(parseISO(relatedRecord.planned_follow_up_date)) > startOfDay(parseISO(relatedRecord.completed_at))
             : false;
           const dueLbl = wasEarly ? "was planned for" : "was due";
-          const parts = [
-            "Follow-up",
-            plannedDateStr ? `${dueLbl} ${plannedDateStr}` : null,
-            completedDateStr2 ? `Completed ${completedDateStr2}` : null,
-          ].filter(Boolean).join(" · ");
+          const prefix = plannedDateStr ? `Follow-up ${dueLbl} ${plannedDateStr}` : 'Follow-up completed';
+          const suffix = completedDateStr2 ? ` · Completed ${completedDateStr2}` : '';
           return {
-            text: parts ? `→ ${parts}` : "→ Follow-up completed",
-            color: "#3d7a4a",
+            text: `→ ${prefix}${suffix}`,
+            color: '#3d7a4a',
           };
         }
 
