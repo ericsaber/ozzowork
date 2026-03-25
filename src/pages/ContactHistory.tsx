@@ -24,7 +24,7 @@ import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { toast } from "sonner";
-import { format, parseISO, startOfToday, isPast, isToday } from "date-fns";
+import { format, parseISO, startOfToday, startOfDay, isPast, isToday } from "date-fns";
 
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
 const typeIcons: Record<string, typeof Phone> = { call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video };
