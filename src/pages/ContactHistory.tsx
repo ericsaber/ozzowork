@@ -65,31 +65,19 @@ const ContactHistory = () => {
     queryKey: ["task-records", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("task_records" as any)
-        .select("*").eq("contact_id", id!).not("status", "eq", "draft").order("created_at", { ascending: false });
+        .select("*, follow_up_edits(*)").eq("contact_id", id!).not("status", "eq", "draft").order("created_at", { ascending: false });
       if (error) throw error;
+      console.log("[ContactHistory] follow_up_edits fetched:", data);
       return data as any[];
     },
     enabled: !!id,
   });
 
-  const { data: followUpEdits } = useQuery({
-    queryKey: ["follow-up-edits", id],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      const { data, error } = await supabase
-        .from("follow_up_edits" as any)
-        .select("task_record_id, previous_due_date, previous_type, changed_at")
-        .eq("user_id", user.id);
-      if (error) throw error;
-      console.log("[ContactHistory] follow_up_edits fetched:", data);
-      return (data || []) as any[];
-    },
-    enabled: !!id,
-  });
-
-  const rescheduleMap = (followUpEdits || []).reduce((acc: any, edit: any) => {
-    acc[edit.task_record_id] = edit;
+  const rescheduleMap = (taskRecords || []).reduce((acc: any, record: any) => {
+    const edits = record.follow_up_edits;
+    if (edits && edits.length > 0) {
+      acc[record.id] = edits[edits.length - 1];
+    }
     return acc;
   }, {});
 
