@@ -1,31 +1,25 @@
 
 
-## Plan: Completion Context in History Thread Line
+## Reschedule Display Cleanup
 
-Three targeted edits across two files.
+Three targeted changes to consolidate reschedule context into history thread lines and remove it from follow-up cards.
 
-### 1. CompleteFollowupSheet.tsx — Link new record to completed coin
+### Changes
 
-**File:** `src/components/CompleteFollowupSheet.tsx` (lines 89-98)
+**1. `src/components/ContactFollowupCard.tsx`**
+- Remove `rescheduledFrom` from the props interface and destructuring
+- Remove the `{rescheduledFrom && ...}` JSX paragraph block
+- Remove `parseISO` from imports if no longer used (keep `format` for `dateLabel`)
 
-Add `related_task_record_id: taskRecordId` to the insert object, and add a console.log after the insert call.
+**2. `src/pages/ContactHistory.tsx` — Card renders**
+- Remove `rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}` from both `upcomingFollowups.map` and `overdueFollowups.map` `<ContactFollowupCard>` renders
 
-### 2. ContactHistory.tsx — Update `getThreadLine` related record block
-
-**File:** `src/pages/ContactHistory.tsx` (lines 170-184)
-
-Replace the existing `related_task_record_id` handling block with expanded logic covering:
-- **Cancelled**: Show `→ Follow-up cancelled · Was due {date}` (gray)
-- **Completed**: Show `→ Was due {plannedDate} · Completed {completedDate}` (green)
-- **Rescheduled** (active with date): Keep existing `→ Follow-up rescheduled to {date}` (sienna)
-- Add a console.log for debugging related record lookups
-
-### 3. ContactHistory.tsx — Reschedule annotation copy
-
-**File:** `src/pages/ContactHistory.tsx` (lines 478-484)
-
-Append `on {changed_at date}` to the "Rescheduled from" annotation when `changed_at` is available.
+**3. `src/pages/ContactHistory.tsx` — Thread line & annotation**
+- Remove the separate `{rescheduleMap[record.id] && ...}` annotation block from the normal record render
+- Update `getThreadLine` signature to accept `rescheduleInfo?: any` as second parameter
+- Add reschedule-aware logic before the default active return: if `rescheduleInfo` exists, format as `→ Follow-up planned for [date] · Rescheduled from [previousDate]`
+- Update all `getThreadLine(record)` call sites to `getThreadLine(record, rescheduleMap[record.id])`
 
 ### Not touched
-- Ghost row rendering, existing console.logs, all other files
+- Ghost row rendering, rescheduleMap query/build logic, all console.log statements, all other files
 
