@@ -26,6 +26,7 @@ interface ContactFollowupCardProps {
   onReschedule?: () => void;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
+  hidePlannedFallback?: boolean;
 }
 
 const ContactFollowupCard = ({
