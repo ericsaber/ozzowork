@@ -291,7 +291,7 @@ const InteractionDetail = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }}>
-                  {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Planned"}
+                  {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Follow-up"}
                 </p>
                 <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
                   {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
