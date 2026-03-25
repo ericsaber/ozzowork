@@ -273,8 +273,6 @@ const LogInteractionSheet = ({
             note: note || null,
             status: "completed",
             completed_at: computedConnectDate,
-            planned_follow_up_type: null,
-            planned_follow_up_date: null,
           }).eq("id", existingFollowup.id);
 
           // Delete the draft (interaction absorbed into existing record)
