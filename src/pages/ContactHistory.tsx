@@ -247,7 +247,8 @@ const ContactHistory = () => {
       related_task_record_id: record.related_task_record_id,
     });
 
-    return { text: `→ ${[typeLbl || 'Follow-up planned', plannedDateStr].filter(Boolean).join(" ")}`, color: "#3d7a4a" };
+    const activeLbl = typeLbl ? `${typeLbl} planned` : 'Follow-up planned';
+    return { text: `→ ${[activeLbl, plannedDateStr].filter(Boolean).join(' ')}`, color: '#3d7a4a' };
   };
 
   return (
