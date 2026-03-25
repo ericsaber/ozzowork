@@ -187,7 +187,7 @@ const OutstandingFollowupStep = ({
                   <div className="flex flex-wrap gap-2">
                     {status === "future" && (
                       <button
-                        onClick={() => handleChipClick(existingFollowup.planned_follow_up_date)}
+                        onClick={() => setRescheduleDate(existingFollowup.planned_follow_up_date)}
                         className="transition-colors"
                         style={{
                           borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
