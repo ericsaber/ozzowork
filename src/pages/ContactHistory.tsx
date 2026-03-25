@@ -513,6 +513,9 @@ const ContactHistory = () => {
                       <div className="mt-0.5">
                         <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#c8622a" }}>
                           Rescheduled from {format(parseISO(rescheduleMap[record.id].previous_due_date), "MMM d")}
+                          {rescheduleMap[record.id].changed_at
+                            ? ` on ${format(parseISO(rescheduleMap[record.id].changed_at), "MMM d")}`
+                            : ""}
                         </span>
                       </div>
                     )}
