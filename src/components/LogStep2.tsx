@@ -55,7 +55,7 @@ const LogStep2 = ({
   console.log("[LogStep2] mounted:", { connectType, contactName });
 
   // Fix 3: When connectType is empty, via row starts fully dimmed with no pre-selection
-  const [followUpType, setFollowUpType] = useState(connectType || "");
+  const [followUpType, setFollowUpType] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
