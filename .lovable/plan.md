@@ -1,17 +1,31 @@
 
 
-## Three Bug Fixes
+## Plan: Completion Context in History Thread Line
 
-Three files modified. All existing console.log statements preserved.
+Three targeted edits across two files.
 
-### Bug 1 — `src/components/LogInteractionSheet.tsx`
-- Line 412: Change `previous_type: existingFollowup.planned_follow_up_type` to `previous_type: existingFollowup.planned_follow_up_type || ''`
-- Add console.log after the insert (line 416) logging the inserted values
+### 1. CompleteFollowupSheet.tsx — Link new record to completed coin
 
-### Bug 2 — `src/components/CompleteFollowupSheet.tsx`
-- Lines 53-61: Update the op1 UPDATE to include `planned_follow_up_type: null` and `planned_follow_up_date: null` in both the console.log and the `.update()` call
+**File:** `src/components/CompleteFollowupSheet.tsx` (lines 89-98)
 
-### Bug 3 — `src/components/CompleteFollowupSheet.tsx` + `src/components/LogStep2.tsx`
-- Line 104 in CompleteFollowupSheet: Add `console.log("[completion] followupMutation received:", { type, date })` before the `insertCompletionRecord` call
-- Line 377 in LogStep2: Change the CTA onClick to log `{ followUpType, selectedDate }` before calling `onSaveWithFollowup`
+Add `related_task_record_id: taskRecordId` to the insert object, and add a console.log after the insert call.
+
+### 2. ContactHistory.tsx — Update `getThreadLine` related record block
+
+**File:** `src/pages/ContactHistory.tsx` (lines 170-184)
+
+Replace the existing `related_task_record_id` handling block with expanded logic covering:
+- **Cancelled**: Show `→ Follow-up cancelled · Was due {date}` (gray)
+- **Completed**: Show `→ Was due {plannedDate} · Completed {completedDate}` (green)
+- **Rescheduled** (active with date): Keep existing `→ Follow-up rescheduled to {date}` (sienna)
+- Add a console.log for debugging related record lookups
+
+### 3. ContactHistory.tsx — Reschedule annotation copy
+
+**File:** `src/pages/ContactHistory.tsx` (lines 478-484)
+
+Append `on {changed_at date}` to the "Rescheduled from" annotation when `changed_at` is available.
+
+### Not touched
+- Ghost row rendering, existing console.logs, all other files
 
