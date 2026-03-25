@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video, ClipboardList,
-  Plus, Pencil, Trash2, X, MoreHorizontal, ArrowRight, ChevronRight, Clock, Calendar,
+  Plus, Pencil, Trash2, X, MoreHorizontal, ArrowRight, ChevronRight, Clock, Calendar, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,7 +102,13 @@ const ContactHistory = () => {
 
   // History: records with connect_type OR note (Fix 3: include note-only records)
   const historyRecords = (taskRecords || [])
-    .filter((r: any) => r.connect_type || r.note || r.status === 'cleared' || r.status === 'cancelled')
+    .filter((r: any) =>
+      r.connect_type ||
+      r.note ||
+      r.status === 'cleared' ||
+      r.status === 'cancelled' ||
+      (r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date)
+    )
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
   const interactionCount = historyRecords.length;
@@ -403,6 +409,43 @@ const ContactHistory = () => {
                           style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
                         >
                           Cancelled
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Completed tails-only record (follow-up completed with no prior interaction)
+              if (record.status === 'completed' && !record.connect_type && !record.note && record.planned_follow_up_date) {
+                const typeLbl = record.planned_follow_up_type
+                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
+                  : "Planned";
+                const plannedDateStr = format(parseISO(record.planned_follow_up_date), "MMM d");
+                const completedDateStr = record.completed_at
+                  ? format(parseISO(record.completed_at), "MMM d")
+                  : "";
+
+                return (
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
+                      <Check size={14} style={{ color: "#3d7a4a" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
+                        {typeLbl} follow-up · Was due {plannedDateStr}
+                      </span>
+                      {completedDateStr && completedDateStr !== plannedDateStr && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
+                          Completed {completedDateStr}
+                        </p>
+                      )}
+                      <div className="mt-1">
+                        <span
+                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                          style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
+                        >
+                          Done
                         </span>
                       </div>
                     </div>
