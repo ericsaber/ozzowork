@@ -382,6 +382,7 @@ const ContactHistory = () => {
                 key={r.id}
                 taskRecord={r}
                 variant="overdue"
+                hidePlannedFallback
                 onTap={() => navigate(`/interaction/${r.id}`)}
                 onComplete={() => handleComplete(r)}
                 onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
