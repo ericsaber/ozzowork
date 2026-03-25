@@ -81,7 +81,7 @@ const InteractionDetail = () => {
       console.log("[InteractionDetail] active followup check:", {
         contactId: task.contact_id,
         hasActiveFollowup: !!data,
-        activeFollowupId: data?.id,
+        activeFollowupId: (data as any)?.id,
       });
       return data as any;
     },
