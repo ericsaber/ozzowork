@@ -167,18 +167,52 @@ const ContactHistory = () => {
       ? format(parseISO(record.completed_at), "MMM d")
       : "";
 
-    // Standalone log linked to a rescheduled record
     if (record.related_task_record_id) {
       const relatedRecord = (taskRecords || []).find((r: any) => r.id === record.related_task_record_id);
       if (relatedRecord) {
-        const relatedDateStr = relatedRecord.planned_follow_up_date
+        const plannedDateStr = relatedRecord.planned_follow_up_date
           ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
           : "";
+        const completedDateStr2 = relatedRecord.completed_at
+          ? format(parseISO(relatedRecord.completed_at), "MMM d")
+          : "";
+        const rescheduledDateStr = relatedRecord.planned_follow_up_date
+          ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
+          : "";
+
+        console.log("[getThreadLine] related record found:", {
+          relatedId: relatedRecord.id,
+          relatedStatus: relatedRecord.status,
+          plannedDate: relatedRecord.planned_follow_up_date,
+          completedAt: relatedRecord.completed_at,
+        });
+
         if (relatedRecord.status === "cancelled") {
-          return { text: "→ Follow-up cancelled", color: "#9e9e99" };
+          return {
+            text: plannedDateStr
+              ? `→ Follow-up cancelled · Was due ${plannedDateStr}`
+              : "→ Follow-up cancelled",
+            color: "#9e9e99",
+          };
         }
-        if (relatedDateStr) {
-          return { text: `→ Follow-up rescheduled to ${relatedDateStr}`, color: "#c8622a" };
+
+        if (relatedRecord.status === "completed") {
+          const parts = [
+            plannedDateStr ? `Was due ${plannedDateStr}` : null,
+            completedDateStr2 ? `Completed ${completedDateStr2}` : null,
+          ].filter(Boolean).join(" · ");
+          return {
+            text: parts ? `→ ${parts}` : "→ Follow-up completed",
+            color: "#3d7a4a",
+          };
+        }
+
+        // Rescheduled — related record is still active with a new date
+        if (rescheduledDateStr) {
+          return {
+            text: `→ Follow-up rescheduled to ${rescheduledDateStr}`,
+            color: "#c8622a",
+          };
         }
       }
     }
