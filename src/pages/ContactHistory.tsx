@@ -75,18 +75,17 @@ const ContactHistory = () => {
   const { data: followUpEdits } = useQuery({
     queryKey: ["follow-up-edits", id],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("follow_up_edits" as any)
         .select("task_record_id, previous_due_date, previous_type, changed_at")
-        .in(
-          "task_record_id",
-          (taskRecords || []).map((r: any) => r.id)
-        );
+        .eq("user_id", user.id);
       if (error) throw error;
       console.log("[ContactHistory] follow_up_edits fetched:", data);
       return (data || []) as any[];
     },
-    enabled: !!id && !!(taskRecords && taskRecords.length > 0),
+    enabled: !!id,
   });
 
   const rescheduleMap = (followUpEdits || []).reduce((acc: any, edit: any) => {
