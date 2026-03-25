@@ -504,7 +504,7 @@ const ContactHistory = () => {
               // Fix 3: fallback icon and verb when no connect type
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
-              const thread = getThreadLine(record);
+              const thread = getThreadLine(record, rescheduleMap[record.id]);
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
