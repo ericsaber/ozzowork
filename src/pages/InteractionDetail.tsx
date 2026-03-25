@@ -15,6 +15,7 @@ import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
+import { toast } from "sonner";
 
 const typeIcons: Record<string, typeof Phone> = {
   call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video,
