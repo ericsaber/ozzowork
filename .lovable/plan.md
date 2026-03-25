@@ -1,25 +1,26 @@
 
 
-## Reschedule Display Cleanup
+## Plan: Undo Cancel + Active Follow-up Gate
 
-Three targeted changes to consolidate reschedule context into history thread lines and remove it from follow-up cards.
+**Single file change:** `src/pages/InteractionDetail.tsx`
 
 ### Changes
 
-**1. `src/components/ContactFollowupCard.tsx`**
-- Remove `rescheduledFrom` from the props interface and destructuring
-- Remove the `{rescheduledFrom && ...}` JSX paragraph block
-- Remove `parseISO` from imports if no longer used (keep `format` for `dateLabel`)
+1. **Add `toast` import** from sonner (needed for success/error feedback on undo cancel).
 
-**2. `src/pages/ContactHistory.tsx` — Card renders**
-- Remove `rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}` from both `upcomingFollowups.map` and `overdueFollowups.map` `<ContactFollowupCard>` renders
+2. **Add `activeFollowup` query** — fires when `task?.contact_id` is available, checks for any other active task record with a planned follow-up date on the same contact (excluding current record). Derives `hasOtherActiveFollowup` boolean.
 
-**3. `src/pages/ContactHistory.tsx` — Thread line & annotation**
-- Remove the separate `{rescheduleMap[record.id] && ...}` annotation block from the normal record render
-- Update `getThreadLine` signature to accept `rescheduleInfo?: any` as second parameter
-- Add reschedule-aware logic before the default active return: if `rescheduleInfo` exists, format as `→ Follow-up planned for [date] · Rescheduled from [previousDate]`
-- Update all `getThreadLine(record)` call sites to `getThreadLine(record, rescheduleMap[record.id])`
+3. **Add `undoCancelMutation`** — sets status back to `"active"`, clears `completed_at`, invalidates all relevant query keys including `active-followup-check`, shows toast on success/error.
 
-### Not touched
-- Ghost row rendering, rescheduleMap query/build logic, all console.log statements, all other files
+4. **Gate "Undo complete"** — add `&& !hasOtherActiveFollowup` to the existing `isCompleted` condition.
+
+5. **Add "Undo cancel" menu item** — after the undo-complete item, render a new item when `task?.status === "cancelled" && !hasOtherActiveFollowup`.
+
+All existing `console.log` statements preserved. No other files touched.
+
+### Technical Details
+
+- Query uses `.maybeSingle()` with `.limit(1)` so it returns `null` when no active follow-up exists, avoiding errors on zero rows.
+- The `.neq("id", id!)` filter excludes the current record from the check, so undoing a cancel on a record that *is* the only follow-up works correctly.
+- Both undo mutations invalidate `active-followup-check` so the gate re-evaluates after state changes.
 
