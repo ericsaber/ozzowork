@@ -62,7 +62,7 @@ const LogStep2 = ({
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
   // Fix 3: viaActivated starts false when no connectType (row fully dimmed)
-  const [viaActivated, setViaActivated] = useState(!!connectType);
+  const [viaActivated, setViaActivated] = useState(false);
 
   const handlePillClick = (value: string) => {
     if (!viaActivated) setViaActivated(true);
