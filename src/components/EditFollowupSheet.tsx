@@ -158,7 +158,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
           {/* Save */}
           <button
             onClick={() => mutation.mutate()}
-            disabled={!followUpType || !selectedDate || mutation.isPending}
+            disabled={!selectedDate || mutation.isPending}
             className="w-full rounded-[13px] bg-primary text-primary-foreground py-[14px] text-[14px] font-semibold shadow-md transition-opacity disabled:opacity-[0.38]"
             style={{ fontFamily: "var(--font-body)" }}
           >
