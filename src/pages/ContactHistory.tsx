@@ -219,6 +219,16 @@ const ContactHistory = () => {
     }
 
     if (record.status === "completed") {
+      if (record.planned_follow_up_date && record.completed_at) {
+        const wasEarly = startOfDay(parseISO(record.planned_follow_up_date)) > startOfDay(parseISO(record.completed_at));
+        const dueLbl = wasEarly ? "was planned for" : "was due";
+        const sameDate = plannedDateStr && completedDateStr && plannedDateStr === completedDateStr;
+        const prefix = sameDate
+          ? `Follow-up completed ${completedDateStr}`
+          : `Follow-up ${dueLbl} ${plannedDateStr}`;
+        const suffix = sameDate ? '' : (completedDateStr ? ` · Completed ${completedDateStr}` : '');
+        return { text: `→ ${prefix}${suffix}`, color: '#3d7a4a' };
+      }
       const parts = [typeLbl || 'Follow-up planned', plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
         .filter(Boolean).join(" · ");
       return { text: `→ ${parts}`, color: "#3d7a4a" };
