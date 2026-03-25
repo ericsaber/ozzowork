@@ -108,6 +108,7 @@ const CompleteFollowupSheet = ({
 
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
+      console.log("[completion] followupMutation received:", { type, date });
       await insertCompletionRecord({
         plannedFollowUpType: type || null,
         plannedFollowUpDate: date || null,

@@ -409,10 +409,16 @@ const LogInteractionSheet = ({
       await supabase.from("follow_up_edits" as any).insert({
         task_record_id: existingFollowup.id,
         follow_up_id: null,
-        previous_type: existingFollowup.planned_follow_up_type,
+        previous_type: existingFollowup.planned_follow_up_type || '',
         previous_due_date: previousDate,
         changed_at: new Date().toISOString(),
         user_id: user.id,
+      });
+
+      console.log("[handleOutstandingUpdate] follow_up_edits inserted:", {
+        task_record_id: existingFollowup.id,
+        previous_type: existingFollowup.planned_follow_up_type || '',
+        previous_due_date: previousDate,
       });
     }
 
