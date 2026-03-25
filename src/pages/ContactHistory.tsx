@@ -402,7 +402,7 @@ const ContactHistory = () => {
               if (record.status === 'cleared') {
                 const typeLbl = record.planned_follow_up_type
                   ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Planned";
+                  : "Follow-up";
                 const dateStr = record.planned_follow_up_date
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
