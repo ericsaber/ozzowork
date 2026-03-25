@@ -197,9 +197,13 @@ const ContactHistory = () => {
         }
 
         if (relatedRecord.status === "completed") {
+          const wasEarly = relatedRecord.planned_follow_up_date && relatedRecord.completed_at
+            ? startOfDay(parseISO(relatedRecord.planned_follow_up_date)) > startOfDay(parseISO(relatedRecord.completed_at))
+            : false;
+          const dueLbl = wasEarly ? "was planned for" : "was due";
           const parts = [
             "Follow-up",
-            plannedDateStr ? `Was due ${plannedDateStr}` : null,
+            plannedDateStr ? `${dueLbl} ${plannedDateStr}` : null,
             completedDateStr2 ? `Completed ${completedDateStr2}` : null,
           ].filter(Boolean).join(" · ");
           return {
