@@ -188,19 +188,19 @@ const ContactHistory = () => {
     }
 
     if (record.status === "completed") {
-      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
+      const parts = [typeLbl || 'Follow-up planned', plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
         .filter(Boolean).join(" · ");
       return { text: `→ ${parts}`, color: "#3d7a4a" };
     }
 
     if (record.status === "cancelled") {
-      const parts = [typeLbl, plannedDateStr ? `Was due ${plannedDateStr}` : null, "Cancelled"]
+      const parts = [typeLbl || 'Follow-up planned', plannedDateStr ? `Was due ${plannedDateStr}` : null, "Cancelled"]
         .filter(Boolean).join(" · ");
       return { text: `→ ${parts}`, color: "#9e9e99" };
     }
 
     if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
-      return { text: `→ ${[typeLbl, plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
+      return { text: `→ ${[typeLbl || 'Follow-up planned', plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
     }
 
     console.log('[getThreadLine]', {
