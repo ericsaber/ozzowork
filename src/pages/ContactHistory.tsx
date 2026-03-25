@@ -216,7 +216,7 @@ const ContactHistory = () => {
         if (rescheduledDateStr) {
           return {
             text: `→ Follow-up rescheduled to ${rescheduledDateStr}`,
-            color: "#c8622a",
+            color: "#3d7a4a",
           };
         }
       }
