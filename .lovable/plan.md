@@ -1,15 +1,16 @@
 
 
-## Rescheduled From Annotation on Follow-up Card
+## Completed Tails-Only Ghost Row in History
 
-Two files changed.
+Single file change: `src/pages/ContactHistory.tsx`
 
-### 1. `src/components/ContactFollowupCard.tsx`
-- Add `rescheduledFrom?: string | null` to props interface and destructure it
-- Render `"Rescheduled from [date]"` paragraph (11px, `#c8622a`) after the `relativeTime` paragraph when `rescheduledFrom` is truthy
+### Changes
 
-### 2. `src/pages/ContactHistory.tsx`
-- Pass `rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}` to `ContactFollowupCard` in both `upcomingFollowups.map` and `overdueFollowups.map`
+1. **Expand `historyRecords` filter** — add `(r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date)` condition
 
-No new imports needed in either file. All existing console.log statements preserved.
+2. **Add completed tails-only ghost row** — after the cancelled case in `historyRecords.map()`, render a non-tappable div at 0.6 opacity with green Check icon, type label + "Was due [date]", optional "Completed [date]" subline, and green "Done" pill
+
+3. **Verify `Check` import** from lucide-react (likely already present)
+
+No other files touched. All existing console.log statements preserved.
 
