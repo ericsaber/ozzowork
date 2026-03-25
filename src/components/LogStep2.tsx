@@ -378,7 +378,7 @@ const LogStep2 = ({
           console.log("[LogStep2] saving with:", { followUpType, selectedDate });
           onSaveWithFollowup(followUpType, selectedDate);
         }}
-        disabled={!selectedDate || isSaving}
+        disabled={!selectedDate || !followUpType || isSaving}
         className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
       >
