@@ -156,7 +156,7 @@ const ContactHistory = () => {
     });
   };
 
-  const getThreadLine = (record: any) => {
+  const getThreadLine = (record: any, rescheduleInfo?: any) => {
     const typeLbl = record.planned_follow_up_type
       ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
       : null;
