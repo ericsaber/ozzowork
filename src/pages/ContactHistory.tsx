@@ -216,7 +216,7 @@ const ContactHistory = () => {
         if (rescheduledDateStr) {
           return {
             text: `→ Follow-up rescheduled to ${rescheduledDateStr}`,
-            color: "#c8622a",
+            color: "#3d7a4a",
           };
         }
       }
@@ -251,7 +251,7 @@ const ContactHistory = () => {
     });
 
     const activeLbl = typeLbl ? `${typeLbl} planned` : 'Follow-up planned';
-    if (rescheduleInfo) {
+    if (rescheduleInfo && record.related_task_record_id) {
       const previousDateStr = rescheduleInfo.previous_due_date
         ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
         : "";
@@ -260,7 +260,7 @@ const ContactHistory = () => {
         : `Follow-up planned for ${plannedDateStr}`;
       return { text: `→ ${rescheduleText}`, color: "#3d7a4a" };
     }
-    return { text: `→ ${[activeLbl, plannedDateStr].filter(Boolean).join(' ')}`, color: '#3d7a4a' };
+    return { text: `→ ${typeLbl ? `${typeLbl} planned for` : 'Follow-up planned for'} ${plannedDateStr}`, color: '#3d7a4a' };
   };
 
   return (
