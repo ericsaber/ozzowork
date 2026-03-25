@@ -107,7 +107,7 @@ const ContactHistory = () => {
       r.note ||
       r.status === 'cleared' ||
       r.status === 'cancelled' ||
-      (r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date)
+      (r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date && !(taskRecords || []).some((other: any) => other.related_task_record_id === r.id))
     )
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
