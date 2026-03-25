@@ -291,18 +291,20 @@ const InteractionDetail = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }}>
-                  {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Planned"}
+                  {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Follow-up"}
                 </p>
                 <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
                   {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
                 </p>
-                <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
-                  fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
-                  background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#e9f2eb",
-                  color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#3d7a4a",
-                }}>
-                  {isCompleted ? "Done" : getDaysLabel()}
-                </span>
+                {!isCompleted && (
+                  <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
+                    fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                    background: overdue ? "#fce8e8" : "#e9f2eb",
+                    color: overdue ? "#a32d2d" : "#3d7a4a",
+                  }}>
+                    {getDaysLabel()}
+                  </span>
+                )}
               </div>
             </div>
           ) : (
