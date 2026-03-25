@@ -305,7 +305,7 @@ const LogInteractionSheet = ({
             planned_follow_up_date: date || null,
           }).eq("id", draftId!);
         }
-        return { completePath: true, hasFollowup: !!(type && date) };
+        return { completePath: true, hasFollowup: !!date };
       }
 
       // Normal step 2 path (no outstanding follow-up)

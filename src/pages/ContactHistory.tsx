@@ -402,7 +402,7 @@ const ContactHistory = () => {
               if (record.status === 'cleared') {
                 const typeLbl = record.planned_follow_up_type
                   ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Planned";
+                  : "Follow-up";
                 const dateStr = record.planned_follow_up_date
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
@@ -432,7 +432,7 @@ const ContactHistory = () => {
               if (record.status === 'cancelled' && !record.connect_type && !record.note) {
                 const typeLbl = record.planned_follow_up_type
                   ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Planned";
+                  : "Follow-up";
                 const plannedDateStr = record.planned_follow_up_date
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
@@ -469,7 +469,7 @@ const ContactHistory = () => {
               if (record.status === 'completed' && !record.connect_type && !record.note && record.planned_follow_up_date) {
                 const typeLbl = record.planned_follow_up_type
                   ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Planned";
+                  : "Follow-up";
                 const plannedDateStr = format(parseISO(record.planned_follow_up_date), "MMM d");
                 const completedDateStr = record.completed_at
                   ? format(parseISO(record.completed_at), "MMM d")
