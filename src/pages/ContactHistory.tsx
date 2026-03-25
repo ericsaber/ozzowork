@@ -156,7 +156,7 @@ const ContactHistory = () => {
     });
   };
 
-  const getThreadLine = (record: any) => {
+  const getThreadLine = (record: any, rescheduleInfo?: any) => {
     const typeLbl = record.planned_follow_up_type
       ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
       : null;
@@ -251,6 +251,15 @@ const ContactHistory = () => {
     });
 
     const activeLbl = typeLbl ? `${typeLbl} planned` : 'Follow-up planned';
+    if (rescheduleInfo) {
+      const previousDateStr = rescheduleInfo.previous_due_date
+        ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
+        : "";
+      const rescheduleText = previousDateStr
+        ? `Follow-up planned for ${plannedDateStr} · Rescheduled from ${previousDateStr}`
+        : `Follow-up planned for ${plannedDateStr}`;
+      return { text: `→ ${rescheduleText}`, color: "#3d7a4a" };
+    }
     return { text: `→ ${[activeLbl, plannedDateStr].filter(Boolean).join(' ')}`, color: '#3d7a4a' };
   };
 
@@ -351,7 +360,6 @@ const ContactHistory = () => {
                 onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
                 menuOpen={openMenuId === `card-${r.id}`}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
-                rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}
               />
             ))}
           </div>
@@ -374,7 +382,6 @@ const ContactHistory = () => {
                 onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
                 menuOpen={openMenuId === `card-${r.id}`}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
-                rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}
               />
             ))}
           </div>
@@ -497,7 +504,7 @@ const ContactHistory = () => {
               // Fix 3: fallback icon and verb when no connect type
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
-              const thread = getThreadLine(record);
+              const thread = getThreadLine(record, rescheduleMap[record.id]);
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
@@ -515,16 +522,6 @@ const ContactHistory = () => {
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
                     </div>
-                    {rescheduleMap[record.id] && (
-                      <div className="mt-0.5">
-                        <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#c8622a" }}>
-                          Rescheduled from {format(parseISO(rescheduleMap[record.id].previous_due_date), "MMM d")}
-                          {rescheduleMap[record.id].changed_at
-                            ? ` on ${format(parseISO(rescheduleMap[record.id].changed_at), "MMM d")}`
-                            : ""}
-                        </span>
-                      </div>
-                    )}
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
                 </button>
