@@ -281,11 +281,11 @@ const LogInteractionSheet = ({
           await supabase.from("task_records" as any).delete().eq("id", draftId!);
 
           // If new follow-up set, create new tails-only coin
-          if (type && date) {
+      if (date) {
             await supabase.from("task_records" as any).insert({
               contact_id: contactId,
               user_id: user.id,
-              planned_follow_up_type: type,
+              planned_follow_up_type: type || null,
               planned_follow_up_date: date,
               status: "active",
             });
