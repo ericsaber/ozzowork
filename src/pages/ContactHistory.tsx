@@ -214,8 +214,13 @@ const ContactHistory = () => {
 
         // Rescheduled — related record is still active with a new date
         if (rescheduledDateStr) {
+          const prevDateStr = rescheduleInfo?.previous_due_date
+            ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
+            : "";
           return {
-            text: `→ Follow-up rescheduled to ${rescheduledDateStr}`,
+            text: prevDateStr
+              ? `→ Follow-up rescheduled to ${rescheduledDateStr} · From ${prevDateStr}`
+              : `→ Follow-up rescheduled to ${rescheduledDateStr}`,
             color: "#3d7a4a",
           };
         }
