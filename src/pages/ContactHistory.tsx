@@ -251,7 +251,7 @@ const ContactHistory = () => {
     });
 
     const activeLbl = typeLbl ? `${typeLbl} planned` : 'Follow-up planned';
-    if (rescheduleInfo) {
+    if (rescheduleInfo && record.related_task_record_id) {
       const previousDateStr = rescheduleInfo.previous_due_date
         ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
         : "";
