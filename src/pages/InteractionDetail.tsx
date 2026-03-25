@@ -202,9 +202,14 @@ const InteractionDetail = () => {
                 <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
             )}
-            {isCompleted && (
+            {isCompleted && !hasOtherActiveFollowup && (
               <DropdownMenuItem onClick={() => undoCompleteMutation.mutate()}>
                 <RotateCcw size={14} className="mr-2" /> Undo complete
+              </DropdownMenuItem>
+            )}
+            {task?.status === "cancelled" && !hasOtherActiveFollowup && (
+              <DropdownMenuItem onClick={() => undoCancelMutation.mutate()}>
+                <RotateCcw size={14} className="mr-2" /> Undo cancel
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
