@@ -111,7 +111,7 @@ const ContactHistory = () => {
     )
     .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
 
-  const interactionCount = historyRecords.length;
+  const interactionCount = historyRecords.filter((r: any) => r.connect_type || r.note).length;
   const firstContactDate = historyRecords.length > 0
     ? format(parseISO(historyRecords[historyRecords.length - 1].connect_date || historyRecords[historyRecords.length - 1].created_at), "MMM d")
     : null;
