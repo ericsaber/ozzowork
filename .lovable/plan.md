@@ -1,16 +1,15 @@
 
 
-## ContactHistory History Display Fix
+## Rescheduled From Annotation on Follow-up Card
 
-Single file change: `src/pages/ContactHistory.tsx`
+Two files changed.
 
-### Changes
+### 1. `src/components/ContactFollowupCard.tsx`
+- Add `rescheduledFrom?: string | null` to props interface and destructure it
+- Render `"Rescheduled from [date]"` paragraph (11px, `#c8622a`) after the `relativeTime` paragraph when `rescheduledFrom` is truthy
 
-1. **historyRecords filter** — add `|| r.status === 'cancelled'` to include cancelled tails-only records in history
+### 2. `src/pages/ContactHistory.tsx`
+- Pass `rescheduledFrom={rescheduleMap[r.id]?.previous_due_date ?? null}` to `ContactFollowupCard` in both `upcomingFollowups.map` and `overdueFollowups.map`
 
-2. **Replace `getThreadLine`** — new version handles completed ("Done"), cancelled ("Cancelled"), overdue, and active states with proper `typeLbl · Was due [date]` formatting and a new `console.log('[getThreadLine]', ...)` call
-
-3. **Add cancelled record case in history map** — after the existing `cleared` block and before the normal record rendering, add a `status === 'cancelled'` branch that renders a non-tappable div at 0.55 opacity with Calendar icon, type label, planned date, optional "Cancelled [date] · Was due [date]" subline, and a "Cancelled" pill. Full-coin cancelled records (with `connect_type`) fall through to normal rendering where `getThreadLine` handles the thread line.
-
-All existing console.log statements preserved. No other files touched.
+No new imports needed in either file. All existing console.log statements preserved.
 
