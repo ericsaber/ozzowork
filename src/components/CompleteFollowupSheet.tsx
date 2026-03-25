@@ -95,6 +95,12 @@ const CompleteFollowupSheet = ({
       planned_follow_up_type: plannedFollowUpType,
       planned_follow_up_date: plannedFollowUpDate,
       status: plannedFollowUpDate ? "active" : "completed",
+      related_task_record_id: taskRecordId,
+    });
+
+    console.log("[completion] op2 linked to completed coin:", {
+      taskRecordId,
+      related_task_record_id: taskRecordId,
     });
 
     if (error) throw error;
