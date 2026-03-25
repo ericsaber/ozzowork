@@ -301,7 +301,7 @@ const InteractionDetail = () => {
                   background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#e9f2eb",
                   color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#3d7a4a",
                 }}>
-                  {isCompleted ? "Done" : getDaysLabel()}
+                  {isCompleted ? null : getDaysLabel()}
                 </span>
               </div>
             </div>
