@@ -1,16 +1,17 @@
 
 
-## Completed Tails-Only Ghost Row in History
+## Three Bug Fixes
 
-Single file change: `src/pages/ContactHistory.tsx`
+Three files modified. All existing console.log statements preserved.
 
-### Changes
+### Bug 1 — `src/components/LogInteractionSheet.tsx`
+- Line 412: Change `previous_type: existingFollowup.planned_follow_up_type` to `previous_type: existingFollowup.planned_follow_up_type || ''`
+- Add console.log after the insert (line 416) logging the inserted values
 
-1. **Expand `historyRecords` filter** — add `(r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date)` condition
+### Bug 2 — `src/components/CompleteFollowupSheet.tsx`
+- Lines 53-61: Update the op1 UPDATE to include `planned_follow_up_type: null` and `planned_follow_up_date: null` in both the console.log and the `.update()` call
 
-2. **Add completed tails-only ghost row** — after the cancelled case in `historyRecords.map()`, render a non-tappable div at 0.6 opacity with green Check icon, type label + "Was due [date]", optional "Completed [date]" subline, and green "Done" pill
-
-3. **Verify `Check` import** from lucide-react (likely already present)
-
-No other files touched. All existing console.log statements preserved.
+### Bug 3 — `src/components/CompleteFollowupSheet.tsx` + `src/components/LogStep2.tsx`
+- Line 104 in CompleteFollowupSheet: Add `console.log("[completion] followupMutation received:", { type, date })` before the `insertCompletionRecord` call
+- Line 377 in LogStep2: Change the CTA onClick to log `{ followUpType, selectedDate }` before calling `onSaveWithFollowup`
 
