@@ -112,6 +112,17 @@ const ContactFollowupCard = ({
               {relativeTime}
             </p>
           )}
+          {rescheduledFrom && (
+            <p style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "11px",
+              lineHeight: "16px",
+              color: "#c8622a",
+              marginTop: "2px",
+            }}>
+              Rescheduled from {format(parseISO(rescheduledFrom), "MMM d")}
+            </p>
+          )}
         </div>
 
         {/* Three-dot menu */}
