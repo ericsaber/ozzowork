@@ -15,6 +15,7 @@ import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { useCompleteTask } from "@/hooks/useCompleteTask";
+import { toast } from "sonner";
 
 const typeIcons: Record<string, typeof Phone> = {
   call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video,
@@ -62,6 +63,51 @@ const InteractionDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
       queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
     },
+  });
+
+  const { data: activeFollowup } = useQuery({
+    queryKey: ["active-followup-check", task?.contact_id],
+    queryFn: async () => {
+      if (!task?.contact_id) return null;
+      const { data } = await supabase
+        .from("task_records" as any)
+        .select("id")
+        .eq("contact_id", task.contact_id)
+        .eq("status", "active")
+        .not("planned_follow_up_date", "is", null)
+        .neq("id", id!)
+        .limit(1)
+        .maybeSingle();
+      console.log("[InteractionDetail] active followup check:", {
+        contactId: task.contact_id,
+        hasActiveFollowup: !!data,
+        activeFollowupId: (data as any)?.id,
+      });
+      return data as any;
+    },
+    enabled: !!task?.contact_id,
+  });
+
+  const hasOtherActiveFollowup = !!activeFollowup;
+
+  const undoCancelMutation = useMutation({
+    mutationFn: async () => {
+      console.log("[InteractionDetail] undo cancel:", id);
+      const { error } = await supabase
+        .from("task_records" as any)
+        .update({ status: "active", completed_at: null })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-record", id] });
+      queryClient.invalidateQueries({ queryKey: ["task-records"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+      queryClient.invalidateQueries({ queryKey: ["active-followup-check"] });
+      toast.success("Follow-up reactivated");
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
@@ -156,9 +202,14 @@ const InteractionDetail = () => {
                 <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
             )}
-            {isCompleted && (
+            {isCompleted && !hasOtherActiveFollowup && (
               <DropdownMenuItem onClick={() => undoCompleteMutation.mutate()}>
                 <RotateCcw size={14} className="mr-2" /> Undo complete
+              </DropdownMenuItem>
+            )}
+            {task?.status === "cancelled" && !hasOtherActiveFollowup && (
+              <DropdownMenuItem onClick={() => undoCancelMutation.mutate()}>
+                <RotateCcw size={14} className="mr-2" /> Undo cancel
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
