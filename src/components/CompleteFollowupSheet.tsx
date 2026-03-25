@@ -50,13 +50,19 @@ const CompleteFollowupSheet = ({
       const connectDate = new Date().toISOString();
       connectDateRef.current = connectDate;
 
-      console.log("[completion] op1 UPDATE:", taskRecordId, { status: "completed" });
+      console.log("[completion] op1 UPDATE:", taskRecordId, {
+        status: "completed",
+        planned_follow_up_type: null,
+        planned_follow_up_date: null,
+      });
 
       const { error } = await supabase
         .from("task_records" as any)
         .update({
           status: "completed",
           completed_at: connectDate,
+          planned_follow_up_type: null,
+          planned_follow_up_date: null,
         })
         .eq("id", taskRecordId);
 
