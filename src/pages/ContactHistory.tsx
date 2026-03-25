@@ -198,6 +198,7 @@ const ContactHistory = () => {
 
         if (relatedRecord.status === "completed") {
           const parts = [
+            "Follow-up",
             plannedDateStr ? `Was due ${plannedDateStr}` : null,
             completedDateStr2 ? `Completed ${completedDateStr2}` : null,
           ].filter(Boolean).join(" · ");
