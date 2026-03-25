@@ -267,26 +267,29 @@ const LogInteractionSheet = ({
 
         if (isTailsOnly) {
           // Fill in the head of the existing tails-only coin + mark complete
-          await supabase.from("task_records" as any).update({
+          const { error: updateError } = await supabase.from("task_records" as any).update({
             connect_type: connectType || null,
             connect_date: computedConnectDate,
             note: note || null,
             status: "completed",
             completed_at: computedConnectDate,
           }).eq("id", existingFollowup.id);
+          console.log('[followupMutation] tails-only UPDATE result:', { error: updateError?.message || null });
 
           // Delete the draft (interaction absorbed into existing record)
-          await supabase.from("task_records" as any).delete().eq("id", draftId!);
+          const { error: deleteError } = await supabase.from("task_records" as any).delete().eq("id", draftId!);
+          console.log('[followupMutation] tails-only DELETE result:', { error: deleteError?.message || null });
 
           // If new follow-up set, create new tails-only coin
-      if (date) {
-            await supabase.from("task_records" as any).insert({
+          if (date) {
+            const { error: insertError } = await supabase.from("task_records" as any).insert({
               contact_id: contactId,
               user_id: user.id,
               planned_follow_up_type: type || null,
               planned_follow_up_date: date,
               status: "active",
             });
+            console.log('[followupMutation] tails-only INSERT result:', { error: insertError?.message || null, date });
           }
         } else {
           // Full coin: mark existing record's tail complete
