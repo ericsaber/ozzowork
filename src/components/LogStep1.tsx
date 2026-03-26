@@ -530,7 +530,7 @@ const LogStep1 = ({
                     <Mic size={18} className="text-muted-foreground" />
                   </button>
                   <div className="flex-1">
-                    <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="uppercase tracking-[0.08em] block mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                       {isRawTranscript ? "Transcript" : "Note"}
                     </span>
                     <textarea
