@@ -169,6 +169,9 @@ const InteractionDetail = () => {
   const isStandaloneLog = !!task.related_task_record_id;
   if (isStandaloneLog) {
     console.log('[InteractionDetail] standalone log — skipping own follow-up tail:', { related_task_record_id: task.related_task_record_id });
+    if (relatedCoin) {
+      console.log('[InteractionDetail] standalone log related coin state:', { status: relatedCoin.status, planned_follow_up_date: relatedCoin.planned_follow_up_date, completed_at: relatedCoin.completed_at });
+    }
   }
   
   const showBottomBar = hasFollowUp && !isCompleted && !isStandaloneLog;
@@ -299,86 +302,113 @@ const InteractionDetail = () => {
           )}
         </div>
 
-        {/* Divider */}
-        <div className="relative px-4">
-          <div className="border-t border-border" />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
-            <ArrowRight size={12} style={{ color: "#9e9e99" }} />
-          </div>
-        </div>
+        {/* Divider + What's Next — hidden for standalone logs with no related follow-up data */}
+        {(!isStandaloneLog || (relatedCoin && relatedCoin.planned_follow_up_date)) && (
+          <>
+            <div className="relative px-4">
+              <div className="border-t border-border" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
+                <ArrowRight size={12} style={{ color: "#9e9e99" }} />
+              </div>
+            </div>
 
-        {/* WHAT'S NEXT */}
-        <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
-            What's next
-          </p>
-          {isStandaloneLog ? (
-            coinHasActiveFollowUp ? (
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: overdue ? "#fce8e8" : "#f5ede7" }}>
-                  {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} /> : (
-                    <CalendarIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
-                    {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
-                  </p>
-                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                    {dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
-                  </p>
-                  {dueDate && (
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
-                      fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
-                      background: overdue ? "#fce8e8" : "#e9f2eb",
-                      color: overdue ? "#a32d2d" : "#3d7a4a",
-                    }}>
-                      {getDaysLabel()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
-                No active follow-up.
+            <div className="px-4 py-3">
+              <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
+                What's next
               </p>
-            )
-          ) : hasFollowUp ? (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#f5ede7" }}>
-                {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} /> : (
-                  <CalendarIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }}>
-                  {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Follow-up"}
-                </p>
-                <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
-                  {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
-                </p>
-                {!isCompleted && (
-                  <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
-                    fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
-                    background: overdue ? "#fce8e8" : "#e9f2eb",
-                    color: overdue ? "#a32d2d" : "#3d7a4a",
-                  }}>
-                    {getDaysLabel()}
-                  </span>
-                )}
-              </div>
+              {isStandaloneLog ? (
+                relatedCoin?.status === 'active' && relatedCoin.planned_follow_up_date ? (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: overdue ? "#fce8e8" : "#f5ede7" }}>
+                      {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} /> : (
+                        <CalendarIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
+                        {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
+                      </p>
+                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                        {dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
+                      </p>
+                      {dueDate && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
+                          fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                          background: overdue ? "#fce8e8" : "#e9f2eb",
+                          color: overdue ? "#a32d2d" : "#3d7a4a",
+                        }}>
+                          {getDaysLabel()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : relatedCoin?.status === 'completed' ? (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#e9f2eb" }}>
+                      <CalendarIcon size={14} style={{ color: "#3d7a4a" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: "#3d7a4a" }}>
+                        Follow-up completed
+                      </p>
+                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                        Was planned for {relatedCoin.planned_follow_up_date ? format(parseISO(relatedCoin.planned_follow_up_date), "MMM d") : "—"} · Completed {relatedCoin.completed_at ? format(parseISO(relatedCoin.completed_at), "MMM d") : ""}
+                      </p>
+                    </div>
+                  </div>
+                ) : relatedCoin?.status === 'cancelled' ? (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f0ede8" }}>
+                      <CalendarIcon size={14} style={{ color: "#9e9e99" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: "#9e9e99" }}>
+                        Follow-up cancelled
+                      </p>
+                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                        Was due {relatedCoin.planned_follow_up_date ? format(parseISO(relatedCoin.planned_follow_up_date), "MMM d") : "—"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null
+              ) : hasFollowUp ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#f5ede7" }}>
+                    {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} /> : (
+                      <CalendarIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }}>
+                      {task.planned_follow_up_type ? (typeLabels[task.planned_follow_up_type] || task.planned_follow_up_type) : "Follow-up"}
+                    </p>
+                    <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                      {isCompleted ? `Completed ${task.completed_at ? format(parseISO(task.completed_at), "MMM d") : ""}` : dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
+                    </p>
+                    {!isCompleted && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
+                        fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                        background: overdue ? "#fce8e8" : "#e9f2eb",
+                        color: overdue ? "#a32d2d" : "#3d7a4a",
+                      }}>
+                        {getDaysLabel()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
+                  <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
+                    No follow-up scheduled.{" "}
+                    <button onClick={() => setScheduleOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
+                      Add one?
+                    </button>
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="rounded-[10px] py-[10px] px-[14px]" style={{ background: "#fdf5f0", border: "0.5px solid rgba(200,98,42,0.2)" }}>
-              <p className="text-[13px]" style={{ color: "#7a746c", fontFamily: "var(--font-body)" }}>
-                No follow-up scheduled.{" "}
-                <button onClick={() => setScheduleOpen(true)} className="underline font-medium" style={{ color: "#c8622a" }}>
-                  Add one?
-                </button>
-              </p>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Bottom action bar */}
