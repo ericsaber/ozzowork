@@ -353,7 +353,7 @@ const ContactHistory = () => {
       {/* Next follow-up */}
       {upcomingFollowups.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
           <div className="space-y-3">
             {upcomingFollowups.map((r: any) => (
               <ContactFollowupCard
