@@ -401,7 +401,7 @@ const LogStep1 = ({
                 >
                   <Search size={13} className="text-muted-foreground" />
                 </div>
-                <span className="text-[15.5px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[16px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   Loading…
                 </span>
               </div>
