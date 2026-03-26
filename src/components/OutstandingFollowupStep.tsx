@@ -225,7 +225,7 @@ const OutstandingFollowupStep = ({
                         <button
                           className="inline-flex items-center gap-1 transition-colors"
                           style={{
-                            borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                            borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                             fontFamily: "var(--font-body)", fontWeight: 500,
                             ...(showDatePicker
                               ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
