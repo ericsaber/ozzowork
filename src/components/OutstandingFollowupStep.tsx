@@ -209,7 +209,7 @@ const OutstandingFollowupStep = ({
                           onClick={() => handleChipClick(chipDate)}
                           className="transition-colors"
                           style={{
-                            borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                            borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                             fontFamily: "var(--font-body)", fontWeight: 500,
                             ...(sel
                               ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
