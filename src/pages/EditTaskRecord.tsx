@@ -205,7 +205,7 @@ const EditTaskRecord = () => {
       {/* WHAT'S NEXT */}
       <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-6" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>What's next</p>
+          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What's next</p>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[13px] text-foreground" style={{ fontFamily: "var(--font-body)" }}>Follow-up planned</span>
             <Switch checked={followUpOn} onCheckedChange={setFollowUpOn} className="data-[state=checked]:bg-[#c8622a]" />
