@@ -520,8 +520,8 @@ const ContactHistory = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>{verb}</span>
-                      <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                      <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
+                      <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
                     {record.note && (
                       <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)" }}>{record.note}</p>
