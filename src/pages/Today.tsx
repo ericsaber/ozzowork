@@ -29,6 +29,7 @@ const Today = () => {
         .select("*, contacts(*)")
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
+        .is('related_task_record_id', null)
         .lte("planned_follow_up_date", windowEnd)
         .order("planned_follow_up_date", { ascending: true });
       if (error) throw error;
