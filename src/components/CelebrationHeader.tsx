@@ -86,7 +86,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             <h2
               style={{
                 fontFamily: "var(--font-heading)",
-                fontSize: "20px",
+                fontSize: "22px",
                 lineHeight: "26px",
                 color: "#c8622a",
                 animation: "toast-fade-up 220ms ease-out 280ms both",
@@ -97,7 +97,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             <p
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: "11px",
+                fontSize: "13px",
                 lineHeight: "16px",
                 color: "#7a746c",
                 animation: "toast-fade-up 220ms ease-out 400ms both",
@@ -114,7 +114,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
               <h2
                 style={{
                   fontFamily: "var(--font-heading)",
-                  fontSize: "20px",
+                  fontSize: "22px",
                   fontWeight: 500,
                   lineHeight: "24px",
                   color: "#c8622a",
@@ -137,7 +137,7 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
             <p
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: "11px",
+                fontSize: "13px",
                 lineHeight: "16px",
                 color: "#7a746c",
               }}

@@ -34,11 +34,11 @@ const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
   });
 
   const labelStyle = (state: "active" | "completed" | "inactive"): React.CSSProperties => ({
-    fontSize: "10.5px",
+    fontSize: "11px",
     fontWeight: state === "active" ? 600 : 400,
     textTransform: "uppercase" as const,
     letterSpacing: "0.08em",
-    color: state === "active" ? "#c8622a" : "#a09890",
+    color: "#999",
     fontFamily: "var(--font-body)",
   });
 
