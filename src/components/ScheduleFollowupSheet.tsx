@@ -227,7 +227,7 @@ const ScheduleFollowupSheet = ({
             >
               <span
                 className="shrink-0"
-                style={{ fontSize: "11px", color: "#b0a89e", fontFamily: "var(--font-body)" }}
+                style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
               >
                 via
               </span>
