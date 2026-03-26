@@ -313,7 +313,7 @@ const InteractionDetail = () => {
             </div>
 
             <div className="px-4 py-3">
-              <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
+              <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>
                 What's next
               </p>
               {isStandaloneLog ? (
