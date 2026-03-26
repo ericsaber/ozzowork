@@ -176,6 +176,21 @@ const ContactHistory = () => {
           completedAt: relatedRecord.completed_at,
         });
 
+        // Check follow_up_action FIRST — before relatedStatus
+        console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
+        if (record.follow_up_action === 'kept') {
+          const displayDateStr = record.planned_follow_up_date
+            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
+            : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
+          return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
+        }
+        if (record.follow_up_action === 'rescheduled') {
+          const displayDateStr = record.planned_follow_up_date
+            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
+            : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
+          return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
+        }
+
         if (relatedRecord.status === "cancelled") {
           return {
             text: plannedDateStr
@@ -199,22 +214,6 @@ const ContactHistory = () => {
             text: `→ ${prefix}${suffix}`,
             color: '#3d7a4a',
           };
-        }
-
-        // Rescheduled or kept — read action directly from the standalone log record
-        if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
-          const displayDateStr = record.planned_follow_up_date
-            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
-            : rescheduledDateStr;
-          if (record.follow_up_action === 'kept') {
-            return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
-          }
-          if (record.follow_up_action === 'rescheduled') {
-            return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
-          }
-          // Fallback for records created before follow_up_action column
-          return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
         }
       }
     }
