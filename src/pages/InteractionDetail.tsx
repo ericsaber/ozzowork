@@ -325,7 +325,7 @@ const InteractionDetail = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
+                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "15px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
                         {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
                       </p>
                       <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
