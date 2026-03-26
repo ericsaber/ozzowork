@@ -143,7 +143,7 @@ const OutstandingFollowupStep = ({
             <span style={{ fontSize: "13px", color: "#1c1812", fontFamily: "var(--font-body)" }}>{typeLabel}</span>
           )}
         </div>
-        <div style={{ fontSize: "12px", color: "#7a746c", fontFamily: "var(--font-body)", marginTop: 4 }}>
+        <div style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)", marginTop: 4 }}>
           {dueDateStr}
         </div>
       </div>
