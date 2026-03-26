@@ -169,6 +169,9 @@ const InteractionDetail = () => {
   const isStandaloneLog = !!task.related_task_record_id;
   if (isStandaloneLog) {
     console.log('[InteractionDetail] standalone log — skipping own follow-up tail:', { related_task_record_id: task.related_task_record_id });
+    if (relatedCoin) {
+      console.log('[InteractionDetail] standalone log related coin state:', { status: relatedCoin.status, planned_follow_up_date: relatedCoin.planned_follow_up_date, completed_at: relatedCoin.completed_at });
+    }
   }
   
   const showBottomBar = hasFollowUp && !isCompleted && !isStandaloneLog;
