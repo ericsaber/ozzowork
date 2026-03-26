@@ -86,7 +86,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <div className="px-[18px] pt-[14px] pb-[12px] border-b border-border">
-          <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+          <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
             Edit follow-up
           </h2>
           <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
