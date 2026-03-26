@@ -572,7 +572,7 @@ const LogStep1 = ({
               <button
                 key={t.value}
                 onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[14px] font-medium transition-colors ${
                   selected
                     ? "text-primary-foreground"
                     : "text-muted-foreground"
