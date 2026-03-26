@@ -52,10 +52,16 @@ const InteractionDetail = () => {
 
   const undoCompleteMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("task_records" as any)
-        .update({ status: "active", completed_at: null })
-        .eq("id", id!);
-      if (error) throw error;
+      console.log('[InteractionDetail] undo complete triggered:', { taskRecordId: id });
+      try {
+        const { error } = await supabase.from("task_records" as any)
+          .update({ status: "active", completed_at: null })
+          .eq("id", id!);
+        if (error) throw error;
+      } catch (error) {
+        console.log('[InteractionDetail] undo complete error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-record", id] });
@@ -63,6 +69,7 @@ const InteractionDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
       queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
     },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const { data: activeFollowup } = useQuery({
