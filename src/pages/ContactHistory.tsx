@@ -203,16 +203,29 @@ const ContactHistory = () => {
 
         // Rescheduled or kept — related record is still active with a date
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          const recordDate = record.connect_date || record.created_at;
-          const editsBeforeThisRecord = (allRescheduleEdits || []).filter((e: any) => 
-            e.task_record_id === record.related_task_record_id && 
-            new Date(e.changed_at) > new Date(recordDate)
+          const recordTime = new Date(record.connect_date || record.created_at).getTime();
+          const allEditsForRelated = (allRescheduleEdits || [])
+            .filter((e: any) => e.task_record_id === record.related_task_record_id)
+            .sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+          
+          // Find edit created within 60 seconds of this record — means this WAS the reschedule action
+          const matchingEdit = allEditsForRelated.find((e: any) => 
+            Math.abs(new Date(e.changed_at).getTime() - recordTime) < 60000
           );
-          const wasRescheduledAfter = editsBeforeThisRecord.length > 0;
-          if (!wasRescheduledAfter) {
-            return { text: `→ Follow-up kept for ${rescheduledDateStr}`, color: '#3d7a4a' };
+          
+          if (matchingEdit) {
+            // This record caused the reschedule
+            return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
+          } else {
+            // This record was a keep — find what date was current at time of keep
+            const firstEditAfter = allEditsForRelated.find((e: any) => 
+              new Date(e.changed_at).getTime() > recordTime
+            );
+            const keptDateStr = firstEditAfter?.previous_due_date 
+              ? format(parseISO(firstEditAfter.previous_due_date), 'MMM d')
+              : rescheduledDateStr;
+            return { text: `→ Follow-up kept for ${keptDateStr}`, color: '#3d7a4a' };
           }
-          return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
         }
       }
     }
