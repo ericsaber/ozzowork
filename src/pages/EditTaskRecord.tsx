@@ -207,7 +207,7 @@ const EditTaskRecord = () => {
         <div className="px-4 py-3">
           <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What's next</p>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] text-foreground" style={{ fontFamily: "var(--font-body)" }}>Follow-up planned</span>
+            <span className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Follow-up planned</span>
             <Switch checked={followUpOn} onCheckedChange={setFollowUpOn} className="data-[state=checked]:bg-[#c8622a]" />
           </div>
           {followUpOn && (
