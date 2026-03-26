@@ -275,7 +275,7 @@ const InteractionDetail = () => {
                 {ConnectIcon ? <ConnectIcon size={14} className="text-muted-foreground" /> : <ClipboardList size={14} className="text-muted-foreground" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px" }}>
+                <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px", lineHeight: "20px" }}>
                   {task.connect_type ? (typeLabels[task.connect_type] || task.connect_type) : "Interacted"}
                 </p>
                 {task.connect_date && (
