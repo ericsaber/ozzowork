@@ -220,7 +220,7 @@ const InteractionDetail = () => {
             <DropdownMenuItem onClick={() => navigate(`/edit-task/${id}`)}>
               <Pencil size={14} className="mr-2" /> Edit
             </DropdownMenuItem>
-            {hasFollowUp && !isCompleted && (
+            {hasFollowUp && !isCompleted && !isStandaloneLog && (
               <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>
                 <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
