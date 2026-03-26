@@ -599,8 +599,8 @@ const LogStep1 = ({
           style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
         >
           <p
-            className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="font-medium uppercase tracking-[0.1em] mb-2"
+            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}
           >
             When?
           </p>
