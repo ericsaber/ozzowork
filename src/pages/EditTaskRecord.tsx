@@ -163,7 +163,7 @@ const EditTaskRecord = () => {
       {/* WHAT HAPPENED */}
       <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>What happened</p>
+          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What happened</p>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[13px] text-foreground" style={{ fontFamily: "var(--font-body)" }}>Interaction logged</span>
             <Switch checked={interactionOn} onCheckedChange={setInteractionOn} className="data-[state=checked]:bg-[#c8622a]" />
