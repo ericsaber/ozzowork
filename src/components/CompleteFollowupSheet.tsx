@@ -109,9 +109,10 @@ const CompleteFollowupSheet = ({
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       console.log("[completion] followupMutation received:", { type, date });
+      console.log('[completion] op2 follow-up payload:', { type, date, planned_follow_up_type: type || null, planned_follow_up_date: date ? date : null });
       await insertCompletionRecord({
         plannedFollowUpType: type || null,
-        plannedFollowUpDate: date || null,
+        plannedFollowUpDate: date ? date : null,
       });
     },
     onSuccess: () => {
