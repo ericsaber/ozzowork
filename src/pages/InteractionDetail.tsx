@@ -362,7 +362,7 @@ const InteractionDetail = () => {
                       <CalendarIcon size={14} style={{ color: "#9e9e99" }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: "#9e9e99" }}>
+                      <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "15px", lineHeight: "20px", color: "#9e9e99" }}>
                         Follow-up cancelled
                       </p>
                       <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
