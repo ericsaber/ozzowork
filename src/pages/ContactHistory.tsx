@@ -143,7 +143,9 @@ const ContactHistory = () => {
     });
   };
 
-  const getThreadLine = (record: any, rescheduleInfo?: any) => {
+  const allFollowUpEdits = (taskRecords || []).flatMap((r: any) => r.follow_up_edits || []);
+
+  const getThreadLine = (record: any, rescheduleInfo?: any, allRescheduleEdits?: any[]) => {
     const typeLbl = record.planned_follow_up_type
       ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
       : null;
