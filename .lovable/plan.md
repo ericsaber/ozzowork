@@ -1,42 +1,42 @@
 
 
-## Fix: Audit and repair all activeFollowup queries
+## Fix: Reorder follow_up_action check before relatedStatus in getThreadLine
 
 ### Problem
-Three query locations besides `LogInteractionSheet.tsx` filter for active follow-ups without excluding standalone logs (`related_task_record_id` is set). Now that standalone logs store `planned_follow_up_date`, they appear as false positives.
+In the `related_task_record_id` branch (lines 159-219), the `cancelled` check (line 179) and `completed` check (line 188) fire before the `follow_up_action` check (line 205). When the related coin gets completed, standalone logs with `follow_up_action = 'kept'` or `'rescheduled'` incorrectly show completion text.
 
-### All locations found
+### Change — `src/pages/ContactHistory.tsx` (lines 159-219)
 
-| # | File | Line | Already fixed? |
-|---|------|------|---------------|
-| 1 | `LogInteractionSheet.tsx` | ~83 | Yes — has `.is('related_task_record_id', null)` |
-| 2 | `InteractionDetail.tsx` | ~77 | **No** |
-| 3 | `Today.tsx` | ~31 | **No** |
-| 4 | `Upcoming.tsx` | ~17 | **No** |
+Move the `follow_up_action` check to immediately after finding `relatedRecord` and logging, **before** any `relatedRecord.status` checks:
 
-### Changes
-
-**1. `src/pages/InteractionDetail.tsx`** (line ~78, after `.not("planned_follow_up_date", "is", null)`)
-- Add `.is('related_task_record_id', null)` before `.neq("id", id!)`
-- Update the console.log after query result to include:
 ```typescript
-console.log('[InteractionDetail] activeFollowup after fix:', { 
-  activeFollowupId: (data as any)?.id, 
-  related_task_record_id: (data as any)?.related_task_record_id 
-});
+if (record.related_task_record_id) {
+  const relatedRecord = ...find...;
+  if (relatedRecord) {
+    // existing console.log for related record found (keep)
+    
+    // NEW: check follow_up_action FIRST
+    console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
+    if (record.follow_up_action === 'kept') {
+      const displayDateStr = record.planned_follow_up_date
+        ? format(parseISO(record.planned_follow_up_date), 'MMM d')
+        : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
+      return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
+    }
+    if (record.follow_up_action === 'rescheduled') {
+      const displayDateStr = record.planned_follow_up_date
+        ? format(parseISO(record.planned_follow_up_date), 'MMM d')
+        : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
+      return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
+    }
+
+    // THEN: existing cancelled/completed/fallback checks (unchanged)
+    if (relatedRecord.status === "cancelled") { ... }
+    if (relatedRecord.status === "completed") { ... }
+    // Remove the old follow_up_action block (lines 204-218)
+  }
+}
 ```
 
-**2. `src/pages/Today.tsx`** (line ~31, after `.not("planned_follow_up_date", "is", null)`)
-- Add `.is('related_task_record_id', null)` before `.lte(…)`
-
-**3. `src/pages/Upcoming.tsx`** (line ~17, after `.not("planned_follow_up_date", "is", null)`)
-- Add `.is('related_task_record_id', null)` before `.gt(…)`
-
-**4. `src/components/LogInteractionSheet.tsx`** (line ~87)
-- Update existing console.log to match requested format:
-```typescript
-console.log('[activeFollowups] query result after fix:', data ? { id: (data as any).id, related: (data as any).related_task_record_id, date: (data as any).planned_follow_up_date } : null);
-```
-
-All existing console.logs remain untouched. No other files affected.
+Remove the old `if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled')` block (lines 204-218) since it's now handled above. All existing console.logs remain.
 
