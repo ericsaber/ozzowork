@@ -178,7 +178,7 @@ const OutstandingFollowupStep = ({
                 <div className="mt-2 px-1">
                   <p
                     className="uppercase tracking-[0.1em] mb-2"
-                    style={{ fontSize: "11px", color: "#7a746c", fontFamily: "var(--font-body)" }}
+                    style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
                   >
                     {status === "future"
                       ? `Currently ${format(fuDate, "MMM d, yyyy")} — keep or pick a new date`
