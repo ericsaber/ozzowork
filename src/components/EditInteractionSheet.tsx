@@ -174,7 +174,8 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground min-h-[80px] resize-none outline-none focus:border-[#f0c4a8] transition-colors"
+              className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground min-h-[80px] resize-none outline-none focus:border-[#f0c4a8] transition-colors"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
               style={{ fontFamily: "var(--font-body)" }}
               placeholder="What happened?"
             />
