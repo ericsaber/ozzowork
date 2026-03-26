@@ -342,9 +342,9 @@ const ContactHistory = () => {
       {/* Schedule CTA when no active follow-ups */}
       {!hasActiveFollowups && contact && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
           <button onClick={() => setScheduleOpen(true)} className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}>
-            <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
+            <p className="text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>No follow-up scheduled</p>
             <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>+ Schedule a follow-up</span>
           </button>
         </div>
