@@ -199,24 +199,12 @@ const ContactHistory = () => {
           };
         }
 
-        // Rescheduled — related record is still active with a new date
-        if (rescheduledDateStr) {
-          // If rescheduleInfo exists but previous_due_date matches the current planned date, it was kept not rescheduled
-          if (rescheduleInfo && rescheduleInfo.previous_due_date === relatedRecord.planned_follow_up_date) {
-            return {
-              text: `→ Follow-up kept for ${rescheduledDateStr}`,
-              color: '#3d7a4a',
-            };
+        // Rescheduled or kept — related record is still active with a date
+        if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
+          if (!rescheduleInfo) {
+            return { text: `→ Follow-up kept for ${rescheduledDateStr}`, color: '#3d7a4a' };
           }
-          const prevDateStr = rescheduleInfo?.previous_due_date
-            ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
-            : "";
-          return {
-            text: prevDateStr
-              ? `→ Follow-up rescheduled to ${rescheduledDateStr} · From ${prevDateStr}`
-              : `→ Follow-up rescheduled to ${rescheduledDateStr}`,
-            color: "#3d7a4a",
-          };
+          return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
         }
       }
     }
