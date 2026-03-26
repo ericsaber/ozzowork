@@ -183,7 +183,7 @@ const EditTaskRecord = () => {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Date</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Date</p>
                 <Popover open={showConnectDatePicker} onOpenChange={setShowConnectDatePicker}>
                   <PopoverTrigger asChild>
                     <button className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
