@@ -435,7 +435,7 @@ const LogInteractionSheet = ({
     await supabase.from("task_records" as any)
       .update({
         status: "active",
-        related_task_record_id: existingFollowup.id,
+        ...(isKeep ? {} : { related_task_record_id: existingFollowup.id }),
       })
       .eq("id", draftId);
 
