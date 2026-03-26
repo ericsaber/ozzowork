@@ -377,7 +377,7 @@ const LogStep1 = ({
                   >
                     {initials}
                   </div>
-                  <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  <span className="text-[16px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
                     {contactName}
                   </span>
                 </div>
