@@ -365,7 +365,7 @@ const InteractionDetail = () => {
                       <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "15px", lineHeight: "20px", color: "#9e9e99" }}>
                         Follow-up cancelled
                       </p>
-                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "16px" }}>
                         Was due {relatedCoin.planned_follow_up_date ? format(parseISO(relatedCoin.planned_follow_up_date), "MMM d") : "—"}
                       </p>
                     </div>
