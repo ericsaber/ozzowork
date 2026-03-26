@@ -186,7 +186,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
             <>
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t border-border" />
-                <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="font-medium uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                   Follow-up
                 </span>
                 <div className="flex-1 border-t border-border" />
