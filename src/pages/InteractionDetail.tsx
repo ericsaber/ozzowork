@@ -305,7 +305,38 @@ const InteractionDetail = () => {
           <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
             What's next
           </p>
-          {hasFollowUp ? (
+          {isStandaloneLog ? (
+            coinHasActiveFollowUp ? (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: overdue ? "#fce8e8" : "#f5ede7" }}>
+                  {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} /> : (
+                    <CalendarIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
+                    {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
+                  </p>
+                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                    {dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
+                  </p>
+                  {dueDate && (
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
+                      fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                      background: overdue ? "#fce8e8" : "#e9f2eb",
+                      color: overdue ? "#a32d2d" : "#3d7a4a",
+                    }}>
+                      {getDaysLabel()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
+                No active follow-up.
+              </p>
+            )
+          ) : hasFollowUp ? (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#f5ede7" }}>
                 {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} /> : (
