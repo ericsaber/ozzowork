@@ -231,7 +231,7 @@ const EditTaskRecord = () => {
                     const chipDate = chip.date();
                     return (
                       <button key={chip.label} onClick={() => { setFollowUpDate(followUpDate === chipDate ? "" : chipDate); setShowDatePicker(false); }}
-                        className={`rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                        className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                         style={{ fontFamily: "var(--font-body)" }}>
                         {chip.label}
                       </button>
