@@ -203,7 +203,13 @@ const ContactHistory = () => {
 
         // Rescheduled or kept — related record is still active with a date
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          if (!rescheduleInfo) {
+          const recordDate = record.connect_date || record.created_at;
+          const editsBeforeThisRecord = (allRescheduleEdits || []).filter((e: any) => 
+            e.task_record_id === record.related_task_record_id && 
+            new Date(e.changed_at) > new Date(recordDate)
+          );
+          const wasRescheduledAfter = editsBeforeThisRecord.length > 0;
+          if (!wasRescheduledAfter) {
             return { text: `→ Follow-up kept for ${rescheduledDateStr}`, color: '#3d7a4a' };
           }
           return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
