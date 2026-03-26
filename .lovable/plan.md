@@ -1,44 +1,33 @@
 
 
-## Fix: Completion flow — separate tails-only coin for new follow-ups
+## Fix: InteractionDetail What's Next — show completed/cancelled state for standalone logs
 
 ### Problem
-`insertCompletionRecord` stores `planned_follow_up_date` and `planned_follow_up_type` on op2, which also has `related_task_record_id` set. Dashboard queries filter out records with `related_task_record_id`, making the new follow-up invisible.
+When `isStandaloneLog` is true and the related coin is completed or cancelled, the What's Next section falls through to "No active follow-up" instead of showing the actual state.
 
-### Change — `src/components/CompleteFollowupSheet.tsx`
+### Changes — `src/pages/InteractionDetail.tsx`
 
-**`insertCompletionRecord` function (lines 72-107):**
+**1. Add console log** (after the existing `isStandaloneLog` console log, ~line 162)
 
-1. Remove `planned_follow_up_type` and `planned_follow_up_date` from the op2 INSERT payload. Op2 always gets `status: "completed"` (it's just the interaction log).
-
-2. After op2 insert, if `plannedFollowUpDate` is truthy, insert op3 — a clean tails-only coin with no `related_task_record_id`:
-
+When `isStandaloneLog && relatedCoin`, log:
 ```typescript
-// op2 INSERT — interaction record only
-const { error } = await supabase.from("task_records" as any).insert({
-  contact_id: contactId,
-  user_id: userId,
-  connect_type: connectType || null,
-  note: note || null,
-  connect_date: connectDate,
-  status: "completed",
-  related_task_record_id: taskRecordId,
-});
-if (error) throw error;
-
-// op3 — new follow-up coin if date is set
-if (plannedFollowUpDate) {
-  console.log('[completion] op3 new follow-up coin:', { planned_follow_up_date: plannedFollowUpDate });
-  const { error: op3Error } = await supabase.from("task_records" as any).insert({
-    contact_id: contactId,
-    user_id: userId,
-    status: "active",
-    planned_follow_up_type: plannedFollowUpType || null,
-    planned_follow_up_date: plannedFollowUpDate,
-  });
-  if (op3Error) throw op3Error;
-}
+console.log('[InteractionDetail] standalone log related coin state:', { status: relatedCoin.status, planned_follow_up_date: relatedCoin.planned_follow_up_date, completed_at: relatedCoin.completed_at });
 ```
 
-All existing console.logs remain. No other files change.
+**2. Replace the standalone log branch in What's Next** (lines 315-345)
+
+Replace the current two-branch logic (`coinHasActiveFollowUp` / "No active follow-up") with four states:
+
+- **`relatedCoin.status === 'active'` + `planned_follow_up_date`**: Show follow-up with overdue/due logic, green icon+badge (existing active rendering, keep as-is)
+- **`relatedCoin.status === 'completed'`**: Green icon, text: `"Follow-up was planned for [planned_follow_up_date] · Completed [completed_at]"` — plain text, no buttons
+- **`relatedCoin.status === 'cancelled'`**: Gray icon, text: `"Follow-up cancelled · Was due [planned_follow_up_date]"` — plain text, no buttons
+- **Otherwise** (no relatedCoin or no planned date): Render nothing — hide the entire What's Next section including the header and divider
+
+**3. Conditionally hide divider + What's Next section**
+
+Wrap the divider and What's Next `div` in a condition: only render when `!isStandaloneLog || (relatedCoin && relatedCoin.planned_follow_up_date)`. This hides the section entirely when the related coin has no follow-up data.
+
+### Technical detail
+
+The completed/cancelled branches use `CalendarIcon` in a green (#e9f2eb/#3d7a4a) or gray (#f0ede8/#9e9e99) icon box respectively, matching existing visual patterns. All existing console.logs remain.
 
