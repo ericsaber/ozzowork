@@ -186,7 +186,7 @@ const EditTaskRecord = () => {
                 <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Date</p>
                 <Popover open={showConnectDatePicker} onOpenChange={setShowConnectDatePicker}>
                   <PopoverTrigger asChild>
-                    <button className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    <button className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
                       <CalendarIcon size={14} className="text-muted-foreground" />
                       {connectDate ? format(new Date(connectDate + "T00:00:00"), "MMM d, yyyy") : "Pick a date"}
                     </button>
