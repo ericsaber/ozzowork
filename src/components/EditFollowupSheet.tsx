@@ -97,7 +97,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
         <div className="px-[18px] py-[14px] pb-[24px] overflow-y-auto space-y-5">
           {/* Type pills */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Follow-up type
             </p>
             <div className="flex flex-wrap gap-2">
