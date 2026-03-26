@@ -127,7 +127,7 @@ const OutstandingFollowupStep = ({
         Outstanding follow-up
       </h2>
 
-      <p className="text-center" style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
+      <p className="text-center" style={{ fontSize: "14px", color: "#7a746c", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
         You already have an active follow-up. What would you like to do with it?
       </p>
 
