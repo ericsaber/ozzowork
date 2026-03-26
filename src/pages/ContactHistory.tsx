@@ -510,7 +510,7 @@ const ContactHistory = () => {
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
               const rescheduleInfo = rescheduleMap[record.id] || (record.related_task_record_id ? rescheduleMap[record.related_task_record_id] : undefined);
-              const thread = getThreadLine(record, rescheduleInfo);
+              const thread = getThreadLine(record, rescheduleInfo, allFollowUpEdits);
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
