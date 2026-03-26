@@ -217,7 +217,7 @@ const EditTaskRecord = () => {
                 <div className="flex flex-wrap gap-2">
                   {typeOptions.map((t) => (
                     <button key={t.value} onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[13px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                       style={{ fontFamily: "var(--font-body)" }}>
                       <t.icon size={11} />{t.label}
                     </button>
