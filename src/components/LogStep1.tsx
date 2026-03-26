@@ -447,7 +447,7 @@ const LogStep1 = ({
               <div className="w-12 border-t border-border my-1" />
               <button
                 onClick={() => setIsTyping(true)}
-                className="text-[14px] italic text-muted-foreground"
+                className="text-[15px] italic text-muted-foreground"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 or tap here to type…
