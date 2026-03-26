@@ -169,7 +169,7 @@ const OutstandingFollowupStep = ({
                 >
                   {opt.label}
                 </div>
-                <div style={{ fontSize: "12px", fontFamily: "var(--font-body)", color: "#7a746c", marginTop: 2, lineHeight: 1.4 }}>
+                <div style={{ fontSize: "13px", fontFamily: "var(--font-body)", color: "#7a746c", marginTop: 2, lineHeight: 1.4 }}>
                   {opt.sub}
                 </div>
               </button>
