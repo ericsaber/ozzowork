@@ -92,6 +92,19 @@ const InteractionDetail = () => {
 
   const hasOtherActiveFollowup = !!activeFollowup;
 
+  const { data: relatedCoin } = useQuery({
+    queryKey: ["task-record", task?.related_task_record_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("task_records" as any)
+        .select("*")
+        .eq("id", task!.related_task_record_id!)
+        .single();
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!task?.related_task_record_id,
+  });
+
   const undoCancelMutation = useMutation({
     mutationFn: async () => {
       console.log("[InteractionDetail] undo cancel:", id);
@@ -146,15 +159,23 @@ const InteractionDetail = () => {
   console.log('[InteractionDetail] task data:', { connect_type: task.connect_type, note: task.note, hasInteraction: !!(task.connect_type || task.note) });
   const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
+  const isStandaloneLog = !!task.related_task_record_id;
+  if (isStandaloneLog) {
+    console.log('[InteractionDetail] standalone log — skipping own follow-up tail:', { related_task_record_id: task.related_task_record_id });
+  }
   
-  const showBottomBar = hasFollowUp && !isCompleted;
+  const showBottomBar = hasFollowUp && !isCompleted && !isStandaloneLog;
 
-  const dueDate = task.planned_follow_up_date ? parseISO(task.planned_follow_up_date) : null;
+  // For standalone logs, use the related coin's follow-up data for "What's Next"
+  const coinForFollowUp = isStandaloneLog ? relatedCoin : task;
+  const coinHasActiveFollowUp = coinForFollowUp && coinForFollowUp.planned_follow_up_date && coinForFollowUp.status !== 'completed' && coinForFollowUp.status !== 'cancelled';
+
+  const dueDate = coinForFollowUp?.planned_follow_up_date ? parseISO(coinForFollowUp.planned_follow_up_date) : null;
   const overdue = dueDate && !isCompleted ? isPast(dueDate) && !isDateToday(dueDate) : false;
   const dueDateIsToday = dueDate ? isDateToday(dueDate) : false;
 
   const ConnectIcon = task.connect_type ? typeIcons[task.connect_type] : null;
-  const FollowUpIcon = task.planned_follow_up_type ? typeIcons[task.planned_follow_up_type] : null;
+  const FollowUpIcon = coinForFollowUp?.planned_follow_up_type ? typeIcons[coinForFollowUp.planned_follow_up_type] : null;
 
   const handleLogFollowUp = () => {
     if (task && contact) {
@@ -199,7 +220,7 @@ const InteractionDetail = () => {
             <DropdownMenuItem onClick={() => navigate(`/edit-task/${id}`)}>
               <Pencil size={14} className="mr-2" /> Edit
             </DropdownMenuItem>
-            {hasFollowUp && !isCompleted && (
+            {hasFollowUp && !isCompleted && !isStandaloneLog && (
               <DropdownMenuItem onClick={() => setRescheduleOpen(true)}>
                 <Clock size={14} className="mr-2" /> Reschedule
               </DropdownMenuItem>
@@ -284,7 +305,38 @@ const InteractionDetail = () => {
           <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>
             What's next
           </p>
-          {hasFollowUp ? (
+          {isStandaloneLog ? (
+            coinHasActiveFollowUp ? (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: overdue ? "#fce8e8" : "#f5ede7" }}>
+                  {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} /> : (
+                    <CalendarIcon size={14} style={{ color: overdue ? "#a32d2d" : "#c8622a" }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "14px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
+                    {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
+                  </p>
+                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                    {dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
+                  </p>
+                  {dueDate && (
+                    <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
+                      fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                      background: overdue ? "#fce8e8" : "#e9f2eb",
+                      color: overdue ? "#a32d2d" : "#3d7a4a",
+                    }}>
+                      {getDaysLabel()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>
+                No active follow-up.
+              </p>
+            )
+          ) : hasFollowUp ? (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: isCompleted ? "#e9f2eb" : overdue ? "#fce8e8" : "#f5ede7" }}>
                 {FollowUpIcon ? <FollowUpIcon size={14} style={{ color: isCompleted ? "#3d7a4a" : overdue ? "#a32d2d" : "#c8622a" }} /> : (
