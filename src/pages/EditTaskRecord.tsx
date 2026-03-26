@@ -152,7 +152,7 @@ const EditTaskRecord = () => {
       {/* Contact header */}
       <div className="flex items-center gap-3 mb-5">
         <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-          <span className="text-xs font-semibold text-secondary-foreground">{initials}</span>
+          <span className="font-semibold text-secondary-foreground" style={{ fontSize: "13px" }}>{initials}</span>
         </div>
         <div>
           <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{contactName}</p>
