@@ -75,6 +75,7 @@ const InteractionDetail = () => {
         .eq("contact_id", task.contact_id)
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
+        .is('related_task_record_id', null)
         .neq("id", id!)
         .limit(1)
         .maybeSingle();
