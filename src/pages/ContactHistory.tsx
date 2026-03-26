@@ -218,7 +218,9 @@ const ContactHistory = () => {
               changedTime: new Date(e.changed_at).getTime(),
               diff: Math.abs(new Date(e.changed_at).getTime() - recordTime),
               previous_due_date: e.previous_due_date,
+              task_record_id: e.task_record_id,
             })),
+            firstEditAfterExists: !!allEditsForRelated.find((e: any) => new Date(e.changed_at).getTime() > recordTime),
           });
 
           // Find edit created within 60 seconds of this record — means this WAS the reschedule action
