@@ -107,7 +107,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
                   <button
                     key={t.value}
                     onClick={() => setFollowUpType(t.value)}
-                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${
                       selected
                         ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
