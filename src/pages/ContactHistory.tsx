@@ -208,6 +208,19 @@ const ContactHistory = () => {
             .filter((e: any) => e.task_record_id === record.related_task_record_id)
             .sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
           
+          console.log('[getThreadLine] timing debug:', {
+            recordId: record.id,
+            recordTime,
+            recordConnectDate: record.connect_date,
+            recordCreatedAt: record.created_at,
+            allEditsForRelated: allEditsForRelated.map((e: any) => ({
+              changed_at: e.changed_at,
+              changedTime: new Date(e.changed_at).getTime(),
+              diff: Math.abs(new Date(e.changed_at).getTime() - recordTime),
+              previous_due_date: e.previous_due_date,
+            })),
+          });
+
           // Find edit created within 60 seconds of this record — means this WAS the reschedule action
           const matchingEdit = allEditsForRelated.find((e: any) => 
             Math.abs(new Date(e.changed_at).getTime() - recordTime) < 60000
