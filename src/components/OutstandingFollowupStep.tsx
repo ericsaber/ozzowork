@@ -165,7 +165,7 @@ const OutstandingFollowupStep = ({
               >
                 <div
                   className="font-bold"
-                  style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: selected ? opt.color : "#1c1812" }}
+                  style={{ fontSize: "15px", fontFamily: "var(--font-body)", color: selected ? opt.color : "#1c1812" }}
                 >
                   {opt.label}
                 </div>
