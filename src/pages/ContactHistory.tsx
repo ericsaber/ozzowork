@@ -527,7 +527,7 @@ const ContactHistory = () => {
                       <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
                     )}
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
+                      <span style={{ fontFamily: "var(--font-body)", color: thread.color, fontSize: "12px" }}>{thread.text}</span>
                     </div>
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
