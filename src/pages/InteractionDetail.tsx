@@ -175,7 +175,7 @@ const InteractionDetail = () => {
   const dueDateIsToday = dueDate ? isDateToday(dueDate) : false;
 
   const ConnectIcon = task.connect_type ? typeIcons[task.connect_type] : null;
-  const FollowUpIcon = task.planned_follow_up_type ? typeIcons[task.planned_follow_up_type] : null;
+  const FollowUpIcon = coinForFollowUp?.planned_follow_up_type ? typeIcons[coinForFollowUp.planned_follow_up_type] : null;
 
   const handleLogFollowUp = () => {
     if (task && contact) {
