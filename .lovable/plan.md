@@ -1,53 +1,44 @@
 
 
-## Fix: Follow-up date dropped + undo complete silent failure
+## Fix: Completion flow — separate tails-only coin for new follow-ups
 
-### Bug 1 — `src/components/CompleteFollowupSheet.tsx`
+### Problem
+`insertCompletionRecord` stores `planned_follow_up_date` and `planned_follow_up_type` on op2, which also has `related_task_record_id` set. Dashboard queries filter out records with `related_task_record_id`, making the new follow-up invisible.
 
-**Line 114**: `plannedFollowUpDate: date || null` nulls out the date when type is empty but date is set, because `followupMutation` passes both through `|| null`. The fix: decouple date from type.
+### Change — `src/components/CompleteFollowupSheet.tsx`
 
-Change line 113-114:
+**`insertCompletionRecord` function (lines 72-107):**
+
+1. Remove `planned_follow_up_type` and `planned_follow_up_date` from the op2 INSERT payload. Op2 always gets `status: "completed"` (it's just the interaction log).
+
+2. After op2 insert, if `plannedFollowUpDate` is truthy, insert op3 — a clean tails-only coin with no `related_task_record_id`:
+
 ```typescript
-plannedFollowUpType: type || null,
-plannedFollowUpDate: date || null,
-```
-to:
-```typescript
-plannedFollowUpType: type || null,
-plannedFollowUpDate: date ? date : null,
-```
+// op2 INSERT — interaction record only
+const { error } = await supabase.from("task_records" as any).insert({
+  contact_id: contactId,
+  user_id: userId,
+  connect_type: connectType || null,
+  note: note || null,
+  connect_date: connectDate,
+  status: "completed",
+  related_task_record_id: taskRecordId,
+});
+if (error) throw error;
 
-Add console log after line 111:
-```typescript
-console.log('[completion] op2 follow-up payload:', { type, date, planned_follow_up_type: type || null, planned_follow_up_date: date ? date : null });
-```
-
-Note: `date || null` and `date ? date : null` behave identically for strings — the real issue may be upstream where `type` emptiness causes `date` to not be passed. Need to verify `onSaveWithFollowup` call site. But the log will confirm.
-
-### Bug 2 — `src/pages/InteractionDetail.tsx`
-
-**Lines 53-66**: `undoCompleteMutation` has no error handler — errors are silently swallowed.
-
-Add to `mutationFn` (line 54): console log at start + wrap in try/catch:
-```typescript
-mutationFn: async () => {
-  console.log('[InteractionDetail] undo complete triggered:', { taskRecordId: id });
-  try {
-    const { error } = await supabase.from("task_records" as any)
-      .update({ status: "active", completed_at: null })
-      .eq("id", id!);
-    if (error) throw error;
-  } catch (error) {
-    console.log('[InteractionDetail] undo complete error:', error);
-    throw error;
-  }
-},
+// op3 — new follow-up coin if date is set
+if (plannedFollowUpDate) {
+  console.log('[completion] op3 new follow-up coin:', { planned_follow_up_date: plannedFollowUpDate });
+  const { error: op3Error } = await supabase.from("task_records" as any).insert({
+    contact_id: contactId,
+    user_id: userId,
+    status: "active",
+    planned_follow_up_type: plannedFollowUpType || null,
+    planned_follow_up_date: plannedFollowUpDate,
+  });
+  if (op3Error) throw op3Error;
+}
 ```
 
-Add `onError` handler after `onSuccess`:
-```typescript
-onError: (e: any) => toast.error(e.message),
-```
-
-All existing console.logs remain.
+All existing console.logs remain. No other files change.
 
