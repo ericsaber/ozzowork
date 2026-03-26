@@ -361,8 +361,8 @@ const Contacts = () => {
                   <span className="font-semibold text-secondary-foreground" style={{ fontSize: "13px" }}>{initials}</span>
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-foreground">{fullName}</p>
-                  {contact.company && <p className="text-xs text-muted-foreground">{contact.company}</p>}
+                  <p className="font-medium text-foreground" style={{ fontSize: "16px" }}>{fullName}</p>
+                  {contact.company && <p className="text-muted-foreground" style={{ fontSize: "13px" }}>{contact.company}</p>}
                 </div>
               </button>
             );

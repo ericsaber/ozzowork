@@ -289,7 +289,7 @@ const RescheduleSheet = ({
           <button
             onClick={() => mutation.mutate()}
             disabled={!selectedDate || mutation.isPending}
-            className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+            className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
             style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
           >
             {mutation.isPending ? "Saving..." : "Save new date"}
