@@ -510,7 +510,7 @@ const LogStep1 = ({
                 >
                   Transcribing…
                 </span>
-                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   AI will sum it up
                 </span>
                 <div className="w-12 border-t border-border my-1" />
