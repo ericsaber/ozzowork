@@ -124,7 +124,7 @@ const ScheduleFollowupSheet = ({
             {/* Date section */}
             <p
               className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
-              style={{ fontSize: "11px", color: "#1c1812", fontFamily: "var(--font-body)" }}
+              style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
             >
               Next connect
             </p>
