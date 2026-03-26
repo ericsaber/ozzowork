@@ -304,10 +304,10 @@ const LogStep1 = ({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      placeholder="Who did you talk to?"
-                      onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-                      onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
-                      className="flex-1 bg-transparent border-none outline-none text-[15.5px] text-foreground placeholder:text-muted-foreground"
+                       placeholder="Who did you talk to?"
+                       onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                       onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
+                       className="flex-1 bg-transparent border-none outline-none text-[16px] text-foreground placeholder:text-muted-foreground"
                       style={{ fontFamily: "var(--font-body)" }}
                     />
                   </div>
