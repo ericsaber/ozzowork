@@ -25,7 +25,7 @@ const BottomNav = () => {
             }`}
           >
             <CalendarCheck size={22} />
-            <span className="text-xs font-medium">Today</span>
+            <span className="font-medium" style={{ fontSize: '13px' }}>Today</span>
           </button>
 
           <div className="flex flex-col items-center gap-1 px-4 py-2">
@@ -44,7 +44,7 @@ const BottomNav = () => {
             }`}
           >
             <Users size={22} />
-            <span className="text-xs font-medium">Contacts</span>
+            <span className="font-medium" style={{ fontSize: '13px' }}>Contacts</span>
           </button>
         </div>
       </nav>

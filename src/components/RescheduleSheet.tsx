@@ -129,7 +129,7 @@ const RescheduleSheet = ({
               <Clock size={16} className="text-[hsl(12,70%,52%)]" />
             </div>
             <div>
-              <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+              <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
                 Reschedule
               </h2>
               <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
@@ -152,7 +152,7 @@ const RescheduleSheet = ({
             {/* Date section */}
             <p
               className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
-              style={{ fontSize: "11px", color: "#1c1812", fontFamily: "var(--font-body)" }}
+              style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
             >
               Next connect
             </p>
@@ -168,7 +168,7 @@ const RescheduleSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       ...(selected
@@ -187,7 +187,7 @@ const RescheduleSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       ...(showDatePicker
@@ -227,7 +227,7 @@ const RescheduleSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       background: "#c8622a",
@@ -256,7 +256,7 @@ const RescheduleSheet = ({
             >
               <span
                 className="shrink-0"
-                style={{ fontSize: "11px", color: "#b0a89e", fontFamily: "var(--font-body)" }}
+                style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
               >
                 via
               </span>
@@ -289,7 +289,7 @@ const RescheduleSheet = ({
           <button
             onClick={() => mutation.mutate()}
             disabled={!selectedDate || mutation.isPending}
-            className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+            className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
             style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
           >
             {mutation.isPending ? "Saving..." : "Save new date"}

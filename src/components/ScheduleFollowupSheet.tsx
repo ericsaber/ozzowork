@@ -124,7 +124,7 @@ const ScheduleFollowupSheet = ({
             {/* Date section */}
             <p
               className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
-              style={{ fontSize: "11px", color: "#1c1812", fontFamily: "var(--font-body)" }}
+              style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
             >
               Next connect
             </p>
@@ -140,7 +140,7 @@ const ScheduleFollowupSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       ...(selected
@@ -159,7 +159,7 @@ const ScheduleFollowupSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       ...(showDatePicker
@@ -198,7 +198,7 @@ const ScheduleFollowupSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       background: "#c8622a",
@@ -227,7 +227,7 @@ const ScheduleFollowupSheet = ({
             >
               <span
                 className="shrink-0"
-                style={{ fontSize: "11px", color: "#b0a89e", fontFamily: "var(--font-body)" }}
+                style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
               >
                 via
               </span>
@@ -261,7 +261,7 @@ const ScheduleFollowupSheet = ({
           <button
             onClick={() => mutation.mutate()}
             disabled={!date || mutation.isPending}
-            className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+            className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
             style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
           >
             {mutation.isPending ? "Saving..." : "Save →"}

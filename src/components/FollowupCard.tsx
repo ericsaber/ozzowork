@@ -59,23 +59,23 @@ const FollowupCard = ({
           <span
             onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
             className="font-medium text-foreground truncate hover:underline cursor-pointer"
-            style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}
+            style={{ fontFamily: 'var(--font-body)', fontSize: '16px', lineHeight: '20px' }}
           >
             {name}
           </span>
           {variant === "overdue" ? (
-            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#fce8e8', color: '#a32d2d' }}>
+            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '15px', lineHeight: '20px', background: '#fce8e8', color: '#a32d2d' }}>
               <TypeIcon size={16} />{badgeLabel}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '14px', lineHeight: '20px', background: '#e9f2eb', color: '#3d7a4a' }}>
+            <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full shrink-0" style={{ fontSize: '15px', lineHeight: '20px', background: '#e9f2eb', color: '#3d7a4a' }}>
               <TypeIcon size={16} />{badgeLabel}
             </span>
           )}
         </div>
 
         {company && (
-          <p className="font-normal text-[#999]" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>
+          <p className="font-normal text-[#999]" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>
             {company}
           </p>
         )}
@@ -83,17 +83,17 @@ const FollowupCard = ({
         {connectType && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
-            <p className="font-medium uppercase text-[#bbb] mb-1" style={{ fontFamily: 'var(--font-body)', fontSize: '9px', lineHeight: '16px', letterSpacing: '0.1em' }}>
+            <p className="font-medium uppercase text-[#bbb] mb-1" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', letterSpacing: '0.1em' }}>
               Last connect
             </p>
             {ConnectIcon && (
-              <span className="inline-flex items-center gap-1 mb-1" style={{ background: '#e8e4de', color: '#666', borderRadius: '20px', padding: '3px 9px', fontSize: '10px', fontWeight: 500 }}>
+              <span className="inline-flex items-center gap-1 mb-1" style={{ background: '#e8e4de', color: '#666', borderRadius: '20px', padding: '3px 9px', fontSize: '12px', fontWeight: 500 }}>
                 <ConnectIcon size={10} />
                 {connectVerb} · {connectDate ? format(parseISO(connectDate), "MMM d") : ""}
               </span>
             )}
             {note && (
-              <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px' }}>
+              <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>
                 {note}
               </p>
             )}

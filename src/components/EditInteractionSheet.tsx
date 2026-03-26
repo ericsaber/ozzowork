@@ -100,7 +100,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
     <Drawer open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <div className="px-[18px] pt-[14px] pb-[12px] border-b border-border">
-          <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+          <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
             Edit interaction
           </h2>
         </div>
@@ -108,7 +108,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
         <div className="px-[18px] py-[14px] pb-[24px] overflow-y-auto space-y-5">
           {/* Connect type */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               How did you connect?
             </p>
             <div className="flex flex-wrap gap-2">
@@ -118,7 +118,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
                   <button
                     key={t.value}
                     onClick={() => setConnectType(connectType === t.value ? "" : t.value)}
-                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${
                       selected
                         ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
@@ -135,14 +135,14 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
 
           {/* Date */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Date
             </p>
             <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
               <PopoverTrigger asChild>
                 <button
-                  className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
+                  style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
                 >
                   <CalendarIcon size={14} className="text-muted-foreground" />
                   {date ? format(parseISO(date), "EEE, MMM d, yyyy") : "Pick a date"}
@@ -167,14 +167,14 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
 
           {/* Note */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Note
             </p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground min-h-[80px] resize-none outline-none focus:border-[#f0c4a8] transition-colors"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground min-h-[80px] resize-none outline-none focus:border-[#f0c4a8] transition-colors"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
               placeholder="What happened?"
             />
           </div>
@@ -184,7 +184,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
             <>
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t border-border" />
-                <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="font-medium uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                   Follow-up
                 </span>
                 <div className="flex-1 border-t border-border" />
@@ -192,7 +192,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
 
               {/* Follow-up type */}
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                   Follow-up type
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -202,7 +202,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
                       <button
                         key={t.value}
                         onClick={() => setFollowUpType(t.value)}
-                        className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
+                        className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${
                           selected
                             ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
                             : "bg-white border-[1.5px] border-border text-muted-foreground"
@@ -219,14 +219,14 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
 
               {/* Follow-up date */}
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                   Follow-up due date
                 </p>
                 <Popover open={showFollowUpDatePicker} onOpenChange={setShowFollowUpDatePicker}>
                   <PopoverTrigger asChild>
                     <button
-                      className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
+                      style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
                     >
                       <CalendarIcon size={14} className="text-muted-foreground" />
                       {followUpDate ? format(parseISO(followUpDate), "EEE, MMM d, yyyy") : "Pick a date"}

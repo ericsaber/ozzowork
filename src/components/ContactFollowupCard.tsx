@@ -102,7 +102,7 @@ const ContactFollowupCard = ({
             {(plannedType || !hidePlannedFallback) && (
               <span
                 className="inline-flex items-center gap-1 rounded-full px-[9px] py-[2px] shrink-0"
-                style={{ background: pillBg, color: pillColor, fontSize: "11px", fontWeight: 500, fontFamily: "var(--font-body)" }}
+                style={{ background: pillBg, color: pillColor, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-body)" }}
               >
                 <TypeIcon size={11} />
                 {plannedType ? `${typeLabels[plannedType] || plannedType} planned` : "Planned"}
@@ -110,7 +110,7 @@ const ContactFollowupCard = ({
             )}
           </div>
           {relativeTime && (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px", color: "#9e9e99", marginTop: "2px" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "16px", color: "#9e9e99", marginTop: "2px" }}>
               {relativeTime}
             </p>
           )}

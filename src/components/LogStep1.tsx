@@ -278,7 +278,7 @@ const LogStep1 = ({
                     >
                       {initials}
                     </div>
-                    <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="text-[16px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
                       {contactName}
                     </span>
                   </div>
@@ -304,10 +304,10 @@ const LogStep1 = ({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      placeholder="Who did you talk to?"
-                      onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-                      onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
-                      className="flex-1 bg-transparent border-none outline-none text-[15.5px] text-foreground placeholder:text-muted-foreground"
+                       placeholder="Who did you talk to?"
+                       onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                       onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
+                       className="flex-1 bg-transparent border-none outline-none text-[16px] text-foreground placeholder:text-muted-foreground"
                       style={{ fontFamily: "var(--font-body)" }}
                     />
                   </div>
@@ -340,8 +340,8 @@ const LogStep1 = ({
                                 {cInitials}
                               </div>
                               <div>
-                                <div className="text-[14px] text-foreground">{`${c.first_name} ${c.last_name}`.trim()}</div>
-                                {c.company && <div className="text-[12px] text-muted-foreground">{c.company}</div>}
+                              <div className="text-foreground" style={{ fontSize: "14px" }}>{`${c.first_name} ${c.last_name}`.trim()}</div>
+                                {c.company && <div className="text-muted-foreground" style={{ fontSize: "12px" }}>{c.company}</div>}
                               </div>
                             </button>
                           );
@@ -377,7 +377,7 @@ const LogStep1 = ({
                   >
                     {initials}
                   </div>
-                  <span className="text-[15.5px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                  <span className="text-[16px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
                     {contactName}
                   </span>
                 </div>
@@ -401,7 +401,7 @@ const LogStep1 = ({
                 >
                   <Search size={13} className="text-muted-foreground" />
                 </div>
-                <span className="text-[15.5px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[16px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   Loading…
                 </span>
               </div>
@@ -441,13 +441,13 @@ const LogStep1 = ({
               <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 Speak a few sentences
               </span>
-              <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                 AI will sum it up
               </span>
               <div className="w-12 border-t border-border my-1" />
               <button
                 onClick={() => setIsTyping(true)}
-                className="text-[14px] italic text-muted-foreground"
+                className="text-[15px] italic text-muted-foreground"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 or tap here to type…
@@ -473,13 +473,13 @@ const LogStep1 = ({
                 <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   Recording… tap to stop
                 </span>
-                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   AI will sum it up
                 </span>
                 <div className="w-12 border-t border-border my-1" />
                 <button
                   onClick={() => setIsTyping(true)}
-                  className="text-[14px] italic text-muted-foreground"
+                  className="text-[15px] italic text-muted-foreground"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   or tap here to type…
@@ -510,11 +510,11 @@ const LogStep1 = ({
                 >
                   Transcribing…
                 </span>
-                <span className="text-[12px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
                   AI will sum it up
                 </span>
                 <div className="w-12 border-t border-border my-1" />
-                <span className="text-[14px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                <span className="text-[15px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
                   or tap here to type…
                 </span>
               </div>
@@ -530,7 +530,7 @@ const LogStep1 = ({
                     <Mic size={18} className="text-muted-foreground" />
                   </button>
                   <div className="flex-1">
-                    <span className="text-[12px] uppercase tracking-[0.08em] text-muted-foreground block mb-1" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="uppercase tracking-[0.08em] block mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
                       {isRawTranscript ? "Transcript" : "Note"}
                     </span>
                     <textarea
@@ -544,8 +544,8 @@ const LogStep1 = ({
                         el.style.height = el.scrollHeight + "px";
                       }}
                       onFocus={preventScrollOnFocus}
-                      className="w-full bg-transparent border-none outline-none resize-none text-[14px] text-foreground placeholder:text-muted-foreground italic overflow-hidden"
-                      style={{ fontFamily: "var(--font-heading)", minHeight: "56px" }}
+                      className="w-full bg-transparent border-none outline-none resize-none text-foreground placeholder:text-muted-foreground italic overflow-hidden"
+                      style={{ fontFamily: "var(--font-heading)", minHeight: "56px", fontSize: "16px" }}
                     />
                   </div>
                 </div>
@@ -560,8 +560,8 @@ const LogStep1 = ({
         style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
       >
         <p
-          className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-          style={{ fontFamily: "var(--font-body)" }}
+          className="font-medium uppercase tracking-[0.1em] mb-2"
+          style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}
         >
           How'd you connect?
         </p>
@@ -572,7 +572,7 @@ const LogStep1 = ({
               <button
                 key={t.value}
                 onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[13px] font-medium transition-colors ${
+                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[14px] font-medium transition-colors ${
                   selected
                     ? "text-primary-foreground"
                     : "text-muted-foreground"
@@ -599,8 +599,8 @@ const LogStep1 = ({
           style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
         >
           <p
-            className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="font-medium uppercase tracking-[0.1em] mb-2"
+            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}
           >
             When?
           </p>
@@ -612,7 +612,7 @@ const LogStep1 = ({
               style={{
                 borderRadius: "100px",
                 padding: "8px 13px",
-                fontSize: "12px",
+                fontSize: "13px",
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
                 ...(connectDate === todayStr
@@ -629,7 +629,7 @@ const LogStep1 = ({
               style={{
                 borderRadius: "100px",
                 padding: "8px 13px",
-                fontSize: "12px",
+                fontSize: "13px",
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
                 ...(connectDate === yesterdayStr
@@ -647,7 +647,7 @@ const LogStep1 = ({
                   style={{
                     borderRadius: "100px",
                     padding: "8px 13px",
-                    fontSize: "12px",
+                    fontSize: "13px",
                     fontFamily: "var(--font-body)",
                     fontWeight: 500,
                     ...(connectDate !== todayStr && connectDate !== yesterdayStr
@@ -687,7 +687,7 @@ const LogStep1 = ({
       <button
         onClick={handleMainCTA}
         disabled={isRecording ? false : (!canSubmit && !isTranscribing)}
-        className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+        className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{
           borderRadius: "100px",
           background: "hsl(var(--primary))",

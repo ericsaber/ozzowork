@@ -86,7 +86,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
     <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <div className="px-[18px] pt-[14px] pb-[12px] border-b border-border">
-          <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+          <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
             Edit follow-up
           </h2>
           <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
@@ -97,7 +97,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
         <div className="px-[18px] py-[14px] pb-[24px] overflow-y-auto space-y-5">
           {/* Type pills */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Follow-up type
             </p>
             <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
                   <button
                     key={t.value}
                     onClick={() => setFollowUpType(t.value)}
-                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${
                       selected
                         ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
                         : "bg-white border-[1.5px] border-border text-muted-foreground"
@@ -124,14 +124,14 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
 
           {/* Due date */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Due date
             </p>
             <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
               <PopoverTrigger asChild>
                 <button
-                  className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
+                  style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
                 >
                   <CalendarIcon size={14} className="text-muted-foreground" />
                   {selectedDate ? format(parseISO(selectedDate), "EEE, MMM d, yyyy") : "Pick a date"}

@@ -110,8 +110,8 @@ const ContactCombobox = ({ contacts, contactId, onSelect, onAddNew }: ContactCom
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-[12px] border-[1.5px] border-[#e0dbd3] bg-[#f0ede8] px-[14px] py-[10px] text-[12px] text-[#18181a] placeholder:text-[#bbb] focus:outline-none focus:border-[#f0c4a8] transition-colors"
-        style={{ fontFamily: "var(--font-body)" }}
+        className="w-full rounded-[12px] border-[1.5px] border-[#e0dbd3] bg-[#f0ede8] px-[14px] py-[10px] text-[#18181a] placeholder:text-[#bbb] focus:outline-none focus:border-[#f0c4a8] transition-colors"
+        style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
       />
 
       {open && (
@@ -122,8 +122,8 @@ const ContactCombobox = ({ contacts, contactId, onSelect, onAddNew }: ContactCom
           <div ref={listRef} className="max-h-[200px] overflow-y-auto">
             {filtered.length === 0 && (
               <div
-                className="px-[14px] py-[10px] text-[12px] text-[#bbb]"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="px-[14px] py-[10px] text-[#bbb]"
+                style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
               >
                 No contacts found
               </div>
@@ -140,11 +140,11 @@ const ContactCombobox = ({ contacts, contactId, onSelect, onAddNew }: ContactCom
                 }`}
                 style={{ fontFamily: "var(--font-body)" }}
               >
-                <div className="text-[12px] text-[#18181a]">
+                <div className="text-[#18181a]" style={{ fontSize: "14px" }}>
                   {`${c.first_name} ${c.last_name}`.trim()}
                 </div>
                 {c.company && (
-                  <div className="text-[10px] text-[#888] mt-0.5">{c.company}</div>
+                  <div className="text-[#888] mt-0.5" style={{ fontSize: "12px" }}>{c.company}</div>
                 )}
               </button>
             ))}
@@ -160,10 +160,10 @@ const ContactCombobox = ({ contacts, contactId, onSelect, onAddNew }: ContactCom
                 setOpen(false);
               }}
               onMouseEnter={() => setFocusedIndex(filtered.length)}
-              className={`w-full text-left px-[14px] py-[10px] text-[12px] font-medium text-[#c8622a] transition-colors ${
+              className={`w-full text-left px-[14px] py-[10px] font-medium text-[#c8622a] transition-colors ${
                 focusedIndex === filtered.length ? "bg-[#fdf0e8]" : ""
               }`}
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
             >
               + Add new contact
             </button>

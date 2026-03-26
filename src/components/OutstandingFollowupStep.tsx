@@ -127,7 +127,7 @@ const OutstandingFollowupStep = ({
         Outstanding follow-up
       </h2>
 
-      <p className="text-center" style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
+      <p className="text-center" style={{ fontSize: "14px", color: "#7a746c", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
         You already have an active follow-up. What would you like to do with it?
       </p>
 
@@ -143,7 +143,7 @@ const OutstandingFollowupStep = ({
             <span style={{ fontSize: "13px", color: "#1c1812", fontFamily: "var(--font-body)" }}>{typeLabel}</span>
           )}
         </div>
-        <div style={{ fontSize: "12px", color: "#7a746c", fontFamily: "var(--font-body)", marginTop: 4 }}>
+        <div style={{ fontSize: "13px", color: "#7a746c", fontFamily: "var(--font-body)", marginTop: 4 }}>
           {dueDateStr}
         </div>
       </div>
@@ -165,11 +165,11 @@ const OutstandingFollowupStep = ({
               >
                 <div
                   className="font-bold"
-                  style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: selected ? opt.color : "#1c1812" }}
+                  style={{ fontSize: "15px", fontFamily: "var(--font-body)", color: selected ? opt.color : "#1c1812" }}
                 >
                   {opt.label}
                 </div>
-                <div style={{ fontSize: "12px", fontFamily: "var(--font-body)", color: "#7a746c", marginTop: 2, lineHeight: 1.4 }}>
+                <div style={{ fontSize: "13px", fontFamily: "var(--font-body)", color: "#7a746c", marginTop: 2, lineHeight: 1.4 }}>
                   {opt.sub}
                 </div>
               </button>
@@ -178,7 +178,7 @@ const OutstandingFollowupStep = ({
                 <div className="mt-2 px-1">
                   <p
                     className="uppercase tracking-[0.1em] mb-2"
-                    style={{ fontSize: "11px", color: "#7a746c", fontFamily: "var(--font-body)" }}
+                    style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
                   >
                     {status === "future"
                       ? `Currently ${format(fuDate, "MMM d, yyyy")} — keep or pick a new date`
@@ -190,7 +190,7 @@ const OutstandingFollowupStep = ({
                         onClick={() => setRescheduleDate(existingFollowup.planned_follow_up_date)}
                         className="transition-colors"
                         style={{
-                          borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                          borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                           fontFamily: "var(--font-body)", fontWeight: 500,
                           ...(rescheduleDate === existingFollowup.planned_follow_up_date
                             ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
@@ -209,7 +209,7 @@ const OutstandingFollowupStep = ({
                           onClick={() => handleChipClick(chipDate)}
                           className="transition-colors"
                           style={{
-                            borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                            borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                             fontFamily: "var(--font-body)", fontWeight: 500,
                             ...(sel
                               ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
@@ -225,7 +225,7 @@ const OutstandingFollowupStep = ({
                         <button
                           className="inline-flex items-center gap-1 transition-colors"
                           style={{
-                            borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                            borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                             fontFamily: "var(--font-body)", fontWeight: 500,
                             ...(showDatePicker
                               ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
@@ -262,7 +262,7 @@ const OutstandingFollowupStep = ({
                             onClick={() => setRescheduleDate("")}
                             className="inline-flex items-center gap-1.5 transition-colors"
                             style={{
-                              borderRadius: "100px", padding: "8px 13px", fontSize: "12px",
+                              borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                               fontFamily: "var(--font-body)", fontWeight: 500,
                               background: "#c8622a", color: "#fff", border: "0.5px solid transparent",
                             }}
@@ -284,7 +284,7 @@ const OutstandingFollowupStep = ({
       <button
         onClick={handleSave}
         disabled={isDisabled}
-        className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+        className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
       >
         {getCTAText()}

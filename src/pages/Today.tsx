@@ -94,8 +94,8 @@ const Today = () => {
         <div className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3">
           <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
           <div className="flex-1 min-w-0 text-left">
-            <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
-            <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>You're all caught up</p>
+            <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
+            <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>You're all caught up</p>
           </div>
         </div>
       );
@@ -113,8 +113,8 @@ const Today = () => {
       <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
         <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
         <div className="flex-1 min-w-0 text-left">
-          <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
-          <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
+          <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
+          <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
         </div>
         <span className="inline-flex items-center gap-1 bg-[#f5ede7] text-primary font-medium rounded-[20px] px-2.5 py-1 shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}><Eye size={16} />See all</span>
       </button>
@@ -124,7 +124,7 @@ const Today = () => {
   return (
     <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
-      <p className="text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '20px' }}>
+      <p className="text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
       </p>
@@ -142,14 +142,14 @@ const Today = () => {
             <>
               {dueToday.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Due Today</h2>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
                   <div className="space-y-3">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
 
               {overdue.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Overdue</h2>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
                   <div className="space-y-3">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
@@ -157,7 +157,7 @@ const Today = () => {
           )}
 
           <section>
-            <h2 className="font-medium uppercase tracking-[0.1em] text-[#bbb] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px' }}>Coming Up</h2>
+            <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
             {renderComingUp()}
           </section>
         </div>

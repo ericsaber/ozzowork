@@ -142,9 +142,9 @@ const EditTaskRecord = () => {
     <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
       {/* Nav */}
       <div className="flex items-center justify-between mb-5">
-        <button onClick={() => navigate(-1)} className="text-muted-foreground text-[13px]" style={{ fontFamily: "var(--font-body)" }}>Cancel</button>
-        <span className="text-[15px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>Edit interaction</span>
-        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending || (followUpOn && !followUpDate)} className="text-[13px] font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)", opacity: (saveMutation.isPending || (followUpOn && !followUpDate)) ? 0.38 : 1 }}>
+        <button onClick={() => navigate(-1)} className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Cancel</button>
+        <span className="text-foreground" style={{ fontFamily: "var(--font-heading)", fontSize: "17px" }}>Edit interaction</span>
+        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending || (followUpOn && !followUpDate)} className="font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)", fontSize: "15px", opacity: (saveMutation.isPending || (followUpOn && !followUpDate)) ? 0.38 : 1 }}>
           {saveMutation.isPending ? "..." : bothOff ? "Delete" : "Save"}
         </button>
       </div>
@@ -152,7 +152,7 @@ const EditTaskRecord = () => {
       {/* Contact header */}
       <div className="flex items-center gap-3 mb-5">
         <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-          <span className="text-xs font-semibold text-secondary-foreground">{initials}</span>
+          <span className="font-semibold text-secondary-foreground" style={{ fontSize: "13px" }}>{initials}</span>
         </div>
         <div>
           <p className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{contactName}</p>
@@ -163,19 +163,19 @@ const EditTaskRecord = () => {
       {/* WHAT HAPPENED */}
       <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-4" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>What happened</p>
+          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What happened</p>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] text-foreground" style={{ fontFamily: "var(--font-body)" }}>Interaction logged</span>
+            <span className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Interaction logged</span>
             <Switch checked={interactionOn} onCheckedChange={setInteractionOn} className="data-[state=checked]:bg-[#c8622a]" />
           </div>
           {interactionOn && (
             <div className="space-y-3">
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Type</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Type</p>
                 <div className="flex flex-wrap gap-2">
                   {typeOptions.map((t) => (
                     <button key={t.value} onClick={() => setConnectType(connectType === t.value ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[11px] font-medium transition-colors ${connectType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${connectType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                       style={{ fontFamily: "var(--font-body)" }}>
                       <t.icon size={13} />{t.label}
                     </button>
@@ -183,10 +183,10 @@ const EditTaskRecord = () => {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Date</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Date</p>
                 <Popover open={showConnectDatePicker} onOpenChange={setShowConnectDatePicker}>
                   <PopoverTrigger asChild>
-                    <button className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] text-[13px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                    <button className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
                       <CalendarIcon size={14} className="text-muted-foreground" />
                       {connectDate ? format(new Date(connectDate + "T00:00:00"), "MMM d, yyyy") : "Pick a date"}
                     </button>
@@ -196,7 +196,7 @@ const EditTaskRecord = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-[12px] border-[1.5px] border-border bg-secondary px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground min-h-[56px] resize-none outline-none focus:border-[#e8c4a8] transition-colors" style={{ fontFamily: "var(--font-body)" }} placeholder="Add a note…" />
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-[12px] border-[1.5px] border-border bg-secondary px-3 py-2.5 text-foreground placeholder:text-muted-foreground min-h-[56px] resize-none outline-none focus:border-[#e8c4a8] transition-colors" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }} placeholder="Add a note…" />
             </div>
           )}
         </div>
@@ -205,19 +205,19 @@ const EditTaskRecord = () => {
       {/* WHAT'S NEXT */}
       <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-6" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "0.08em", color: "#9e9e99" }}>What's next</p>
+          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What's next</p>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] text-foreground" style={{ fontFamily: "var(--font-body)" }}>Follow-up planned</span>
+            <span className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Follow-up planned</span>
             <Switch checked={followUpOn} onCheckedChange={setFollowUpOn} className="data-[state=checked]:bg-[#c8622a]" />
           </div>
           {followUpOn && (
             <div className="space-y-3">
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Type</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Type</p>
                 <div className="flex flex-wrap gap-2">
                   {typeOptions.map((t) => (
                     <button key={t.value} onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[13px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                       style={{ fontFamily: "var(--font-body)" }}>
                       <t.icon size={11} />{t.label}
                     </button>
@@ -225,13 +225,13 @@ const EditTaskRecord = () => {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Due</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Due</p>
                 <div className="flex flex-wrap gap-2">
                   {dateChips.map((chip) => {
                     const chipDate = chip.date();
                     return (
                       <button key={chip.label} onClick={() => { setFollowUpDate(followUpDate === chipDate ? "" : chipDate); setShowDatePicker(false); }}
-                        className={`rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                        className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                         style={{ fontFamily: "var(--font-body)" }}>
                         {chip.label}
                       </button>
@@ -239,7 +239,7 @@ const EditTaskRecord = () => {
                   })}
                   <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
                     <PopoverTrigger asChild>
-                      <button className={`rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium transition-colors inline-flex items-center gap-1 ${showDatePicker ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`} style={{ fontFamily: "var(--font-body)" }}>
+                      <button className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors inline-flex items-center gap-1 ${showDatePicker ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`} style={{ fontFamily: "var(--font-body)" }}>
                         <CalendarIcon size={10} />Pick date
                       </button>
                     </PopoverTrigger>
@@ -248,7 +248,7 @@ const EditTaskRecord = () => {
                     </PopoverContent>
                   </Popover>
                   {followUpDate && !dateChips.some(c => c.date() === followUpDate) && (
-                    <span className="inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[10px] font-medium bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" style={{ fontFamily: "var(--font-body)" }}>
                       <CalendarIcon size={10} />
                       {format(new Date(followUpDate + "T00:00:00"), "EEE, MMM d")}
                       <button onClick={() => setFollowUpDate("")} className="ml-0.5 text-[#c8622a] hover:opacity-70">×</button>

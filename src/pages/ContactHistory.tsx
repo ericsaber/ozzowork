@@ -282,8 +282,8 @@ const ContactHistory = () => {
               <span className="text-lg font-semibold text-secondary-foreground">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl text-foreground" style={{ fontFamily: "var(--font-heading)" }}>{fullName}</h1>
-              {contact.company && <p className="text-muted-foreground text-sm" style={{ fontFamily: "var(--font-body)" }}>{contact.company}</p>}
+            <h1 className="text-foreground" style={{ fontFamily: "var(--font-heading)", fontSize: "22px" }}>{fullName}</h1>
+              {contact.company && <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{contact.company}</p>}
             </div>
             <DropdownMenu open={openMenuId === "contact-menu"} onOpenChange={(o) => setOpenMenuId(o ? "contact-menu" : null)}>
               <DropdownMenuTrigger asChild>
@@ -301,16 +301,16 @@ const ContactHistory = () => {
 
           {/* Action row — flush left */}
           <div className="flex items-center justify-start gap-2 mt-4">
-            <button onClick={() => setLogSheetOpen(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] text-[12px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)" }}>
+            <button onClick={() => setLogSheetOpen(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)", fontSize: "13px" }}>
               <Plus size={14} /> Log
             </button>
-            <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+            <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
               <Phone size={14} /> Call
             </button>
-            <button onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else toast("No email added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+            <button onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else toast("No email added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
               <Mail size={14} /> Email
             </button>
-            <button onClick={() => { if (contact.phone) window.location.href = `sms:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] text-[12px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
+            <button onClick={() => { if (contact.phone) window.location.href = `sms:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
               <MessageSquare size={14} /> Text
             </button>
           </div>
@@ -342,9 +342,9 @@ const ContactHistory = () => {
       {/* Schedule CTA when no active follow-ups */}
       {!hasActiveFollowups && contact && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
           <button onClick={() => setScheduleOpen(true)} className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}>
-            <p className="text-[13px] text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)" }}>No follow-up scheduled</p>
+            <p className="text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>No follow-up scheduled</p>
             <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>+ Schedule a follow-up</span>
           </button>
         </div>
@@ -353,7 +353,7 @@ const ContactHistory = () => {
       {/* Next follow-up */}
       {upcomingFollowups.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Next follow-up</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
           <div className="space-y-3">
             {upcomingFollowups.map((r: any) => (
               <ContactFollowupCard
@@ -376,7 +376,7 @@ const ContactHistory = () => {
       {/* Overdue */}
       {overdueFollowups.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Overdue</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Overdue</p>
           <div className="space-y-3">
             {overdueFollowups.map((r: any) => (
               <ContactFollowupCard
@@ -399,7 +399,7 @@ const ContactHistory = () => {
       {/* History */}
       {!isLoading && historyRecords.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>History</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
           <div className="space-y-0">
             {historyRecords.map((record: any) => {
               // Cleared record rendering
@@ -520,14 +520,14 @@ const ContactHistory = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>{verb}</span>
-                      <span className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                      <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
+                      <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
                     {record.note && (
-                      <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)" }}>{record.note}</p>
+                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
                     )}
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
+                      <span style={{ fontFamily: "var(--font-body)", color: thread.color, fontSize: "12px" }}>{thread.text}</span>
                     </div>
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
@@ -542,7 +542,7 @@ const ContactHistory = () => {
 
       {/* Footer */}
       {!isLoading && interactionCount > 0 && (
-        <p className="text-center text-[11px] text-muted-foreground py-4" style={{ fontFamily: "var(--font-body)" }}>
+        <p className="text-center text-muted-foreground py-4" style={{ fontFamily: "var(--font-body)", fontSize: "12px" }}>
           {interactionCount} interaction{interactionCount !== 1 ? "s" : ""}{firstContactDate ? ` · First contact ${firstContactDate}` : ""}
         </p>
       )}

@@ -191,7 +191,7 @@ const LogStep2 = ({
                     <button
                       key={t.value}
                       onClick={() => setEditConnectType(selected ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[13px] font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[14px] font-medium transition-colors ${
                         selected ? "text-primary-foreground" : "text-muted-foreground"
                       }`}
                       style={{
@@ -212,8 +212,8 @@ const LogStep2 = ({
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
                 placeholder="Add a note…"
-                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 text-[14px] italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
-                style={{ fontFamily: "var(--font-heading)" }}
+                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
+                style={{ fontFamily: "var(--font-heading)", fontSize: "16px" }}
               />
               <button
                 onClick={handleDoneEditing}
@@ -239,7 +239,7 @@ const LogStep2 = ({
         {/* Date section */}
         <p
           className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
-          style={{ fontSize: "11px", color: "#1c1812", fontFamily: "var(--font-body)" }}
+          style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
         >
           Next connect
         </p>
@@ -255,7 +255,7 @@ const LogStep2 = ({
                 style={{
                   borderRadius: "100px",
                   padding: "8px 13px",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   fontFamily: "var(--font-body)",
                   fontWeight: 500,
                   ...(selected
@@ -274,7 +274,7 @@ const LogStep2 = ({
                 style={{
                   borderRadius: "100px",
                   padding: "8px 13px",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   fontFamily: "var(--font-body)",
                   fontWeight: 500,
                   ...(showDatePicker
@@ -313,7 +313,7 @@ const LogStep2 = ({
                 style={{
                   borderRadius: "100px",
                   padding: "8px 13px",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   fontFamily: "var(--font-body)",
                   fontWeight: 500,
                   background: "#c8622a",
@@ -342,7 +342,7 @@ const LogStep2 = ({
         >
           <span
             className="shrink-0"
-            style={{ fontSize: "11px", color: "#b0a89e", fontFamily: "var(--font-body)" }}
+            style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
           >
             via
           </span>
@@ -379,7 +379,7 @@ const LogStep2 = ({
           onSaveWithFollowup(followUpType, selectedDate);
         }}
         disabled={!selectedDate || isSaving}
-        className="w-full py-[16.5px] text-[16.5px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
+        className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
         style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
       >
         {isSaving ? "Saving..." : "Save →"}
