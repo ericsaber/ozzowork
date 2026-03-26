@@ -340,8 +340,8 @@ const LogStep1 = ({
                                 {cInitials}
                               </div>
                               <div>
-                                <div className="text-[14px] text-foreground">{`${c.first_name} ${c.last_name}`.trim()}</div>
-                                {c.company && <div className="text-[12px] text-muted-foreground">{c.company}</div>}
+                              <div className="text-foreground" style={{ fontSize: "14px" }}>{`${c.first_name} ${c.last_name}`.trim()}</div>
+                                {c.company && <div className="text-muted-foreground" style={{ fontSize: "12px" }}>{c.company}</div>}
                               </div>
                             </button>
                           );
