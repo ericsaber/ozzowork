@@ -399,7 +399,7 @@ const ContactHistory = () => {
       {/* History */}
       {!isLoading && historyRecords.length > 0 && (
         <div className="mb-5">
-          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)" }}>History</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
           <div className="space-y-0">
             {historyRecords.map((record: any) => {
               // Cleared record rendering
