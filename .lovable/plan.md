@@ -1,42 +1,59 @@
 
 
-## Fix: Reorder follow_up_action check before relatedStatus in getThreadLine
+## Fix: InteractionDetail — standalone logs skip own follow-up tail
 
 ### Problem
-In the `related_task_record_id` branch (lines 159-219), the `cancelled` check (line 179) and `completed` check (line 188) fire before the `follow_up_action` check (line 205). When the related coin gets completed, standalone logs with `follow_up_action = 'kept'` or `'rescheduled'` incorrectly show completion text.
+Standalone logs (`related_task_record_id` is set) now store `planned_follow_up_date` for thread line display, causing InteractionDetail to render a "What's Next" section and action buttons as if this record owns a follow-up.
 
-### Change — `src/pages/ContactHistory.tsx` (lines 159-219)
+### Changes — `src/pages/InteractionDetail.tsx`
 
-Move the `follow_up_action` check to immediately after finding `relatedRecord` and logging, **before** any `relatedRecord.status` checks:
+**1. New query: fetch related coin** (after the `activeFollowup` query, ~line 91)
 
+Add a query that fetches the related coin when `task.related_task_record_id` is set:
 ```typescript
-if (record.related_task_record_id) {
-  const relatedRecord = ...find...;
-  if (relatedRecord) {
-    // existing console.log for related record found (keep)
-    
-    // NEW: check follow_up_action FIRST
-    console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
-    if (record.follow_up_action === 'kept') {
-      const displayDateStr = record.planned_follow_up_date
-        ? format(parseISO(record.planned_follow_up_date), 'MMM d')
-        : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
-      return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
-    }
-    if (record.follow_up_action === 'rescheduled') {
-      const displayDateStr = record.planned_follow_up_date
-        ? format(parseISO(record.planned_follow_up_date), 'MMM d')
-        : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
-      return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
-    }
+const { data: relatedCoin } = useQuery({
+  queryKey: ["task-record", task?.related_task_record_id],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("task_records" as any)
+      .select("*")
+      .eq("id", task!.related_task_record_id!)
+      .single();
+    if (error) throw error;
+    return data as any;
+  },
+  enabled: !!task?.related_task_record_id,
+});
+```
 
-    // THEN: existing cancelled/completed/fallback checks (unchanged)
-    if (relatedRecord.status === "cancelled") { ... }
-    if (relatedRecord.status === "completed") { ... }
-    // Remove the old follow_up_action block (lines 204-218)
-  }
+**2. Derived state** (after `hasFollowUp` declaration, ~line 148)
+
+Add:
+```typescript
+const isStandaloneLog = !!task.related_task_record_id;
+```
+Add console log:
+```typescript
+if (isStandaloneLog) {
+  console.log('[InteractionDetail] standalone log — skipping own follow-up tail:', { related_task_record_id: task.related_task_record_id });
 }
 ```
 
-Remove the old `if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled')` block (lines 204-218) since it's now handled above. All existing console.logs remain.
+**3. What's Next section** (~lines 282-322)
+
+- When `isStandaloneLog` is true, render the related coin's follow-up state instead of the record's own fields
+- If `relatedCoin` exists and has `planned_follow_up_date` and status is not `completed`/`cancelled`, show the coin's follow-up info (type, date, overdue badge)
+- Otherwise render "No follow-up scheduled" (without the "Add one?" button since standalone logs shouldn't create follow-ups)
+
+**4. Bottom action bar** (~line 326)
+
+Change `showBottomBar` to also require `!isStandaloneLog`:
+```typescript
+const showBottomBar = hasFollowUp && !isCompleted && !isStandaloneLog;
+```
+
+**5. Dropdown menu Reschedule item** (~line 202)
+
+Also hide the Reschedule menu item for standalone logs — add `&& !isStandaloneLog` to the condition.
+
+All existing console.logs remain untouched.
 
