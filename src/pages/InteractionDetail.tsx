@@ -279,7 +279,7 @@ const InteractionDetail = () => {
                   {task.connect_type ? (typeLabels[task.connect_type] || task.connect_type) : "Interacted"}
                 </p>
                 {task.connect_date && (
-                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                  <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "16px" }}>
                     {format(parseISO(task.connect_date), "MMM d")} · {formatDistanceToNow(parseISO(task.connect_date), { addSuffix: false })} ago
                   </p>
                 )}
