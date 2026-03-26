@@ -333,7 +333,7 @@ const InteractionDetail = () => {
                       </p>
                       {dueDate && (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1" style={{
-                          fontSize: "10px", fontWeight: 500, fontFamily: "var(--font-body)",
+                          fontSize: "12px", fontWeight: 500, fontFamily: "var(--font-body)",
                           background: overdue ? "#fce8e8" : "#e9f2eb",
                           color: overdue ? "#a32d2d" : "#3d7a4a",
                         }}>
