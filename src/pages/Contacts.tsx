@@ -358,7 +358,7 @@ const Contacts = () => {
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 active:scale-[0.98] transition-all"
               >
                 <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
-                  <span className="text-xs font-semibold text-secondary-foreground">{initials}</span>
+                  <span className="font-semibold text-secondary-foreground" style={{ fontSize: "13px" }}>{initials}</span>
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium text-foreground">{fullName}</p>
