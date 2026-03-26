@@ -201,16 +201,20 @@ const ContactHistory = () => {
           };
         }
 
-        // Rescheduled or kept — related record is still active with a date
+        // Rescheduled or kept — read action directly from the standalone log record
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
+          console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
           const displayDateStr = record.planned_follow_up_date
             ? format(parseISO(record.planned_follow_up_date), 'MMM d')
             : rescheduledDateStr;
-          const hasRescheduleEdit = rescheduleInfo && rescheduleInfo.previous_due_date !== record.planned_follow_up_date;
-          if (!hasRescheduleEdit) {
+          if (record.follow_up_action === 'kept') {
             return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
           }
-          return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
+          if (record.follow_up_action === 'rescheduled') {
+            return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
+          }
+          // Fallback for records created before follow_up_action column
+          return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
         }
       }
     }

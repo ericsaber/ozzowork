@@ -1,0 +1,1 @@
+ALTER TABLE task_records ADD COLUMN IF NOT EXISTS follow_up_action text;
