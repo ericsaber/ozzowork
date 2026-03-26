@@ -433,13 +433,18 @@ const LogInteractionSheet = ({
     // 3. Promote draft to active (heads-only standalone log)
     // Set related_task_record_id to link this log to the rescheduled/kept record
     // If keep, store the kept date on the standalone log for history display
+    const follow_up_action = isKeep ? 'kept' : 'rescheduled';
+    const storedDate = isKeep ? previousDate : newDate;
     await supabase.from("task_records" as any)
       .update({
         status: "active",
         related_task_record_id: existingFollowup.id,
-        planned_follow_up_date: newDate,
+        planned_follow_up_date: storedDate,
+        follow_up_action,
       })
       .eq("id", draftId);
+
+    console.log('[handleOutstandingUpdate] storing action on standalone log:', { follow_up_action, planned_follow_up_date: storedDate });
 
     console.log("[handleOutstandingUpdate] standalone log linked to rescheduled record:", {
       draftId,

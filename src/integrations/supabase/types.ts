@@ -197,6 +197,7 @@ export type Database = {
           connect_type: string | null
           contact_id: string
           created_at: string
+          follow_up_action: string | null
           id: string
           note: string | null
           planned_follow_up_date: string | null
@@ -212,6 +213,7 @@ export type Database = {
           connect_type?: string | null
           contact_id: string
           created_at?: string
+          follow_up_action?: string | null
           id?: string
           note?: string | null
           planned_follow_up_date?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           connect_type?: string | null
           contact_id?: string
           created_at?: string
+          follow_up_action?: string | null
           id?: string
           note?: string | null
           planned_follow_up_date?: string | null
