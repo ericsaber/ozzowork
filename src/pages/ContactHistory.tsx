@@ -203,44 +203,13 @@ const ContactHistory = () => {
 
         // Rescheduled or kept — related record is still active with a date
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          const recordTime = new Date(record.connect_date || record.created_at).getTime();
-          const allEditsForRelated = (allRescheduleEdits || [])
-            .filter((e: any) => e.task_record_id === record.related_task_record_id)
-            .sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
-          
-          console.log('[getThreadLine] timing debug:', {
-            recordId: record.id,
-            recordTime,
-            recordConnectDate: record.connect_date,
-            recordCreatedAt: record.created_at,
-            allEditsForRelated: allEditsForRelated.map((e: any) => ({
-              changed_at: e.changed_at,
-              changedTime: new Date(e.changed_at).getTime(),
-              diff: Math.abs(new Date(e.changed_at).getTime() - recordTime),
-              previous_due_date: e.previous_due_date,
-              task_record_id: e.task_record_id,
-            })),
-            firstEditAfterExists: !!allEditsForRelated.find((e: any) => new Date(e.changed_at).getTime() > recordTime),
-          });
-
-          // Find edit created within 60 seconds of this record — means this WAS the reschedule action
-          const matchingEdit = allEditsForRelated.find((e: any) => 
-            Math.abs(new Date(e.changed_at).getTime() - recordTime) < 60000
-          );
-          
-          if (matchingEdit) {
-            // This record caused the reschedule
-            return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
-          } else {
-            // This record was a keep — find what date was current at time of keep
-            const firstEditAfter = allEditsForRelated.find((e: any) => 
-              new Date(e.changed_at).getTime() > recordTime
-            );
-            const keptDateStr = firstEditAfter?.previous_due_date 
-              ? format(parseISO(firstEditAfter.previous_due_date), 'MMM d')
-              : rescheduledDateStr;
+          if (record.planned_follow_up_date) {
+            // Keep: the standalone log has the kept date stored on it
+            const keptDateStr = format(parseISO(record.planned_follow_up_date), 'MMM d');
             return { text: `→ Follow-up kept for ${keptDateStr}`, color: '#3d7a4a' };
           }
+          // Reschedule: no planned_follow_up_date on the standalone log
+          return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
         }
       }
     }
