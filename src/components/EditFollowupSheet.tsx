@@ -132,7 +132,6 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
                 <button
                   className="inline-flex items-center gap-2 rounded-[12px] border-[1.5px] border-border px-4 py-[10px] font-medium text-foreground hover:border-[#f0c4a8] transition-colors"
                   style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
-                  style={{ fontFamily: "var(--font-body)" }}
                 >
                   <CalendarIcon size={14} className="text-muted-foreground" />
                   {selectedDate ? format(parseISO(selectedDate), "EEE, MMM d, yyyy") : "Pick a date"}
