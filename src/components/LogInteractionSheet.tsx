@@ -81,8 +81,10 @@ const LogInteractionSheet = ({
         .eq("contact_id", contactId)
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
+        .is('related_task_record_id', null)
         .limit(1)
         .maybeSingle();
+      console.log('[activeFollowups] query result:', data ? [{ id: (data as any).id, related: (data as any).related_task_record_id, date: (data as any).planned_follow_up_date }] : null);
       return data as any;
     },
     enabled: open && !!contactId,
