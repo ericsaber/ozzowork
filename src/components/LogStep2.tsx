@@ -191,7 +191,7 @@ const LogStep2 = ({
                     <button
                       key={t.value}
                       onClick={() => setEditConnectType(selected ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[13px] font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[14px] font-medium transition-colors ${
                         selected ? "text-primary-foreground" : "text-muted-foreground"
                       }`}
                       style={{
