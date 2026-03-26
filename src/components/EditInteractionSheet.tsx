@@ -100,7 +100,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
     <Drawer open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DrawerContent className="max-h-[90vh]">
         <div className="px-[18px] pt-[14px] pb-[12px] border-b border-border">
-          <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+          <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
             Edit interaction
           </h2>
         </div>
