@@ -84,6 +84,7 @@ const InteractionDetail = () => {
         hasActiveFollowup: !!data,
         activeFollowupId: (data as any)?.id,
       });
+      console.log('[InteractionDetail] activeFollowup after fix:', { activeFollowupId: (data as any)?.id, related_task_record_id: (data as any)?.related_task_record_id });
       return data as any;
     },
     enabled: !!task?.contact_id,

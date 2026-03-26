@@ -15,6 +15,7 @@ const Upcoming = () => {
         .select("*, contacts(*)")
         .eq("status", "active")
         .not("planned_follow_up_date", "is", null)
+        .is('related_task_record_id', null)
         .gt("planned_follow_up_date", today)
         .order("planned_follow_up_date", { ascending: true });
       if (error) throw error;
