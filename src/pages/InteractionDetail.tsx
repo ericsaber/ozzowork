@@ -328,7 +328,7 @@ const InteractionDetail = () => {
                       <p className="font-medium" style={{ fontFamily: "var(--font-body)", fontSize: "15px", lineHeight: "20px", color: overdue ? "#a32d2d" : "#c8622a" }}>
                         {coinForFollowUp.planned_follow_up_type ? (typeLabels[coinForFollowUp.planned_follow_up_type] || coinForFollowUp.planned_follow_up_type) : "Follow-up"}
                       </p>
-                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "12px", lineHeight: "16px" }}>
+                      <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "16px" }}>
                         {dueDate ? (overdue ? `Was due ${format(dueDate, "MMM d")}` : `Due ${format(dueDate, "MMM d")}`) : "No date set"}
                       </p>
                       {dueDate && (
