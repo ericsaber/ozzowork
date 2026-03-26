@@ -143,7 +143,9 @@ const ContactHistory = () => {
     });
   };
 
-  const getThreadLine = (record: any, rescheduleInfo?: any) => {
+  const allFollowUpEdits = (taskRecords || []).flatMap((r: any) => r.follow_up_edits || []);
+
+  const getThreadLine = (record: any, rescheduleInfo?: any, allRescheduleEdits?: any[]) => {
     const typeLbl = record.planned_follow_up_type
       ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
       : null;
@@ -201,7 +203,13 @@ const ContactHistory = () => {
 
         // Rescheduled or kept — related record is still active with a date
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          if (!rescheduleInfo) {
+          const recordDate = record.connect_date || record.created_at;
+          const editsBeforeThisRecord = (allRescheduleEdits || []).filter((e: any) => 
+            e.task_record_id === record.related_task_record_id && 
+            new Date(e.changed_at) > new Date(recordDate)
+          );
+          const wasRescheduledAfter = editsBeforeThisRecord.length > 0;
+          if (!wasRescheduledAfter) {
             return { text: `→ Follow-up kept for ${rescheduledDateStr}`, color: '#3d7a4a' };
           }
           return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
@@ -502,7 +510,7 @@ const ContactHistory = () => {
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
               const rescheduleInfo = rescheduleMap[record.id] || (record.related_task_record_id ? rescheduleMap[record.related_task_record_id] : undefined);
-              const thread = getThreadLine(record, rescheduleInfo);
+              const thread = getThreadLine(record, rescheduleInfo, allFollowUpEdits);
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
