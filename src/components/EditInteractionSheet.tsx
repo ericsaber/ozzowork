@@ -168,7 +168,7 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
 
           {/* Note */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
               Note
             </p>
             <textarea
