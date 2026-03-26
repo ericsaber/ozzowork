@@ -44,7 +44,6 @@ const EditTaskRecord = () => {
   const [showConnectDatePicker, setShowConnectDatePicker] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const initialized = useRef(false);
-  const bothOff = !interactionOn && !followUpOn;
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task-record", id],
@@ -56,6 +55,9 @@ const EditTaskRecord = () => {
     },
     enabled: !!id,
   });
+
+  const isHistorical = task ? (task.status === 'completed' || task.status === 'cancelled') : false;
+  const bothOff = !interactionOn && !followUpOn && !isHistorical;
 
   useEffect(() => {
     if (task && !initialized.current) {
@@ -77,11 +79,9 @@ const EditTaskRecord = () => {
       const update: any = {};
       if (interactionOn) {
         update.connect_type = connectType || null;
-        // Preserve the original connect_date timestamp if the date hasn't changed
         if (task.connect_date) {
           const originalDateStr = format(parseISO(task.connect_date), "yyyy-MM-dd");
           if (connectDate === originalDateStr) {
-            // Date unchanged — keep the original timestamp
             update.connect_date = task.connect_date;
           } else {
             update.connect_date = connectDate ? new Date(connectDate + "T12:00:00").toISOString() : null;
@@ -90,20 +90,22 @@ const EditTaskRecord = () => {
           update.connect_date = connectDate ? new Date(connectDate + "T12:00:00").toISOString() : null;
         }
         update.note = note || null;
-      } else {
+      } else if (!isHistorical) {
         update.connect_type = null; update.connect_date = null; update.note = null;
       }
-      if (followUpOn) {
-        if (task && (followUpType !== task.planned_follow_up_type || followUpDate !== task.planned_follow_up_date) && task.planned_follow_up_type) {
-          await supabase.from("follow_up_edits" as any).insert({
-            follow_up_id: null, task_record_id: id,
-            previous_type: task.planned_follow_up_type, previous_due_date: task.planned_follow_up_date, user_id: user.id,
-          });
+      if (!isHistorical) {
+        if (followUpOn) {
+          if (task && (followUpType !== task.planned_follow_up_type || followUpDate !== task.planned_follow_up_date) && task.planned_follow_up_type) {
+            await supabase.from("follow_up_edits" as any).insert({
+              follow_up_id: null, task_record_id: id,
+              previous_type: task.planned_follow_up_type, previous_due_date: task.planned_follow_up_date, user_id: user.id,
+            });
+          }
+          update.planned_follow_up_type = followUpType || null;
+          update.planned_follow_up_date = followUpDate || null;
+        } else {
+          update.planned_follow_up_type = null; update.planned_follow_up_date = null;
         }
-        update.planned_follow_up_type = followUpType || null;
-        update.planned_follow_up_date = followUpDate || null;
-      } else {
-        update.planned_follow_up_type = null; update.planned_follow_up_date = null;
       }
       const { error } = await supabase.from("task_records" as any).update(update).eq("id", id!);
       if (error) throw error;
@@ -144,7 +146,7 @@ const EditTaskRecord = () => {
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate(-1)} className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Cancel</button>
         <span className="text-foreground" style={{ fontFamily: "var(--font-heading)", fontSize: "17px" }}>Edit interaction</span>
-        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending || (followUpOn && !followUpDate)} className="font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)", fontSize: "15px", opacity: (saveMutation.isPending || (followUpOn && !followUpDate)) ? 0.38 : 1 }}>
+        <button onClick={() => bothOff ? setDeleteOpen(true) : saveMutation.mutate()} disabled={saveMutation.isPending || (!isHistorical && followUpOn && !followUpDate)} className="font-semibold" style={{ color: "#c8622a", fontFamily: "var(--font-body)", fontSize: "15px", opacity: (saveMutation.isPending || (!isHistorical && followUpOn && !followUpDate)) ? 0.38 : 1 }}>
           {saveMutation.isPending ? "..." : bothOff ? "Delete" : "Save"}
         </button>
       </div>
@@ -202,69 +204,71 @@ const EditTaskRecord = () => {
         </div>
       </div>
 
-      {/* WHAT'S NEXT */}
-      <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-6" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
-        <div className="px-4 py-3">
-          <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What's next</p>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Follow-up planned</span>
-            <Switch checked={followUpOn} onCheckedChange={setFollowUpOn} className="data-[state=checked]:bg-[#c8622a]" />
-          </div>
-          {followUpOn && (
-            <div className="space-y-3">
-              <div>
-                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Type</p>
-                <div className="flex flex-wrap gap-2">
-                  {typeOptions.map((t) => (
-                    <button key={t.value} onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[13px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
-                      style={{ fontFamily: "var(--font-body)" }}>
-                      <t.icon size={11} />{t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Due</p>
-                <div className="flex flex-wrap gap-2">
-                  {dateChips.map((chip) => {
-                    const chipDate = chip.date();
-                    return (
-                      <button key={chip.label} onClick={() => { setFollowUpDate(followUpDate === chipDate ? "" : chipDate); setShowDatePicker(false); }}
-                        className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+      {/* WHAT'S NEXT — hidden for historical records */}
+      {!isHistorical && (
+        <div className="rounded-[12px] bg-card border border-border overflow-hidden mb-6" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
+          <div className="px-4 py-3">
+            <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>What's next</p>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "15px" }}>Follow-up planned</span>
+              <Switch checked={followUpOn} onCheckedChange={setFollowUpOn} className="data-[state=checked]:bg-[#c8622a]" />
+            </div>
+            {followUpOn && (
+              <div className="space-y-3">
+                <div>
+                  <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Type</p>
+                  <div className="flex flex-wrap gap-2">
+                    {typeOptions.map((t) => (
+                      <button key={t.value} onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
+                        className={`inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[13px] font-medium transition-colors ${followUpType === t.value ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
                         style={{ fontFamily: "var(--font-body)" }}>
-                        {chip.label}
+                        <t.icon size={11} />{t.label}
                       </button>
-                    );
-                  })}
-                  <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-                    <PopoverTrigger asChild>
-                      <button className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors inline-flex items-center gap-1 ${showDatePicker ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`} style={{ fontFamily: "var(--font-body)" }}>
-                        <CalendarIcon size={10} />Pick date
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={followUpDate ? new Date(followUpDate + "T00:00:00") : undefined} onSelect={(d) => { if (d) { setFollowUpDate(format(d, "yyyy-MM-dd")); setShowDatePicker(false); } }} disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))} initialFocus className={cn("p-3 pointer-events-auto")} />
-                    </PopoverContent>
-                  </Popover>
-                  {followUpDate && !dateChips.some(c => c.date() === followUpDate) && (
-                    <span className="inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" style={{ fontFamily: "var(--font-body)" }}>
-                      <CalendarIcon size={10} />
-                      {format(new Date(followUpDate + "T00:00:00"), "EEE, MMM d")}
-                      <button onClick={() => setFollowUpDate("")} className="ml-0.5 text-[#c8622a] hover:opacity-70">×</button>
-                    </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Due</p>
+                  <div className="flex flex-wrap gap-2">
+                    {dateChips.map((chip) => {
+                      const chipDate = chip.date();
+                      return (
+                        <button key={chip.label} onClick={() => { setFollowUpDate(followUpDate === chipDate ? "" : chipDate); setShowDatePicker(false); }}
+                          className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors ${followUpDate === chipDate ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`}
+                          style={{ fontFamily: "var(--font-body)" }}>
+                          {chip.label}
+                        </button>
+                      );
+                    })}
+                    <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                      <PopoverTrigger asChild>
+                        <button className={`rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium transition-colors inline-flex items-center gap-1 ${showDatePicker ? "bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" : "bg-white border-[1.5px] border-border text-muted-foreground"}`} style={{ fontFamily: "var(--font-body)" }}>
+                          <CalendarIcon size={10} />Pick date
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={followUpDate ? new Date(followUpDate + "T00:00:00") : undefined} onSelect={(d) => { if (d) { setFollowUpDate(format(d, "yyyy-MM-dd")); setShowDatePicker(false); } }} disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                      </PopoverContent>
+                    </Popover>
+                    {followUpDate && !dateChips.some(c => c.date() === followUpDate) && (
+                      <span className="inline-flex items-center gap-1.5 rounded-[20px] px-[11px] py-[5px] text-[12px] font-medium bg-[#f5ede7] border-[1.5px] border-[#e8c4a8] text-[#c8622a]" style={{ fontFamily: "var(--font-body)" }}>
+                        <CalendarIcon size={10} />
+                        {format(new Date(followUpDate + "T00:00:00"), "EEE, MMM d")}
+                        <button onClick={() => setFollowUpDate("")} className="ml-0.5 text-[#c8622a] hover:opacity-70">×</button>
+                      </span>
+                    )}
+                  </div>
+                  {followUpOn && !followUpDate && (
+                    <p className="text-[12px] mt-1" style={{ color: "#a32d2d", fontFamily: "var(--font-body)" }}>
+                      A date is required to schedule a follow-up.
+                    </p>
                   )}
                 </div>
-                {followUpOn && !followUpDate && (
-                  <p className="text-[12px] mt-1" style={{ color: "#a32d2d", fontFamily: "var(--font-body)" }}>
-                    A date is required to schedule a follow-up.
-                  </p>
-                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {bothOff && (
         <div className="rounded-[12px] bg-destructive/10 border border-destructive/20 px-4 py-3 mb-4">

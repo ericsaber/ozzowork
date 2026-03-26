@@ -27,6 +27,7 @@ interface ContactFollowupCardProps {
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
   hidePlannedFallback?: boolean;
+  rescheduleCount?: number;
 }
 
 const ContactFollowupCard = ({
@@ -39,11 +40,11 @@ const ContactFollowupCard = ({
   menuOpen,
   onMenuOpenChange,
   hidePlannedFallback = false,
+  rescheduleCount,
 }: ContactFollowupCardProps) => {
   const [checkHovered, setCheckHovered] = useState(false);
   const followUpDate = parseISO(taskRecord.planned_follow_up_date);
   const plannedType = taskRecord.planned_follow_up_type;
-  // Use CalendarIcon as fallback when no planned type
   const TypeIcon = plannedType ? (typeIcons[plannedType] || CalendarIcon) : CalendarIcon;
 
   // Date label
@@ -143,6 +144,16 @@ const ContactFollowupCard = ({
           </DropdownMenu>
         )}
       </div>
+
+      {/* Reschedule nudge */}
+      {rescheduleCount !== undefined && rescheduleCount >= 3 && (
+        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+          <Clock size={11} style={{ color: "#999" }} />
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+            Rescheduled {rescheduleCount} times
+          </span>
+        </div>
+      )}
     </div>
   );
 };

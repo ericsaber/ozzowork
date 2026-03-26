@@ -73,21 +73,13 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
-  const rescheduleMap = (taskRecords || []).reduce((acc: any, record: any) => {
-    const edits = record.follow_up_edits;
-    if (edits && edits.length > 0) {
-      acc[record.id] = edits[edits.length - 1];
-    }
-    return acc;
-  }, {});
-
   // Categorize
   const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active" && !r.related_task_record_id);
   const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
   const overdueFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date < todayStr);
   const hasActiveFollowups = activeFollowups.length > 0;
 
-  // History: records with connect_type OR note (Fix 3: include note-only records)
+  // History: records with connect_type OR note
   const historyRecords = (taskRecords || [])
     .filter((r: any) =>
       r.connect_type ||
@@ -102,6 +94,41 @@ const ContactHistory = () => {
   const firstContactDate = historyRecords.length > 0
     ? format(parseISO(historyRecords[historyRecords.length - 1].connect_date || historyRecords[historyRecords.length - 1].created_at), "MMM d")
     : null;
+
+  // Build interleaved follow-up event rows
+  const followUpEvents: { type: string; date: string; targetDate?: string; newDate?: string }[] = [];
+  (taskRecords || []).forEach((coin: any) => {
+    if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
+    const edits = (coin.follow_up_edits || []).sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+
+    if (edits.length === 0) {
+      // No edits — emit scheduled event
+      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: coin.planned_follow_up_date });
+    } else {
+      // Has edits — emit scheduled event using first edit's previous_due_date as original target
+      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: edits[0].previous_due_date });
+      // Emit rescheduled events with chained newDate
+      edits.forEach((edit: any, i: number) => {
+        const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
+        followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
+      });
+    }
+
+    // Cancelled event
+    if (coin.status === 'cancelled') {
+      followUpEvents.push({ type: 'cancelled', date: coin.completed_at || coin.updated_at });
+    }
+  });
+
+  // Merge events with history rows and sort
+  type TimelineItem = { kind: 'interaction'; record: any; date: string } | { kind: 'event'; event: typeof followUpEvents[0]; date: string };
+  const timelineItems: TimelineItem[] = [
+    ...historyRecords.map((r: any) => ({ kind: 'interaction' as const, record: r, date: r.connect_date || r.created_at })),
+    ...followUpEvents.map((e) => ({ kind: 'event' as const, event: e, date: e.date })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Track first interaction index for accent
+  let firstInteractionRendered = false;
 
   // Mutations
   const updateContact = useMutation({
@@ -141,132 +168,6 @@ const ContactHistory = () => {
       userId: item.user_id,
       hasInteraction: !!(item.connect_type || item.note),
     });
-  };
-
-  const allFollowUpEdits = (taskRecords || []).flatMap((r: any) => r.follow_up_edits || []);
-
-  const getThreadLine = (record: any, rescheduleInfo?: any, allRescheduleEdits?: any[]) => {
-    const typeLbl = record.planned_follow_up_type
-      ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-      : null;
-    const plannedDateStr = record.planned_follow_up_date
-      ? format(parseISO(record.planned_follow_up_date), "MMM d")
-      : "";
-    const completedDateStr = record.completed_at
-      ? format(parseISO(record.completed_at), "MMM d")
-      : "";
-
-    if (record.related_task_record_id) {
-      const relatedRecord = (taskRecords || []).find((r: any) => r.id === record.related_task_record_id);
-      if (relatedRecord) {
-        const plannedDateStr = relatedRecord.planned_follow_up_date
-          ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
-          : "";
-        const completedDateStr2 = relatedRecord.completed_at
-          ? format(parseISO(relatedRecord.completed_at), "MMM d")
-          : "";
-        const rescheduledDateStr = relatedRecord.planned_follow_up_date
-          ? format(parseISO(relatedRecord.planned_follow_up_date), "MMM d")
-          : "";
-
-        console.log("[getThreadLine] related record found:", {
-          relatedId: relatedRecord.id,
-          relatedStatus: relatedRecord.status,
-          plannedDate: relatedRecord.planned_follow_up_date,
-          completedAt: relatedRecord.completed_at,
-        });
-
-        // Check follow_up_action FIRST — before relatedStatus
-        console.log('[getThreadLine] standalone log action:', { id: record.id, follow_up_action: record.follow_up_action, planned_follow_up_date: record.planned_follow_up_date });
-        if (record.follow_up_action === 'kept') {
-          const displayDateStr = record.planned_follow_up_date
-            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
-            : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
-          return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
-        }
-        if (record.follow_up_action === 'rescheduled') {
-          const displayDateStr = record.planned_follow_up_date
-            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
-            : relatedRecord.planned_follow_up_date ? format(parseISO(relatedRecord.planned_follow_up_date), 'MMM d') : '';
-          return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
-        }
-
-        if (relatedRecord.status === "cancelled") {
-          return {
-            text: plannedDateStr
-              ? `→ Follow-up cancelled · Was due ${plannedDateStr}`
-              : "→ Follow-up cancelled",
-            color: "#9e9e99",
-          };
-        }
-
-        if (relatedRecord.status === "completed") {
-          const wasEarly = relatedRecord.planned_follow_up_date && relatedRecord.completed_at
-            ? startOfDay(parseISO(relatedRecord.planned_follow_up_date)) > startOfDay(parseISO(relatedRecord.completed_at))
-            : false;
-          const dueLbl = wasEarly ? "was planned for" : "was due";
-          const sameDate = plannedDateStr && completedDateStr2 && plannedDateStr === completedDateStr2;
-          const prefix = sameDate
-            ? `Follow-up completed ${completedDateStr2}`
-            : plannedDateStr ? `Follow-up ${dueLbl} ${plannedDateStr}` : 'Follow-up completed';
-          const suffix = sameDate ? '' : (completedDateStr2 ? ` · Completed ${completedDateStr2}` : '');
-          return {
-            text: `→ ${prefix}${suffix}`,
-            color: '#3d7a4a',
-          };
-        }
-      }
-    }
-
-    if (!record.planned_follow_up_type && !record.planned_follow_up_date) {
-      return { text: "→ No follow-up", color: "#9e9e99" };
-    }
-
-    if (record.status === "completed") {
-      if (record.planned_follow_up_date && record.completed_at) {
-        const wasEarly = startOfDay(parseISO(record.planned_follow_up_date)) > startOfDay(parseISO(record.completed_at));
-        const dueLbl = wasEarly ? "was planned for" : "was due";
-        const sameDate = plannedDateStr && completedDateStr && plannedDateStr === completedDateStr;
-        const prefix = sameDate
-          ? `Follow-up completed ${completedDateStr}`
-          : `Follow-up ${dueLbl} ${plannedDateStr}`;
-        const suffix = sameDate ? '' : (completedDateStr ? ` · Completed ${completedDateStr}` : '');
-        return { text: `→ ${prefix}${suffix}`, color: '#3d7a4a' };
-      }
-      const parts = [typeLbl || 'Follow-up planned', plannedDateStr ? `Was due ${plannedDateStr}` : null, "Done"]
-        .filter(Boolean).join(" · ");
-      return { text: `→ ${parts}`, color: "#3d7a4a" };
-    }
-
-    if (record.status === "cancelled") {
-      const parts = [typeLbl || 'Follow-up planned', plannedDateStr ? `Was due ${plannedDateStr}` : null, "Cancelled"]
-        .filter(Boolean).join(" · ");
-      return { text: `→ ${parts}`, color: "#9e9e99" };
-    }
-
-    if (record.planned_follow_up_date && record.planned_follow_up_date < todayStr) {
-      return { text: `→ ${[typeLbl || 'Follow-up planned', plannedDateStr].filter(Boolean).join(" ")} · Overdue`, color: "#a32d2d" };
-    }
-
-    console.log('[getThreadLine]', {
-      id: record.id,
-      status: record.status,
-      planned_follow_up_date: record.planned_follow_up_date,
-      completed_at: record.completed_at,
-      related_task_record_id: record.related_task_record_id,
-    });
-
-    const activeLbl = typeLbl ? `${typeLbl} planned` : 'Follow-up planned';
-    if (rescheduleInfo && record.related_task_record_id) {
-      const previousDateStr = rescheduleInfo.previous_due_date
-        ? format(parseISO(rescheduleInfo.previous_due_date), "MMM d")
-        : "";
-      const rescheduleText = previousDateStr
-        ? `Follow-up planned for ${plannedDateStr} · Rescheduled from ${previousDateStr}`
-        : `Follow-up planned for ${plannedDateStr}`;
-      return { text: `→ ${rescheduleText}`, color: "#3d7a4a" };
-    }
-    return { text: `→ ${typeLbl ? `${typeLbl} planned for` : 'Follow-up planned for'} ${plannedDateStr}`, color: '#3d7a4a' };
   };
 
   return (
@@ -361,6 +262,7 @@ const ContactHistory = () => {
                 taskRecord={r}
                 variant="upcoming"
                 hidePlannedFallback
+                rescheduleCount={r.follow_up_edits?.length || 0}
                 onTap={() => navigate(`/interaction/${r.id}`)}
                 onComplete={() => handleComplete(r)}
                 onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
@@ -384,6 +286,7 @@ const ContactHistory = () => {
                 taskRecord={r}
                 variant="overdue"
                 hidePlannedFallback
+                rescheduleCount={r.follow_up_edits?.length || 0}
                 onTap={() => navigate(`/interaction/${r.id}`)}
                 onComplete={() => handleComplete(r)}
                 onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
@@ -397,11 +300,51 @@ const ContactHistory = () => {
       )}
 
       {/* History */}
-      {!isLoading && historyRecords.length > 0 && (
+      {!isLoading && timelineItems.length > 0 && (
         <div className="mb-5">
           <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
           <div className="space-y-0">
-            {historyRecords.map((record: any) => {
+            {timelineItems.map((item, idx) => {
+              if (item.kind === 'event') {
+                const evt = item.event;
+                const isScheduled = evt.type === 'scheduled';
+                const isRescheduled = evt.type === 'rescheduled';
+                const isCancelled = evt.type === 'cancelled';
+
+                let label = '';
+                let IconComp = Clock;
+                let iconBg = '#f0ede8';
+                let iconColor = '#9e9e99';
+                let textOpacity = 1;
+
+                if (isScheduled) {
+                  label = `Follow-up scheduled for ${evt.targetDate ? format(parseISO(evt.targetDate), "MMM d") : "—"}`;
+                } else if (isRescheduled) {
+                  label = `Follow-up rescheduled to ${evt.newDate ? format(parseISO(evt.newDate), "MMM d") : "—"}`;
+                } else if (isCancelled) {
+                  IconComp = X;
+                  iconColor = '#a32d2d';
+                  textOpacity = 0.6;
+                  label = 'Follow-up cancelled';
+                }
+
+                return (
+                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7 }}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
+                      <IconComp size={14} style={{ color: iconColor }} />
+                    </div>
+                    <div className="flex-1 min-w-0 flex items-center">
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: iconColor }}>
+                        {label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Interaction row
+              const record = item.record;
+
               // Cleared record rendering
               if (record.status === 'cleared') {
                 const typeLbl = record.planned_follow_up_type
@@ -469,7 +412,7 @@ const ContactHistory = () => {
                 );
               }
 
-              // Completed tails-only record (follow-up completed with no prior interaction)
+              // Completed tails-only record
               if (record.status === 'completed' && !record.connect_type && !record.note && record.planned_follow_up_date) {
                 const typeLbl = record.planned_follow_up_type
                   ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
@@ -506,16 +449,19 @@ const ContactHistory = () => {
                 );
               }
 
+              // Regular interaction row
               const type = record.connect_type;
-              // Fix 3: fallback icon and verb when no connect type
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
-              const rescheduleInfo = rescheduleMap[record.id] || (record.related_task_record_id ? rescheduleMap[record.related_task_record_id] : undefined);
-              const thread = getThreadLine(record, rescheduleInfo, allFollowUpEdits);
+
+              // Accent first interaction
+              const isFirstInteraction = !firstInteractionRendered;
+              if (isFirstInteraction) firstInteractionRendered = true;
+              const iconBg = isFirstInteraction ? "#f5ede7" : "#f0ede8";
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
-                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -524,11 +470,8 @@ const ContactHistory = () => {
                       <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
                     {record.note && (
-                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
+                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px", fontStyle: isFirstInteraction ? "italic" : "normal" }}>{record.note}</p>
                     )}
-                    <div className="flex items-center gap-1 mt-1">
-                      <span style={{ fontFamily: "var(--font-body)", color: thread.color, fontSize: "12px" }}>{thread.text}</span>
-                    </div>
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
                 </button>
