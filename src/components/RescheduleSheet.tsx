@@ -129,7 +129,7 @@ const RescheduleSheet = ({
               <Clock size={16} className="text-[hsl(12,70%,52%)]" />
             </div>
             <div>
-              <h2 className="text-[18px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+              <h2 className="text-[20px] text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
                 Reschedule
               </h2>
               <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
