@@ -69,6 +69,7 @@ const InteractionDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
       queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
     },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const { data: activeFollowup } = useQuery({
