@@ -225,7 +225,7 @@ const EditTaskRecord = () => {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground mb-2" style={{ fontFamily: "var(--font-body)" }}>Due</p>
+                <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Due</p>
                 <div className="flex flex-wrap gap-2">
                   {dateChips.map((chip) => {
                     const chipDate = chip.date();
