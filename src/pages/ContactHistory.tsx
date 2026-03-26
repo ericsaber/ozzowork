@@ -82,7 +82,7 @@ const ContactHistory = () => {
   }, {});
 
   // Categorize
-  const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active");
+  const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active" && !r.related_task_record_id);
   const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
   const overdueFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date < todayStr);
   const hasActiveFollowups = activeFollowups.length > 0;
