@@ -92,6 +92,19 @@ const InteractionDetail = () => {
 
   const hasOtherActiveFollowup = !!activeFollowup;
 
+  const { data: relatedCoin } = useQuery({
+    queryKey: ["task-record", task?.related_task_record_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("task_records" as any)
+        .select("*")
+        .eq("id", task!.related_task_record_id!)
+        .single();
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!task?.related_task_record_id,
+  });
+
   const undoCancelMutation = useMutation({
     mutationFn: async () => {
       console.log("[InteractionDetail] undo cancel:", id);
