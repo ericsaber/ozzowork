@@ -203,13 +203,14 @@ const ContactHistory = () => {
 
         // Rescheduled or kept — related record is still active with a date
         if (relatedRecord.status !== 'completed' && relatedRecord.status !== 'cancelled') {
-          if (record.planned_follow_up_date) {
-            // Keep: the standalone log has the kept date stored on it
-            const keptDateStr = format(parseISO(record.planned_follow_up_date), 'MMM d');
-            return { text: `→ Follow-up kept for ${keptDateStr}`, color: '#3d7a4a' };
+          const displayDateStr = record.planned_follow_up_date
+            ? format(parseISO(record.planned_follow_up_date), 'MMM d')
+            : rescheduledDateStr;
+          const hasRescheduleEdit = rescheduleInfo && rescheduleInfo.previous_due_date !== record.planned_follow_up_date;
+          if (!hasRescheduleEdit) {
+            return { text: `→ Follow-up kept for ${displayDateStr}`, color: '#3d7a4a' };
           }
-          // Reschedule: no planned_follow_up_date on the standalone log
-          return { text: `→ Follow-up rescheduled to ${rescheduledDateStr}`, color: '#3d7a4a' };
+          return { text: `→ Follow-up rescheduled to ${displayDateStr}`, color: '#3d7a4a' };
         }
       }
     }

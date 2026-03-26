@@ -437,7 +437,7 @@ const LogInteractionSheet = ({
       .update({
         status: "active",
         related_task_record_id: existingFollowup.id,
-        ...(isKeep ? { planned_follow_up_date: existingFollowup.planned_follow_up_date } : {}),
+        planned_follow_up_date: newDate,
       })
       .eq("id", draftId);
 
