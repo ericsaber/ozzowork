@@ -542,7 +542,7 @@ const ContactHistory = () => {
 
       {/* Footer */}
       {!isLoading && interactionCount > 0 && (
-        <p className="text-center text-[11px] text-muted-foreground py-4" style={{ fontFamily: "var(--font-body)" }}>
+        <p className="text-center text-muted-foreground py-4" style={{ fontFamily: "var(--font-body)", fontSize: "12px" }}>
           {interactionCount} interaction{interactionCount !== 1 ? "s" : ""}{firstContactDate ? ` · First contact ${firstContactDate}` : ""}
         </p>
       )}
