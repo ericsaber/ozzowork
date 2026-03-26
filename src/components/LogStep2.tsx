@@ -212,8 +212,8 @@ const LogStep2 = ({
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
                 placeholder="Add a note…"
-                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 text-[14px] italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
-                style={{ fontFamily: "var(--font-heading)" }}
+                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
+                style={{ fontFamily: "var(--font-heading)", fontSize: "16px" }}
               />
               <button
                 onClick={handleDoneEditing}
