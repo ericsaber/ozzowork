@@ -159,10 +159,18 @@ const InteractionDetail = () => {
   console.log('[InteractionDetail] task data:', { connect_type: task.connect_type, note: task.note, hasInteraction: !!(task.connect_type || task.note) });
   const isCompleted = task.status === "completed";
   const hasFollowUp = !!task.planned_follow_up_type || !!task.planned_follow_up_date;
+  const isStandaloneLog = !!task.related_task_record_id;
+  if (isStandaloneLog) {
+    console.log('[InteractionDetail] standalone log — skipping own follow-up tail:', { related_task_record_id: task.related_task_record_id });
+  }
   
-  const showBottomBar = hasFollowUp && !isCompleted;
+  const showBottomBar = hasFollowUp && !isCompleted && !isStandaloneLog;
 
-  const dueDate = task.planned_follow_up_date ? parseISO(task.planned_follow_up_date) : null;
+  // For standalone logs, use the related coin's follow-up data for "What's Next"
+  const coinForFollowUp = isStandaloneLog ? relatedCoin : task;
+  const coinHasActiveFollowUp = coinForFollowUp && coinForFollowUp.planned_follow_up_date && coinForFollowUp.status !== 'completed' && coinForFollowUp.status !== 'cancelled';
+
+  const dueDate = coinForFollowUp?.planned_follow_up_date ? parseISO(coinForFollowUp.planned_follow_up_date) : null;
   const overdue = dueDate && !isCompleted ? isPast(dueDate) && !isDateToday(dueDate) : false;
   const dueDateIsToday = dueDate ? isDateToday(dueDate) : false;
 
