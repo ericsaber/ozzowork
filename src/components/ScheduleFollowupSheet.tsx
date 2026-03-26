@@ -159,7 +159,7 @@ const ScheduleFollowupSheet = ({
                     style={{
                       borderRadius: "100px",
                       padding: "8px 13px",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "var(--font-body)",
                       fontWeight: 500,
                       ...(showDatePicker
