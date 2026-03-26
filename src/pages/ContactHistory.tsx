@@ -524,7 +524,7 @@ const ContactHistory = () => {
                       <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
                     {record.note && (
-                      <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)" }}>{record.note}</p>
+                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
                     )}
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-[10px]" style={{ fontFamily: "var(--font-body)", color: thread.color }}>{thread.text}</span>
