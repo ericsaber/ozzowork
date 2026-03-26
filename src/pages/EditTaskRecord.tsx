@@ -196,7 +196,7 @@ const EditTaskRecord = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-[12px] border-[1.5px] border-border bg-secondary px-3 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground min-h-[56px] resize-none outline-none focus:border-[#e8c4a8] transition-colors" style={{ fontFamily: "var(--font-body)" }} placeholder="Add a note…" />
+              <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded-[12px] border-[1.5px] border-border bg-secondary px-3 py-2.5 text-foreground placeholder:text-muted-foreground min-h-[56px] resize-none outline-none focus:border-[#e8c4a8] transition-colors" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }} placeholder="Add a note…" />
             </div>
           )}
         </div>
