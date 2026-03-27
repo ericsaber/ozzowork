@@ -315,7 +315,7 @@ const ContactHistory = () => {
           <div className="mb-5">
             <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Last interaction</p>
             <button
-              onClick={() => navigate(`/interaction/${record.id}`)}
+              onClick={() => navigate(`/interaction/${activeFollowups[0]?.id || record.id}`)}
               className="w-full flex gap-3 bg-white rounded-xl p-3 text-left hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer items-center"
               style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}
             >
@@ -341,7 +341,7 @@ const ContactHistory = () => {
       {!isLoading && filteredTimeline.length > 0 && (
         <div className="mb-5">
           <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
-          <div className="divide-y divide-border">
+          <div>
             {filteredTimeline.map((item, idx) => {
               if (item.kind === 'event') {
                 const evt = item.event;
@@ -367,12 +367,12 @@ const ContactHistory = () => {
                 }
 
                 return (
-                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7 }}>
+                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                       <IconComp size={14} style={{ color: iconColor }} />
                     </div>
                     <div className="flex-1 min-w-0 flex items-center">
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: iconColor }}>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: isCancelled ? iconColor : '#999' }}>
                         {label}
                       </span>
                     </div>
@@ -392,7 +392,7 @@ const ContactHistory = () => {
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.55 }}>
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                       <Calendar size={14} className="text-muted-foreground" />
                     </div>
@@ -429,7 +429,7 @@ const ContactHistory = () => {
                   <button
                     key={record.id}
                     className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
-                    style={{ opacity: 0.55 }}
+                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}
                     onClick={() => navigate(`/interaction/${record.id}`)}
                   >
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
@@ -461,7 +461,7 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
                       <Check size={14} style={{ color: "#3d7a4a" }} />
                     </div>
@@ -495,7 +495,7 @@ const ContactHistory = () => {
               const iconBg = "#f0ede8";
 
               return (
-                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
+                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
