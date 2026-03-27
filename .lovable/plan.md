@@ -1,61 +1,52 @@
 
 
-## ContactHistory + InteractionDetail — Round 3 Fixes
+## InteractionDetail + ContactHistory — Round 4 Fixes
 
-Six fixes across two files.
+Three fixes across two files.
 
 ---
 
-### 1. Follow-up event rows — only for non-active coins with history (ContactHistory.tsx, lines 100–121)
+### 1. InteractionDetail — tails-only coins show What Happened if prior interactions exist
 
-Replace the current `followUpEvents` construction logic with:
+**File:** `src/pages/InteractionDetail.tsx`
 
-```typescript
-(taskRecords || []).forEach((coin: any) => {
-  if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
-  const edits = (coin.follow_up_edits || []).sort(...);
-
-  // Only emit scheduled/rescheduled for non-active coins
-  if (coin.status !== 'active') {
-    if (edits.length > 0 || coin.status === 'cancelled') {
-      followUpEvents.push({
-        type: 'scheduled', date: coin.created_at,
-        targetDate: edits.length > 0 ? edits[0].previous_due_date : coin.planned_follow_up_date
-      });
-    }
-    edits.forEach((edit, i) => {
-      const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
-      followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
-    });
-  }
-
-  if (coin.status === 'cancelled') {
-    followUpEvents.push({ type: 'cancelled', date: coin.completed_at || coin.updated_at });
-  }
-});
+**a)** Line 174 — remove `!isTailsOnly` from query enabled condition:
+```
+enabled: !!task?.contact_id && !!isActive
 ```
 
-This eliminates duplicate "Follow-up scheduled" rows for the active coin.
+**b)** Line 232 — update `interactionData` to use `latestInteraction` for all active coins:
+```typescript
+const interactionData = isActive ? latestInteraction : task;
+```
 
-### 2. History row borders — use `#e8e4de` color (ContactHistory.tsx, lines 370, 395, 432, 464, 498)
+**c)** Line 290 — change What Happened guard from `{!isTailsOnly && (` to:
+```
+{((isActive && latestInteraction) || isHistorical) && (
+```
 
-The current `borderBottom` uses `var(--border)`. Change all five occurrences to `'1px solid #e8e4de'`. No `divide-y` class is present — this is just a color update for consistent hairline dividers.
+**d)** Line 325 — change divider guard from `{isActive && !isTailsOnly && (` to:
+```
+{isActive && latestInteraction && (
+```
 
-### 3. Next Follow-Up card background (ContactHistory.tsx, lines 264–278)
+**e)** Remove `isTailsOnly` variable (line 154) — no longer referenced.
 
-The `ContactFollowupCard` wrapper `<div className="space-y-3">` doesn't set background. The card component itself needs `bg-white` or `background: 'white'`. Check `ContactFollowupCard.tsx` — if its root element doesn't have explicit white background, add `style={{ background: 'white' }}` on the wrapper div at line 264, or pass it through. Simpler: wrap each card in a div with `style={{ background: 'white', borderRadius: '14px' }}`.
+### 2. ContactHistory — timeline row border wrappers
 
-### 4. Event row text color — all labels use `#71717a` (ContactHistory.tsx, line 375)
+**File:** `src/pages/ContactHistory.tsx`
 
-Change `color: isCancelled ? iconColor : '#999'` to `color: '#71717a'` for all event types. The cancelled row's X icon keeps `#a32d2d` but the label text becomes `#71717a` like the others.
+Wrap each timeline item inside a plain `<div>` that carries the `borderBottom` style, and remove `borderBottom` from the inner elements (buttons, styled divs) that have `rounded-lg` or other border-radius.
 
-### 5. EditTaskRecord — already correct
+Specifically, for each of the five return blocks in the timeline map (lines 370, 395, 430, 464, 498):
+- Wrap in `<div key={...} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>`
+- Move the `key` prop to the wrapper
+- Remove `borderBottom` from the inner element's style
+- Inner element keeps all its existing styling (rounded-lg, opacity, etc.)
 
-The `useEffect` at line 62–74 already computes `hist` locally and sets `followUpOn(false)` for historical records. The `{!isHistorical && (...)}` guard at line 209 correctly wraps the What's Next card. No changes needed.
+### 3. Featured card navigation — already correct
 
-### 6. Vertical centering — already correct
-
-Line 498 already uses `${record.note && record.note.trim() ? 'items-start' : 'items-center'}`. No changes needed.
+Line 319 already uses `activeFollowups[0]?.id || record.id`. No change needed.
 
 ---
 
@@ -63,6 +54,6 @@ Line 498 already uses `${record.note && record.note.trim() ? 'items-start' : 'it
 
 | File | Changes |
 |------|---------|
-| `src/pages/ContactHistory.tsx` | Fixes 1, 2, 3, 4 |
-| `src/components/ContactFollowupCard.tsx` | Fix 3 (verify bg) |
+| `src/pages/InteractionDetail.tsx` | Fix 1 (query enabled, rendering guards, remove isTailsOnly) |
+| `src/pages/ContactHistory.tsx` | Fix 2 (border wrapper divs) |
 
