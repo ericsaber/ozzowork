@@ -321,7 +321,7 @@ const InteractionDetail = () => {
         )}
 
         {/* Divider — only for active non-tails coins */}
-        {isActive && !isTailsOnly && (
+        {isActive && latestInteraction && (
           <div className="relative px-4">
             <div className="border-t border-border" />
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">

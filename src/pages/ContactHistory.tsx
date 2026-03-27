@@ -503,21 +503,23 @@ const ContactHistory = () => {
               const iconBg = "#f0ede8";
 
               return (
-                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                    <TypeIcon size={14} className="text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
-                      <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                  <button onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
+                      <TypeIcon size={14} className="text-muted-foreground" />
                     </div>
-                    {record.note && record.note.trim() && (
-                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
-                    )}
-                  </div>
-                  <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
-                </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
+                        <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                      </div>
+                      {record.note && record.note.trim() && (
+                        <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
+                      )}
+                    </div>
+                    <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
+                  </button>
+                </div>
               );
             })}
           </div>
