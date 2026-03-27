@@ -170,7 +170,7 @@ const InteractionDetail = () => {
       console.log('[InteractionDetail] latestInteraction:', data);
       return data as any;
     },
-    enabled: !!task?.contact_id && !!isActive && !isTailsOnly,
+    enabled: !!task?.contact_id && !!isActive,
   });
 
   if (isLoading) {
