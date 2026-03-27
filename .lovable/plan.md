@@ -1,16 +1,14 @@
 
 
-## Fix: Exclude standalone logs from featured card
+## Remove `related_task_record_id` exclusion from latest interaction queries
 
-**File:** `src/pages/ContactHistory.tsx`, line 133
+Two one-line removals.
 
-Add `!item.record.related_task_record_id` to the featured item filter:
+### Fix 1 — `src/pages/InteractionDetail.tsx`
+Remove `.is("related_task_record_id", null)` from the `latestInteraction` query (around line 163).
 
-```typescript
-const featuredItem = timelineItems.find(
-  (item) => item.kind === 'interaction' && (item.record.connect_type || (item.record.note && item.record.note.trim())) && !item.record.related_task_record_id
-);
-```
+### Fix 2 — `src/pages/ContactHistory.tsx`
+Remove `!item.record.related_task_record_id` from the `featuredItem` find condition (around line 133).
 
-Single line change. No other files affected.
+No other changes. All console.log statements preserved.
 
