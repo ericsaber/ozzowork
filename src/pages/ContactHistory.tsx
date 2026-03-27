@@ -48,6 +48,7 @@ const ContactHistory = () => {
     onCompleted: () => {
       queryClient.invalidateQueries({ queryKey: ["task-records", id] });
       queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-interaction", id] });
     },
   });
 
