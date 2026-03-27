@@ -151,7 +151,6 @@ const InteractionDetail = () => {
 
   // State determination
   const isActive = task ? task.status === 'active' && task.planned_follow_up_date && !task.related_task_record_id : false;
-  const isTailsOnly = isActive && !task?.connect_type && !task?.note;
   const isHistorical = task ? !isActive : false;
 
   // Latest interaction query (contact-level) — only for active non-tails coins
