@@ -341,7 +341,7 @@ const ContactHistory = () => {
       {!isLoading && filteredTimeline.length > 0 && (
         <div className="mb-5">
           <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
-          <div className="divide-y divide-border">
+          <div>
             {filteredTimeline.map((item, idx) => {
               if (item.kind === 'event') {
                 const evt = item.event;
