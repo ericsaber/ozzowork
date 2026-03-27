@@ -66,7 +66,8 @@ const EditTaskRecord = () => {
       setConnectType(task.connect_type || "");
       setConnectDate(task.connect_date ? format(parseISO(task.connect_date), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"));
       setNote(task.note || "");
-      setFollowUpOn(!!task.planned_follow_up_type || !!task.planned_follow_up_date);
+      const hist = task.status === 'completed' || task.status === 'cancelled';
+      setFollowUpOn(hist ? false : (!!task.planned_follow_up_type || !!task.planned_follow_up_date));
       setFollowUpType(task.planned_follow_up_type || "");
       setFollowUpDate(task.planned_follow_up_date || "");
     }
