@@ -372,7 +372,7 @@ const ContactHistory = () => {
                       <IconComp size={14} style={{ color: iconColor }} />
                     </div>
                     <div className="flex-1 min-w-0 flex items-center">
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: iconColor }}>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: isCancelled ? iconColor : '#999' }}>
                         {label}
                       </span>
                     </div>
