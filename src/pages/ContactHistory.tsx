@@ -130,7 +130,7 @@ const ContactHistory = () => {
 
   // Find featured (last) interaction for the card above the timeline
   const featuredItem = timelineItems.find(
-    (item) => item.kind === 'interaction' && (item.record.connect_type || (item.record.note && item.record.note.trim()))
+    (item) => item.kind === 'interaction' && (item.record.connect_type || (item.record.note && item.record.note.trim())) && !item.record.related_task_record_id
   );
   const featuredId = featuredItem?.kind === 'interaction' ? featuredItem.record.id : null;
 
