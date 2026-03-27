@@ -504,8 +504,8 @@ const ContactHistory = () => {
                       <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
                       <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
                     </div>
-                    {record.note && (
-                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px", fontStyle: isFirstInteraction ? "italic" : "normal" }}>{record.note}</p>
+                    {record.note && record.note.trim() && (
+                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
                     )}
                   </div>
                   <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
