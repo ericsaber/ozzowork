@@ -305,12 +305,44 @@ const ContactHistory = () => {
         </div>
       )}
 
+      {/* Featured Last Interaction Card */}
+      {!isLoading && featuredItem && featuredItem.kind === 'interaction' && (() => {
+        const record = featuredItem.record;
+        const type = record.connect_type;
+        const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
+        const verb = type ? (typeVerbs[type] || type) : "Interacted";
+        return (
+          <div className="mb-5">
+            <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Last interaction</p>
+            <button
+              onClick={() => navigate(`/interaction/${record.id}`)}
+              className="w-full flex gap-3 bg-white rounded-xl p-3 text-left hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer items-center"
+              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}
+            >
+              <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f5ede7" }}>
+                <TypeIcon size={14} style={{ color: "#c8622a" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
+                  <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                </div>
+                {record.note && record.note.trim() && (
+                  <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "'Crimson Pro', var(--font-body)", fontSize: "13px", fontStyle: "italic" }}>{record.note}</p>
+                )}
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground shrink-0" />
+            </button>
+          </div>
+        );
+      })()}
+
       {/* History */}
-      {!isLoading && timelineItems.length > 0 && (
+      {!isLoading && filteredTimeline.length > 0 && (
         <div className="mb-5">
           <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
-          <div className="space-y-0">
-            {timelineItems.map((item, idx) => {
+          <div className="divide-y divide-border">
+            {filteredTimeline.map((item, idx) => {
               if (item.kind === 'event') {
                 const evt = item.event;
                 const isScheduled = evt.type === 'scheduled';
