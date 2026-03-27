@@ -72,8 +72,8 @@ const ContactFollowupCard = ({
 
   return (
     <div
-      className="rounded-[12px] bg-card overflow-hidden cursor-pointer"
-      style={{ border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,.05)" }}
+      className="rounded-[12px] overflow-hidden cursor-pointer"
+      style={{ background: 'white', border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,.05)" }}
       onClick={onTap}
     >
       <div className="flex items-center gap-3" style={{ padding: "14px 12px" }}>
