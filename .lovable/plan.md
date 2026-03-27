@@ -1,34 +1,55 @@
 
 
-## ContactHistory.tsx — Four Display Fixes
+## ContactHistory + EditTaskRecord — Round 2 Display Fixes
 
-### 1. Extract Last Interaction as featured card (lines 303–310, 452–478)
+Five targeted fixes across two files. No logic changes beyond what's described.
 
-Before the timeline loop, find the first `timelineItem` where `kind === 'interaction'` and the record has `connect_type || note`. Store its `record.id` as `featuredId`.
+---
 
-Render it above the timeline as a white card with:
-- Accent icon bg `#f5ede7`, icon color `#c8622a`
-- Verb bold, date muted, note italic Crimson Pro
-- `bg-white rounded-xl shadow-sm p-3`, tappable → `/interaction/${record.id}`, chevron
-- Under label "LAST INTERACTION" (same styling as other section labels)
+### 1. Featured card navigates to active follow-up coin (ContactHistory.tsx, line 318)
 
-In the timeline loop, skip any interaction item where `record.id === featuredId`. Also remove the `firstInteractionRendered` accent logic (lines 458–460) since the featured card handles it — all remaining interaction rows use gray `#f0ede8`.
+Change `navigate(\`/interaction/${record.id}\`)` to `navigate(\`/interaction/${activeFollowups[0]?.id || record.id}\`)`. The `activeFollowups` array is already computed at line 77.
 
-### 2. Dividers between timeline rows (line 332, 357, 390, 426, 463)
+### 2. EditTaskRecord — force followUpOn false for historical (EditTaskRecord.tsx, line 69)
 
-Add `border-bottom: 1px solid var(--border)` to each timeline row (events and interactions) except the last. Use conditional: `idx < timelineItems.length - 1` (accounting for the skipped featured item — use a filtered array or counter). Simplest: wrap in a container and use `divide-y divide-border` on the parent `<div className="space-y-0">` → change to `<div className="divide-y divide-border">`.
+In the `useEffect` initializer, wrap the `setFollowUpOn` call:
 
-### 3. Note conditional — check for empty string (line 472–474)
+```typescript
+if (isHistorical) {
+  setFollowUpOn(false);
+} else {
+  setFollowUpOn(!!task.planned_follow_up_type || !!task.planned_follow_up_date);
+}
+```
 
-Change `{record.note && (` to `{record.note && record.note.trim() && (` on the note rendering in the regular interaction row. This handles both null and empty string.
+Note: `isHistorical` depends on `task` which is available inside this effect. Need to compute it locally: `const hist = task.status === 'completed' || task.status === 'cancelled';`
 
-### 4. Event row text size (line 337)
+The `{!isHistorical && (...)}` guard on line 208 is already correct — this fix ensures the toggle state matches.
 
-Change `fontSize: "12px"` to `fontSize: "14px"` on the event row label `<span>`.
+### 3. History row borders — replace divide-y with inline borderBottom (ContactHistory.tsx, line 344)
+
+Remove `divide-y divide-border` from the parent `<div>`. On each timeline item's outermost element (event rows at line 370, cleared at 395, cancelled tails-only at 431, completed tails-only at 464, regular interaction at 498), add inline style `borderBottom: '1px solid var(--border)'` — except for the last item. Pass the filtered timeline length and use `idx < filteredTimeline.length - 1`.
+
+### 4. Event row text color — scheduled/rescheduled use #999 (ContactHistory.tsx, line 375)
+
+The event row `<span>` already uses `color: iconColor` where `iconColor = '#9e9e99'`. Change to `color: '#999'` for scheduled and rescheduled events. Cancelled keeps its red-tinted opacity treatment unchanged.
+
+### 5. Vertical centering for interaction rows without notes (ContactHistory.tsx, line 498)
+
+On the regular interaction row `<button>`, change from unconditional class to conditional alignment:
+
+```
+className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`}
+```
+
+Same pattern for cancelled tails-only rows (line 431) and cleared rows (line 395) if they have similar alignment issues.
+
+---
 
 ### Files modified
 
 | File | Changes |
 |------|---------|
-| `src/pages/ContactHistory.tsx` | All four fixes |
+| `src/pages/ContactHistory.tsx` | Fixes 1, 3, 4, 5 |
+| `src/pages/EditTaskRecord.tsx` | Fix 2 |
 
