@@ -368,14 +368,16 @@ const ContactHistory = () => {
                 }
 
                 return (
-                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                      <IconComp size={14} style={{ color: iconColor }} />
-                    </div>
-                    <div className="flex-1 min-w-0 flex items-center">
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
-                        {label}
-                      </span>
+                  <div key={`event-${evt.type}-${idx}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
+                        <IconComp size={14} style={{ color: iconColor }} />
+                      </div>
+                      <div className="flex-1 min-w-0 flex items-center">
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
+                          {label}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -393,21 +395,23 @@ const ContactHistory = () => {
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
-                      <Calendar size={14} className="text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {typeLbl} follow-up{dateStr ? ` · ${dateStr}` : ""}
-                      </span>
-                      <div className="mt-1">
-                        <span
-                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                          style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
-                        >
-                          Cleared
+                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                        <Calendar size={14} className="text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                          {typeLbl} follow-up{dateStr ? ` · ${dateStr}` : ""}
                         </span>
+                        <div className="mt-1">
+                          <span
+                            className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                            style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
+                          >
+                            Cleared
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -427,27 +431,28 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <button
-                    key={record.id}
-                    className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
-                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}
-                    onClick={() => navigate(`/interaction/${record.id}`)}
-                  >
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
-                      <Calendar size={14} className="text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                        {typeLbl} follow-up{plannedDateStr ? ` · ${plannedDateStr}` : ""}
-                      </span>
-                      {cancelledDateStr && plannedDateStr && cancelledDateStr !== plannedDateStr && (
-                        <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
-                          Cancelled {cancelledDateStr} · Was due {plannedDateStr}
-                        </p>
-                      )}
-                    </div>
-                    <ChevronRight size={16} className="text-muted-foreground shrink-0" />
-                  </button>
+                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <button
+                      className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
+                      style={{ opacity: 0.55 }}
+                      onClick={() => navigate(`/interaction/${record.id}`)}
+                    >
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
+                        <Calendar size={14} className="text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
+                          {typeLbl} follow-up{plannedDateStr ? ` · ${plannedDateStr}` : ""}
+                        </span>
+                        {cancelledDateStr && plannedDateStr && cancelledDateStr !== plannedDateStr && (
+                          <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
+                            Cancelled {cancelledDateStr} · Was due {plannedDateStr}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+                    </button>
+                  </div>
                 );
               }
 
@@ -462,26 +467,28 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
-                      <Check size={14} style={{ color: "#3d7a4a" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
-                        {typeLbl} follow-up · Was due {plannedDateStr}
-                      </span>
-                      {completedDateStr && completedDateStr !== plannedDateStr && (
-                        <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
-                          Completed {completedDateStr}
-                        </p>
-                      )}
-                      <div className="mt-1">
-                        <span
-                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                          style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
-                        >
-                          Done
+                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
+                        <Check size={14} style={{ color: "#3d7a4a" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
+                          {typeLbl} follow-up · Was due {plannedDateStr}
                         </span>
+                        {completedDateStr && completedDateStr !== plannedDateStr && (
+                          <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
+                            Completed {completedDateStr}
+                          </p>
+                        )}
+                        <div className="mt-1">
+                          <span
+                            className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                            style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
+                          >
+                            Done
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -496,21 +503,23 @@ const ContactHistory = () => {
               const iconBg = "#f0ede8";
 
               return (
-                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                    <TypeIcon size={14} className="text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
-                      <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                  <button onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`}>
+                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
+                      <TypeIcon size={14} className="text-muted-foreground" />
                     </div>
-                    {record.note && record.note.trim() && (
-                      <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
-                    )}
-                  </div>
-                  <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
-                </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
+                        <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                      </div>
+                      {record.note && record.note.trim() && (
+                        <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
+                      )}
+                    </div>
+                    <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
+                  </button>
+                </div>
               );
             })}
           </div>

@@ -151,7 +151,6 @@ const InteractionDetail = () => {
 
   // State determination
   const isActive = task ? task.status === 'active' && task.planned_follow_up_date && !task.related_task_record_id : false;
-  const isTailsOnly = isActive && !task?.connect_type && !task?.note;
   const isHistorical = task ? !isActive : false;
 
   // Latest interaction query (contact-level) — only for active non-tails coins
@@ -171,7 +170,7 @@ const InteractionDetail = () => {
       console.log('[InteractionDetail] latestInteraction:', data);
       return data as any;
     },
-    enabled: !!task?.contact_id && !!isActive && !isTailsOnly,
+    enabled: !!task?.contact_id && !!isActive,
   });
 
   if (isLoading) {
@@ -229,7 +228,7 @@ const InteractionDetail = () => {
   };
 
   // For WHAT HAPPENED on active coins, use latestInteraction; for historical, use task itself
-  const interactionData = isActive && !isTailsOnly ? latestInteraction : task;
+  const interactionData = isActive ? latestInteraction : task;
   const hasInteractionData = interactionData && (interactionData.connect_type || interactionData.note);
   const ConnectIcon = interactionData?.connect_type ? typeIcons[interactionData.connect_type] : null;
 
@@ -287,7 +286,7 @@ const InteractionDetail = () => {
       <div className="rounded-[12px] bg-card border border-border overflow-hidden" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
 
         {/* WHAT HAPPENED — shown for active (non-tails) and historical */}
-        {!isTailsOnly && (
+        {((isActive && latestInteraction) || isHistorical) && (
           <div className="px-4 py-3">
             <p className="font-medium uppercase mb-3" style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.08em", color: "#999" }}>
               What happened
@@ -322,7 +321,7 @@ const InteractionDetail = () => {
         )}
 
         {/* Divider — only for active non-tails coins */}
-        {isActive && !isTailsOnly && (
+        {isActive && latestInteraction && (
           <div className="relative px-4">
             <div className="border-t border-border" />
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
