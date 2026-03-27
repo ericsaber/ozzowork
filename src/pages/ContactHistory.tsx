@@ -492,10 +492,7 @@ const ContactHistory = () => {
               const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
               const verb = type ? (typeVerbs[type] || type) : "Interacted";
 
-              // Accent first interaction
-              const isFirstInteraction = !firstInteractionRendered;
-              if (isFirstInteraction) firstInteractionRendered = true;
-              const iconBg = isFirstInteraction ? "#f5ede7" : "#f0ede8";
+              const iconBg = "#f0ede8";
 
               return (
                 <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
