@@ -368,14 +368,16 @@ const ContactHistory = () => {
                 }
 
                 return (
-                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                      <IconComp size={14} style={{ color: iconColor }} />
-                    </div>
-                    <div className="flex-1 min-w-0 flex items-center">
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
-                        {label}
-                      </span>
+                  <div key={`event-${evt.type}-${idx}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
+                        <IconComp size={14} style={{ color: iconColor }} />
+                      </div>
+                      <div className="flex-1 min-w-0 flex items-center">
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
+                          {label}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
