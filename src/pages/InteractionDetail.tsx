@@ -163,9 +163,8 @@ const InteractionDetail = () => {
         .from("task_records" as any)
         .select("*")
         .eq("contact_id", task!.contact_id)
-        .not("connect_type", "is", null)
-        .is("related_task_record_id", null)
-        .order("connect_date", { ascending: false })
+      .not("connect_type", "is", null)
+      .order("connect_date", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
