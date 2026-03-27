@@ -495,7 +495,7 @@ const ContactHistory = () => {
               const iconBg = "#f0ede8";
 
               return (
-                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className="flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer">
+                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
