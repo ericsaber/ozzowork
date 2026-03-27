@@ -467,26 +467,28 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
-                      <Check size={14} style={{ color: "#3d7a4a" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
-                        {typeLbl} follow-up · Was due {plannedDateStr}
-                      </span>
-                      {completedDateStr && completedDateStr !== plannedDateStr && (
-                        <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
-                          Completed {completedDateStr}
-                        </p>
-                      )}
-                      <div className="mt-1">
-                        <span
-                          className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                          style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
-                        >
-                          Done
+                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
+                        <Check size={14} style={{ color: "#3d7a4a" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
+                          {typeLbl} follow-up · Was due {plannedDateStr}
                         </span>
+                        {completedDateStr && completedDateStr !== plannedDateStr && (
+                          <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
+                            Completed {completedDateStr}
+                          </p>
+                        )}
+                        <div className="mt-1">
+                          <span
+                            className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                            style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
+                          >
+                            Done
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
