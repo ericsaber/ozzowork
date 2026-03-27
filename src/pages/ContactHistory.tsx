@@ -101,13 +101,14 @@ const ContactHistory = () => {
     if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
     const edits = (coin.follow_up_edits || []).sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
 
-    if (edits.length === 0) {
-      // No edits — emit scheduled event
-      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: coin.planned_follow_up_date });
-    } else {
-      // Has edits — emit scheduled event using first edit's previous_due_date as original target
-      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: edits[0].previous_due_date });
-      // Emit rescheduled events with chained newDate
+    // Only emit scheduled/rescheduled for non-active coins
+    if (coin.status !== 'active') {
+      if (edits.length > 0 || coin.status === 'cancelled') {
+        followUpEvents.push({
+          type: 'scheduled', date: coin.created_at,
+          targetDate: edits.length > 0 ? edits[0].previous_due_date : coin.planned_follow_up_date
+        });
+      }
       edits.forEach((edit: any, i: number) => {
         const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
         followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
