@@ -127,8 +127,14 @@ const ContactHistory = () => {
     ...followUpEvents.map((e) => ({ kind: 'event' as const, event: e, date: e.date })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Track first interaction index for accent
-  let firstInteractionRendered = false;
+  // Find featured (last) interaction for the card above the timeline
+  const featuredItem = timelineItems.find(
+    (item) => item.kind === 'interaction' && (item.record.connect_type || (item.record.note && item.record.note.trim()))
+  );
+  const featuredId = featuredItem?.kind === 'interaction' ? featuredItem.record.id : null;
+
+  // Filter timeline items excluding the featured one
+  const filteredTimeline = featuredId ? timelineItems.filter((item) => !(item.kind === 'interaction' && item.record.id === featuredId)) : timelineItems;
 
   // Mutations
   const updateContact = useMutation({
