@@ -1,48 +1,61 @@
 
 
-## ContactHistory + EditTaskRecord — Round 2 Display Fixes
+## ContactHistory + InteractionDetail — Round 3 Fixes
 
-Five targeted fixes across two files. No logic changes beyond what's described.
+Six fixes across two files.
 
 ---
 
-### 1. Featured card navigates to active follow-up coin (ContactHistory.tsx, line 318)
+### 1. Follow-up event rows — only for non-active coins with history (ContactHistory.tsx, lines 100–121)
 
-Change `navigate(\`/interaction/${record.id}\`)` to `navigate(\`/interaction/${activeFollowups[0]?.id || record.id}\`)`. The `activeFollowups` array is already computed at line 77.
-
-### 2. EditTaskRecord — force followUpOn false for historical (EditTaskRecord.tsx, line 69)
-
-In the `useEffect` initializer, wrap the `setFollowUpOn` call:
+Replace the current `followUpEvents` construction logic with:
 
 ```typescript
-if (isHistorical) {
-  setFollowUpOn(false);
-} else {
-  setFollowUpOn(!!task.planned_follow_up_type || !!task.planned_follow_up_date);
-}
+(taskRecords || []).forEach((coin: any) => {
+  if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
+  const edits = (coin.follow_up_edits || []).sort(...);
+
+  // Only emit scheduled/rescheduled for non-active coins
+  if (coin.status !== 'active') {
+    if (edits.length > 0 || coin.status === 'cancelled') {
+      followUpEvents.push({
+        type: 'scheduled', date: coin.created_at,
+        targetDate: edits.length > 0 ? edits[0].previous_due_date : coin.planned_follow_up_date
+      });
+    }
+    edits.forEach((edit, i) => {
+      const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
+      followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
+    });
+  }
+
+  if (coin.status === 'cancelled') {
+    followUpEvents.push({ type: 'cancelled', date: coin.completed_at || coin.updated_at });
+  }
+});
 ```
 
-Note: `isHistorical` depends on `task` which is available inside this effect. Need to compute it locally: `const hist = task.status === 'completed' || task.status === 'cancelled';`
+This eliminates duplicate "Follow-up scheduled" rows for the active coin.
 
-The `{!isHistorical && (...)}` guard on line 208 is already correct — this fix ensures the toggle state matches.
+### 2. History row borders — use `#e8e4de` color (ContactHistory.tsx, lines 370, 395, 432, 464, 498)
 
-### 3. History row borders — replace divide-y with inline borderBottom (ContactHistory.tsx, line 344)
+The current `borderBottom` uses `var(--border)`. Change all five occurrences to `'1px solid #e8e4de'`. No `divide-y` class is present — this is just a color update for consistent hairline dividers.
 
-Remove `divide-y divide-border` from the parent `<div>`. On each timeline item's outermost element (event rows at line 370, cleared at 395, cancelled tails-only at 431, completed tails-only at 464, regular interaction at 498), add inline style `borderBottom: '1px solid var(--border)'` — except for the last item. Pass the filtered timeline length and use `idx < filteredTimeline.length - 1`.
+### 3. Next Follow-Up card background (ContactHistory.tsx, lines 264–278)
 
-### 4. Event row text color — scheduled/rescheduled use #999 (ContactHistory.tsx, line 375)
+The `ContactFollowupCard` wrapper `<div className="space-y-3">` doesn't set background. The card component itself needs `bg-white` or `background: 'white'`. Check `ContactFollowupCard.tsx` — if its root element doesn't have explicit white background, add `style={{ background: 'white' }}` on the wrapper div at line 264, or pass it through. Simpler: wrap each card in a div with `style={{ background: 'white', borderRadius: '14px' }}`.
 
-The event row `<span>` already uses `color: iconColor` where `iconColor = '#9e9e99'`. Change to `color: '#999'` for scheduled and rescheduled events. Cancelled keeps its red-tinted opacity treatment unchanged.
+### 4. Event row text color — all labels use `#71717a` (ContactHistory.tsx, line 375)
 
-### 5. Vertical centering for interaction rows without notes (ContactHistory.tsx, line 498)
+Change `color: isCancelled ? iconColor : '#999'` to `color: '#71717a'` for all event types. The cancelled row's X icon keeps `#a32d2d` but the label text becomes `#71717a` like the others.
 
-On the regular interaction row `<button>`, change from unconditional class to conditional alignment:
+### 5. EditTaskRecord — already correct
 
-```
-className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`}
-```
+The `useEffect` at line 62–74 already computes `hist` locally and sets `followUpOn(false)` for historical records. The `{!isHistorical && (...)}` guard at line 209 correctly wraps the What's Next card. No changes needed.
 
-Same pattern for cancelled tails-only rows (line 431) and cleared rows (line 395) if they have similar alignment issues.
+### 6. Vertical centering — already correct
+
+Line 498 already uses `${record.note && record.note.trim() ? 'items-start' : 'items-center'}`. No changes needed.
 
 ---
 
@@ -50,6 +63,6 @@ Same pattern for cancelled tails-only rows (line 431) and cleared rows (line 395
 
 | File | Changes |
 |------|---------|
-| `src/pages/ContactHistory.tsx` | Fixes 1, 3, 4, 5 |
-| `src/pages/EditTaskRecord.tsx` | Fix 2 |
+| `src/pages/ContactHistory.tsx` | Fixes 1, 2, 3, 4 |
+| `src/components/ContactFollowupCard.tsx` | Fix 3 (verify bg) |
 
