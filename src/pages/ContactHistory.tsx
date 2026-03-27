@@ -430,7 +430,7 @@ const ContactHistory = () => {
                   <button
                     key={record.id}
                     className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
-                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}
+                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}
                     onClick={() => navigate(`/interaction/${record.id}`)}
                   >
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
