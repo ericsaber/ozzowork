@@ -147,6 +147,7 @@ const InteractionDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["task-record", id] });
       queryClient.invalidateQueries({ queryKey: ["task-records"] });
       queryClient.invalidateQueries({ queryKey: ["latest-interaction", task?.contact_id] });
+      navigate(`/contact/${task?.contact_id}`);
     },
   });
 
