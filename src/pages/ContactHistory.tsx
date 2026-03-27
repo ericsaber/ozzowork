@@ -315,7 +315,7 @@ const ContactHistory = () => {
           <div className="mb-5">
             <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Last interaction</p>
             <button
-              onClick={() => navigate(`/interaction/${record.id}`)}
+              onClick={() => navigate(`/interaction/${activeFollowups[0]?.id || record.id}`)}
               className="w-full flex gap-3 bg-white rounded-xl p-3 text-left hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer items-center"
               style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}
             >
