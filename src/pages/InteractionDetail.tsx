@@ -228,7 +228,7 @@ const InteractionDetail = () => {
   };
 
   // For WHAT HAPPENED on active coins, use latestInteraction; for historical, use task itself
-  const interactionData = isActive && !isTailsOnly ? latestInteraction : task;
+  const interactionData = isActive ? latestInteraction : task;
   const hasInteractionData = interactionData && (interactionData.connect_type || interactionData.note);
   const ConnectIcon = interactionData?.connect_type ? typeIcons[interactionData.connect_type] : null;
 
