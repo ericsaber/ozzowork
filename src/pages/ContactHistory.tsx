@@ -101,13 +101,14 @@ const ContactHistory = () => {
     if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
     const edits = (coin.follow_up_edits || []).sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
 
-    if (edits.length === 0) {
-      // No edits — emit scheduled event
-      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: coin.planned_follow_up_date });
-    } else {
-      // Has edits — emit scheduled event using first edit's previous_due_date as original target
-      followUpEvents.push({ type: 'scheduled', date: coin.created_at, targetDate: edits[0].previous_due_date });
-      // Emit rescheduled events with chained newDate
+    // Only emit scheduled/rescheduled for non-active coins
+    if (coin.status !== 'active') {
+      if (edits.length > 0 || coin.status === 'cancelled') {
+        followUpEvents.push({
+          type: 'scheduled', date: coin.created_at,
+          targetDate: edits.length > 0 ? edits[0].previous_due_date : coin.planned_follow_up_date
+        });
+      }
       edits.forEach((edit: any, i: number) => {
         const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
         followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
@@ -367,12 +368,12 @@ const ContactHistory = () => {
                 }
 
                 return (
-                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div key={`event-${evt.type}-${idx}`} className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                       <IconComp size={14} style={{ color: iconColor }} />
                     </div>
                     <div className="flex-1 min-w-0 flex items-center">
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: isCancelled ? iconColor : '#999' }}>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
                         {label}
                       </span>
                     </div>
@@ -392,7 +393,7 @@ const ContactHistory = () => {
                   ? format(parseISO(record.planned_follow_up_date), "MMM d")
                   : "";
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
                       <Calendar size={14} className="text-muted-foreground" />
                     </div>
@@ -429,7 +430,7 @@ const ContactHistory = () => {
                   <button
                     key={record.id}
                     className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
-                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}
+                    style={{ opacity: 0.55, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}
                     onClick={() => navigate(`/interaction/${record.id}`)}
                   >
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
@@ -461,7 +462,7 @@ const ContactHistory = () => {
                   : "";
 
                 return (
-                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div key={record.id} className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6, borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
                     <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
                       <Check size={14} style={{ color: "#3d7a4a" }} />
                     </div>
@@ -495,7 +496,7 @@ const ContactHistory = () => {
               const iconBg = "#f0ede8";
 
               return (
-                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <button key={record.id} onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
                   <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
                     <TypeIcon size={14} className="text-muted-foreground" />
                   </div>
