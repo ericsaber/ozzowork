@@ -26,11 +26,10 @@ interface LogInteractionSheetProps {
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
   skipFollowupStep?: boolean;
-  existingTaskRecordId?: string;
 }
 
 const LogInteractionSheet = ({
-  open, onOpenChange, preselectedContactId, skipFollowupStep = false, existingTaskRecordId,
+  open, onOpenChange, preselectedContactId, skipFollowupStep = false,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
@@ -49,9 +48,6 @@ const LogInteractionSheet = ({
   // Draft state (FAB / Log button flows only — not completion flow)
   const [draftId, setDraftId] = useState<string | null>(null);
   const [existingFollowup, setExistingFollowup] = useState<any | null>(null);
-
-  // skipFollowupStep mode keeps its own record reference (unchanged)
-  const [savedTaskRecordId, setSavedTaskRecordId] = useState<string | null>(null);
 
   // isDirty tied to draft existence (spec: false before Next →, true after)
   const isDirty = !!draftId;
@@ -76,16 +72,14 @@ const LogInteractionSheet = ({
     queryFn: async () => {
       if (!contactId) return null;
       const { data } = await supabase
-        .from("task_records" as any)
-        .select("id, planned_follow_up_type, planned_follow_up_date, connect_type, note")
+        .from("follow_ups")
+        .select("id, planned_type, planned_date, status")
         .eq("contact_id", contactId)
         .eq("status", "active")
-        .not("planned_follow_up_date", "is", null)
-        .is('related_task_record_id', null)
         .limit(1)
         .maybeSingle();
-      console.log('[activeFollowups] query result after fix:', data ? { id: (data as any).id, related: (data as any).related_task_record_id, date: (data as any).planned_follow_up_date } : null);
-      return data as any;
+      console.log("[activeFollowup] query result:", data);
+      return data;
     },
     enabled: open && !!contactId,
   });
@@ -99,7 +93,6 @@ const LogInteractionSheet = ({
       setNote("");
       setDraftId(null);
       setExistingFollowup(null);
-      setSavedTaskRecordId(null);
       setSkippedInteraction(false);
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
@@ -159,9 +152,8 @@ const LogInteractionSheet = ({
   });
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["task-records"] });
-    queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
-    queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["interactions"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
     queryClient.invalidateQueries({ queryKey: ["active-followup"] });
   };
 
@@ -172,73 +164,62 @@ const LogInteractionSheet = ({
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
+      // TODO Step 10: rewrite skipFollowupStep path for new schema
+      if (skipFollowupStep) {
+        console.log("[LogInteractionSheet] skipFollowupStep path not yet migrated");
+        clearAndClose();
+        return;
+      }
+
       const computedConnectDate =
         connectDate === format(new Date(), "yyyy-MM-dd")
           ? new Date().toISOString()
           : new Date(connectDate + "T12:00:00").toISOString();
 
-      // skipFollowupStep mode — unchanged behavior (no draft)
-      if (skipFollowupStep && existingTaskRecordId) {
-        const updatePayload = {
-          connect_type: connectType || null,
-          note: note || null,
-          connect_date: computedConnectDate,
-        };
-        console.log("[LogInteractionSheet] skipFollowupStep update payload:", updatePayload, "taskRecordId:", existingTaskRecordId);
-        const { error } = await supabase.from("task_records" as any).update(updatePayload).eq("id", existingTaskRecordId);
-        if (error) throw error;
-        return { id: existingTaskRecordId, skipMode: true };
-      }
-
       // Update existing draft
       if (draftId) {
-        const { error } = await supabase.from("task_records" as any).update({
-          connect_type: connectType || null,
-          note: note || null,
-          connect_date: computedConnectDate,
-        }).eq("id", draftId);
+        const { error } = await supabase
+          .from("interactions")
+          .update({
+            connect_type: connectType || null,
+            note: note || null,
+            connect_date: computedConnectDate,
+          })
+          .eq("id", draftId);
         if (error) throw error;
-        console.log("[draft] updated:", { draftId, connect_type: connectType, note, connect_date: computedConnectDate });
-        return { id: draftId, skipMode: false };
+        console.log("[draft] interactions updated:", { draftId, connect_type: connectType, note, connect_date: computedConnectDate });
+        return { id: draftId };
       }
 
       // Create new draft
-      const { data, error } = await supabase.from("task_records" as any).insert({
-        contact_id: contactId,
-        user_id: user.id,
-        connect_type: connectType || null,
-        connect_date: computedConnectDate,
-        note: note || null,
-        status: "draft",
-      }).select("id").single();
+      const { data, error } = await supabase
+        .from("interactions")
+        .insert({
+          contact_id: contactId,
+          user_id: user.id,
+          connect_type: connectType || null,
+          connect_date: computedConnectDate,
+          note: note || null,
+          status: "draft",
+        })
+        .select("id")
+        .single();
       if (error) throw error;
-      console.log("[draft] created:", { draftId: (data as any).id, connect_type: connectType, note, connect_date: computedConnectDate });
-      return { id: (data as any).id, skipMode: false };
+      console.log("[draft] interactions created:", { draftId: data.id, connect_type: connectType, note });
+      return { id: data.id };
     },
-    onSuccess: (result: any) => {
-      // skipFollowupStep mode — close immediately
-      if (result.skipMode) {
-        console.log("[LogInteractionSheet] invalidating:", existingTaskRecordId, "type:", typeof existingTaskRecordId);
-        invalidateAll();
-        queryClient.invalidateQueries({ queryKey: ["task-record", existingTaskRecordId] });
-        queryClient.invalidateQueries({ queryKey: ["contact-task-records", contactId] });
-        toast.success("Interaction logged");
-        clearAndClose();
-        return;
-      }
+    onSuccess: (result) => {
+      if (!result) return; // skipFollowupStep stub path
 
-      // Store draft ID
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
 
-      // Check for active follow-up on the contact
       if (activeFollowup && !skipFollowupStep) {
         setExistingFollowup(activeFollowup);
-        console.log("[outstanding] active follow-up found — routing to outstanding step:", {
-          taskRecordId: activeFollowup.id,
-          type: activeFollowup.planned_follow_up_type,
-          date: activeFollowup.planned_follow_up_date,
-          isTailsOnly: !activeFollowup.connect_type && !activeFollowup.note,
+        console.log("[outstanding] active follow-up found:", {
+          followUpId: activeFollowup.id,
+          type: activeFollowup.planned_type,
+          date: activeFollowup.planned_date,
         });
         setStep("outstanding");
       } else {
@@ -253,70 +234,81 @@ const LogInteractionSheet = ({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+      if (!draftId) throw new Error("No draft interaction");
 
-      // Step 3: complete path — outstanding follow-up needs resolving
+      const computedConnectDate = new Date().toISOString();
+
+      // Complete path — outstanding follow-up exists
       if (existingFollowup) {
-        const isTailsOnly = !existingFollowup.connect_type && !existingFollowup.note;
-        const computedConnectDate = new Date().toISOString();
-
         console.log("[followupMutation] complete path:", {
-          isTailsOnly,
-          existingFollowupId: existingFollowup.id,
+          existingFollowUpId: existingFollowup.id,
           draftId,
-          newFollowUpType: type,
-          newFollowUpDate: date,
+          newType: type,
+          newDate: date,
         });
 
-        if (isTailsOnly) {
-          // Fill in the head of the existing tails-only coin + mark complete
-          const { error: updateError } = await supabase.from("task_records" as any).update({
+        // 1. Mark existing follow-up as completed, write interaction details onto it
+        const { error: completeError } = await supabase
+          .from("follow_ups")
+          .update({
+            status: "completed",
+            completed_at: computedConnectDate,
             connect_type: connectType || null,
             connect_date: computedConnectDate,
             note: note || null,
-            status: "completed",
-            completed_at: computedConnectDate,
-          }).eq("id", existingFollowup.id);
-          console.log('[followupMutation] tails-only UPDATE result:', { error: updateError?.message || null });
+          })
+          .eq("id", existingFollowup.id);
+        if (completeError) throw completeError;
+        console.log("[followupMutation] follow_up marked completed:", existingFollowup.id);
 
-          // Delete the draft (interaction absorbed into existing record)
-          const { error: deleteError } = await supabase.from("task_records" as any).delete().eq("id", draftId!);
-          console.log('[followupMutation] tails-only DELETE result:', { error: deleteError?.message || null });
+        // 2. Publish the interaction draft
+        const { error: publishError } = await supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", draftId);
+        if (publishError) throw publishError;
+        console.log("[followupMutation] interaction draft published:", draftId);
 
-          // If new follow-up set, create new tails-only coin
-          if (date) {
-            const { error: insertError } = await supabase.from("task_records" as any).insert({
+        // 3. If a new follow-up date was set, insert a new follow_ups row
+        if (date) {
+          const { error: insertError } = await supabase
+            .from("follow_ups")
+            .insert({
               contact_id: contactId,
               user_id: user.id,
-              planned_follow_up_type: type || null,
-              planned_follow_up_date: date,
+              planned_type: type || null,
+              planned_date: date,
               status: "active",
             });
-            console.log('[followupMutation] tails-only INSERT result:', { error: insertError?.message || null, date });
-          }
-        } else {
-          // Full coin: mark existing record's tail complete
-          await supabase.from("task_records" as any).update({
-            status: "completed",
-            completed_at: computedConnectDate,
-          }).eq("id", existingFollowup.id);
-
-          // Promote draft to active with new follow-up
-          await supabase.from("task_records" as any).update({
-            status: "active",
-            planned_follow_up_type: type || null,
-            planned_follow_up_date: date || null,
-          }).eq("id", draftId!);
+          if (insertError) throw insertError;
+          console.log("[followupMutation] new follow_up inserted:", { type, date });
         }
+
         return { completePath: true, hasFollowup: !!date };
       }
 
-      // Normal step 2 path (no outstanding follow-up)
-      if (!draftId) throw new Error("No draft record");
-      await supabase.from("task_records" as any).update({
-        planned_follow_up_type: type || null,
-        planned_follow_up_date: date,
-        status: "active",
-      }).eq("id", draftId);
+      // Normal step 2 path — no outstanding follow-up
+      // 1. Publish interaction draft
+      const { error: publishError } = await supabase
+        .from("interactions")
+        .update({ status: "published" })
+        .eq("id", draftId);
+      if (publishError) throw publishError;
+      console.log("[followupMutation] interaction draft published:", draftId);
+
+      // 2. Insert new follow_up
+      const { error: insertError } = await supabase
+        .from("follow_ups")
+        .insert({
+          contact_id: contactId,
+          user_id: user.id,
+          planned_type: type || null,
+          planned_date: date,
+          status: "active",
+        });
+      if (insertError) throw insertError;
+      console.log("[followupMutation] follow_up inserted:", { type, date });
+
       return { completePath: false, hasFollowup: true };
     },
     onSuccess: (result: any) => {
@@ -336,45 +328,47 @@ const LogInteractionSheet = ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Complete path skip — same as followupMutation but with no follow-up
+    // Complete path skip — mark existing follow-up complete, publish draft, no new follow-up
     if (existingFollowup) {
-      const isTailsOnly = !existingFollowup.connect_type && !existingFollowup.note;
       const computedConnectDate = new Date().toISOString();
 
-      console.log("[handleSkip] complete path skip:", { isTailsOnly, existingFollowupId: existingFollowup.id, draftId });
+      console.log("[handleSkip] complete path skip:", {
+        existingFollowUpId: existingFollowup.id,
+        draftId,
+      });
 
-      if (isTailsOnly) {
-        await supabase.from("task_records" as any).update({
+      await supabase
+        .from("follow_ups")
+        .update({
+          status: "completed",
+          completed_at: computedConnectDate,
           connect_type: connectType || null,
           connect_date: computedConnectDate,
           note: note || null,
-          status: "completed",
-          completed_at: computedConnectDate,
-          planned_follow_up_type: null,
-          planned_follow_up_date: null,
-        }).eq("id", existingFollowup.id);
-        await supabase.from("task_records" as any).delete().eq("id", draftId!);
-      } else {
-        await supabase.from("task_records" as any).update({
-          status: "completed",
-          completed_at: computedConnectDate,
-        }).eq("id", existingFollowup.id);
-        await supabase.from("task_records" as any).update({
-          status: "active",
-          planned_follow_up_type: null,
-          planned_follow_up_date: null,
-        }).eq("id", draftId!);
+        })
+        .eq("id", existingFollowup.id);
+
+      if (draftId) {
+        await supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", draftId);
+        console.log("[handleSkip] interaction draft published:", draftId);
       }
+
       invalidateAll();
       toast.success("Nice work. Log saved.");
       clearAndClose();
       return;
     }
 
-    // Normal skip
+    // Normal skip — publish interaction draft, no follow-up created
     if (draftId) {
-      await supabase.from("task_records" as any).update({ status: "active" }).eq("id", draftId);
-      console.log("[draft] skipped follow-up, promoted to active:", draftId);
+      await supabase
+        .from("interactions")
+        .update({ status: "published" })
+        .eq("id", draftId);
+      console.log("[handleSkip] draft published, no follow-up:", draftId);
     }
     invalidateAll();
     toast.success("Log saved.");
@@ -385,8 +379,7 @@ const LogInteractionSheet = ({
   const handleOutstandingComplete = () => {
     console.log("[outstanding] complete chosen — proceeding to step 3:", {
       existingFollowupId: existingFollowup?.id,
-      isTailsOnly: !existingFollowup?.connect_type && !existingFollowup?.note,
-      plannedDate: existingFollowup?.planned_follow_up_date,
+      plannedDate: existingFollowup?.planned_date,
     });
     setStep(3);
   };
@@ -397,62 +390,48 @@ const LogInteractionSheet = ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const previousDate = existingFollowup.planned_follow_up_date;
+    const previousDate = existingFollowup.planned_date;
     const isKeep = newDate === previousDate;
 
-    console.log("[outstanding] update chosen:", {
-      existingFollowupId: existingFollowup.id,
+    console.log("[handleOutstandingUpdate] update chosen:", {
+      existingFollowUpId: existingFollowup.id,
       previousDate,
       newDate,
       isKeep,
     });
 
-    // 1. If rescheduling (not keeping), insert a follow_up_edits audit row
+    // 1. If rescheduling, insert follow_up_edits audit row
     if (!isKeep) {
-      await supabase.from("follow_up_edits" as any).insert({
-        task_record_id: existingFollowup.id,
-        follow_up_id: null,
-        previous_type: existingFollowup.planned_follow_up_type || '',
-        previous_due_date: previousDate,
-        changed_at: new Date().toISOString(),
-        user_id: user.id,
-      });
-
+      const { error: editError } = await supabase
+        .from("follow_up_edits")
+        .insert({
+          follow_up_id: existingFollowup.id,
+          user_id: user.id,
+          previous_type: existingFollowup.planned_type || null,
+          previous_due_date: previousDate,
+        });
       console.log("[handleOutstandingUpdate] follow_up_edits inserted:", {
-        task_record_id: existingFollowup.id,
-        previous_type: existingFollowup.planned_follow_up_type || '',
+        follow_up_id: existingFollowup.id,
         previous_due_date: previousDate,
+        error: editError?.message || null,
       });
     }
 
-    // 2. If rescheduling, update planned_follow_up_date on existing record
+    // 2. If rescheduling, update planned_date on follow_up
     if (!isKeep) {
-      await supabase.from("task_records" as any)
-        .update({ planned_follow_up_date: newDate })
+      await supabase
+        .from("follow_ups")
+        .update({ planned_date: newDate })
         .eq("id", existingFollowup.id);
+      console.log("[handleOutstandingUpdate] follow_up rescheduled to:", newDate);
     }
 
-    // 3. Promote draft to active (heads-only standalone log)
-    // Set related_task_record_id to link this log to the rescheduled/kept record
-    // If keep, store the kept date on the standalone log for history display
-    const follow_up_action = isKeep ? 'kept' : 'rescheduled';
-    const storedDate = isKeep ? previousDate : newDate;
-    await supabase.from("task_records" as any)
-      .update({
-        status: "active",
-        related_task_record_id: existingFollowup.id,
-        planned_follow_up_date: storedDate,
-        follow_up_action,
-      })
+    // 3. Publish interaction draft
+    await supabase
+      .from("interactions")
+      .update({ status: "published" })
       .eq("id", draftId);
-
-    console.log('[handleOutstandingUpdate] storing action on standalone log:', { follow_up_action, planned_follow_up_date: storedDate });
-
-    console.log("[handleOutstandingUpdate] standalone log linked to rescheduled record:", {
-      draftId,
-      relatedRecordId: existingFollowup.id,
-      isKeep,
-    });
+    console.log("[handleOutstandingUpdate] interaction draft published:", draftId);
 
     invalidateAll();
     toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
@@ -469,32 +448,26 @@ const LogInteractionSheet = ({
   const handleOutstandingCancelConfirm = async () => {
     if (!existingFollowup || !draftId) return;
 
-    console.log("[outstanding] cancel confirmed:", {
-      existingFollowupId: existingFollowup.id,
-      plannedDatePreserved: existingFollowup.planned_follow_up_date,
+    console.log("[handleOutstandingCancelConfirm] cancel confirmed:", {
+      existingFollowUpId: existingFollowup.id,
       draftId,
     });
 
-    // 1. Mark existing follow-up as cancelled — preserve planned_follow_up_date
-    await supabase.from("task_records" as any)
+    // 1. Mark follow-up as cancelled
+    await supabase
+      .from("follow_ups")
       .update({
         status: "cancelled",
         completed_at: new Date().toISOString(),
       })
       .eq("id", existingFollowup.id);
 
-    // 2. Promote draft to active (standalone log, no follow-up)
-    await supabase.from("task_records" as any)
-      .update({
-        status: "active",
-        related_task_record_id: existingFollowup.id,
-      })
+    // 2. Publish interaction draft
+    await supabase
+      .from("interactions")
+      .update({ status: "published" })
       .eq("id", draftId);
-
-    console.log("[handleOutstandingCancelConfirm] standalone log linked to cancelled record:", {
-      draftId,
-      relatedRecordId: existingFollowup.id,
-    });
+    console.log("[handleOutstandingCancelConfirm] interaction draft published:", draftId);
 
     setShowCancelConfirmDialog(false);
     invalidateAll();
@@ -513,7 +486,7 @@ const LogInteractionSheet = ({
     setConnectType(newConnectType);
     setNote(newNote);
     if (draftId) {
-      await supabase.from("task_records" as any).update({
+      await supabase.from("interactions").update({
         connect_type: newConnectType || null,
         note: newNote || null,
       }).eq("id", draftId);
@@ -521,10 +494,9 @@ const LogInteractionSheet = ({
   };
 
   const handleChangeContact = async () => {
-    // Delete existing draft if any
     if (draftId) {
-      await supabase.from("task_records" as any).delete().eq("id", draftId);
-      console.log("[draft] contact changed — deleted draft:", draftId);
+      await supabase.from("interactions").delete().eq("id", draftId);
+      console.log("[draft] contact changed — deleted interaction draft:", draftId);
       setDraftId(null);
     }
     setContactCleared(true);
@@ -659,8 +631,8 @@ const LogInteractionSheet = ({
             <AlertDialogAction onClick={async () => {
               setShowDiscardDialog(false);
               if (draftId) {
-                await supabase.from("task_records" as any).delete().eq("id", draftId);
-                console.log("[draft] discarded:", draftId);
+                await supabase.from("interactions").delete().eq("id", draftId);
+                console.log("[draft] discarded interaction:", draftId);
               }
               clearAndClose();
             }}>
