@@ -8,10 +8,12 @@ interface FollowupCardProps {
   name: string;
   company: string | null;
   dueDate: string;
-  plannedType: string;
-  connectType: string | null;
-  connectDate: string | null;
-  note: string | null;
+  plannedType: string | null;
+  lastInteraction?: {
+    connect_type: string | null;
+    connect_date: string | null;
+    note: string | null;
+  } | null;
   variant: "overdue" | "today";
   isCompleting?: boolean;
   onComplete: () => void;
@@ -26,13 +28,14 @@ const pastVerb: Record<string, string> = {
 
 const FollowupCard = ({
   taskRecordId, contactId, name, company, dueDate, variant,
-  plannedType, connectType, connectDate, note, isCompleting, onComplete,
+  plannedType, lastInteraction, isCompleting, onComplete,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   // Use CalendarIcon as fallback when no planned type
   const TypeIcon = plannedType ? (typeIcon[plannedType?.toLowerCase()] || CalendarIcon) : CalendarIcon;
   const plannedLabel = plannedType ? (pastVerb[plannedType?.toLowerCase()] ? typeIcon[plannedType?.toLowerCase()] ? undefined : "Planned" : "Planned") : "Planned";
   // Fix 3: fallback icon and verb when no connect type
+  const connectType = lastInteraction?.connect_type;
   const ConnectIcon = connectType ? (typeIcon[connectType.toLowerCase()] || ClipboardList) : ClipboardList;
   const connectVerb = connectType ? (pastVerb[connectType.toLowerCase()] || connectType) : "Interacted";
 
@@ -42,7 +45,7 @@ const FollowupCard = ({
 
   return (
     <button
-      onClick={() => navigate(`/interaction/${taskRecordId}`)}
+      onClick={() => navigate(`/contact/${contactId}`)}
       data-completing={isCompleting || undefined}
       className="w-full text-left bg-card rounded-lg border border-border p-4 flex items-start gap-3 active:scale-[0.98] transition-all duration-500 animate-fade-in data-[completing]:opacity-40 data-[completing]:line-through"
     >
@@ -80,7 +83,7 @@ const FollowupCard = ({
           </p>
         )}
 
-        {connectType && (
+        {lastInteraction?.connect_type && (
           <div className="mt-2">
             <div className="border-t border-border mb-1.5" />
             <p className="font-medium uppercase text-[#bbb] mb-1" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', letterSpacing: '0.1em' }}>
@@ -89,12 +92,12 @@ const FollowupCard = ({
             {ConnectIcon && (
               <span className="inline-flex items-center gap-1 mb-1" style={{ background: '#e8e4de', color: '#666', borderRadius: '20px', padding: '3px 9px', fontSize: '12px', fontWeight: 500 }}>
                 <ConnectIcon size={10} />
-                {connectVerb} · {connectDate ? format(parseISO(connectDate), "MMM d") : ""}
+                {connectVerb} · {lastInteraction?.connect_date ? format(parseISO(lastInteraction.connect_date), "MMM d") : ""}
               </span>
             )}
-            {note && (
+            {lastInteraction?.note && (
               <p className="text-[#777] line-clamp-2" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>
-                {note}
+                {lastInteraction.note}
               </p>
             )}
           </div>

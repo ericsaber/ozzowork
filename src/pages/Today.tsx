@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
-import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
@@ -14,62 +12,72 @@ const Today = () => {
   const today = format(new Date(), "yyyy-MM-dd");
   const windowEnd = format(addDays(new Date(), 14), "yyyy-MM-dd");
 
-  const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
-    onCompleted: () => {
-      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
-      queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
-      queryClient.invalidateQueries({ queryKey: ["task-records"] });
-    },
-  });
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["task-records-today"],
+  const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
+    queryKey: ["follow-ups-today"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("task_records" as any)
+      const { data, error } = await supabase
+        .from("follow_ups")
         .select("*, contacts(*)")
         .eq("status", "active")
-        .not("planned_follow_up_date", "is", null)
-        .is('related_task_record_id', null)
-        .lte("planned_follow_up_date", windowEnd)
-        .order("planned_follow_up_date", { ascending: true });
+        .lte("planned_date", windowEnd)
+        .order("planned_date", { ascending: true });
       if (error) throw error;
-      const records = data as any[];
-
-      const overdue: any[] = [];
-      const dueToday: any[] = [];
-      const comingUp: any[] = [];
-      const seenComing = new Set<string>();
-
-      for (const item of records || []) {
-        const d = item.planned_follow_up_date;
-        if (d < today) overdue.push(item);
-        else if (d === today) dueToday.push(item);
-        else if (!seenComing.has(item.contact_id)) {
-          seenComing.add(item.contact_id);
-          comingUp.push(item);
-        }
-      }
-      overdue.sort((a: any, b: any) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date));
-      dueToday.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-      return { overdue, dueToday, comingUp };
+      console.log("[Today] follow_ups fetched:", data?.length);
+      return data as any[];
     },
   });
 
-  const { overdue = [], dueToday = [], comingUp = [] } = data || {};
+  const contactIds = (followUpsData || []).map((f: any) => f.contact_id);
+
+  const { data: interactionsData } = useQuery({
+    queryKey: ["interactions-today", contactIds],
+    queryFn: async () => {
+      if (contactIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("interactions")
+        .select("*")
+        .in("contact_id", contactIds)
+        .eq("status", "published")
+        .order("connect_date", { ascending: false });
+      if (error) throw error;
+      console.log("[Today] interactions fetched:", data?.length);
+      return data as any[];
+    },
+    enabled: contactIds.length > 0,
+  });
+
+  const lastInteractionByContact = (interactionsData || []).reduce(
+    (acc: Record<string, any>, interaction: any) => {
+      if (!acc[interaction.contact_id]) {
+        acc[interaction.contact_id] = interaction;
+      }
+      return acc;
+    },
+    {}
+  );
+
+  const records = followUpsData || [];
+  const overdue: any[] = [];
+  const dueToday: any[] = [];
+  const comingUp: any[] = [];
+  const seenComing = new Set<string>();
+
+  for (const item of records) {
+    const d = item.planned_date;
+    if (d < today) overdue.push(item);
+    else if (d === today) dueToday.push(item);
+    else if (!seenComing.has(item.contact_id)) {
+      seenComing.add(item.contact_id);
+      comingUp.push(item);
+    }
+  }
+
+  overdue.sort((a: any, b: any) => a.planned_date.localeCompare(b.planned_date));
+  dueToday.sort((a: any, b: any) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
+
+  const isLoading = followUpsLoading;
   const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
-
-  const handleComplete = (item: any) => {
-    const contactName = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
-    startComplete({
-      taskRecordId: item.id,
-      contactId: item.contact_id,
-      contactName,
-      followUpType: item.planned_follow_up_type || "",
-      userId: item.user_id,
-      hasInteraction: !!(item.connect_type || item.note),
-    });
-  };
 
   const renderCard = (item: any, variant: "overdue" | "today") => (
     <FollowupCard
@@ -78,13 +86,14 @@ const Today = () => {
       contactId={item.contact_id}
       name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
       company={item.contacts?.company}
-      dueDate={item.planned_follow_up_date}
-      plannedType={item.planned_follow_up_type || ""}
-      connectType={item.connect_type}
-      connectDate={item.connect_date}
-      note={item.note}
+      dueDate={item.planned_date}
+      plannedType={item.planned_type || null}
+      lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
-      onComplete={() => handleComplete(item)}
+      onComplete={() => {
+        // TODO Step 10: rewrite complete flow for new schema
+        console.log("[Today] complete flow not yet migrated:", item.id);
+      }}
     />
   );
 
@@ -101,10 +110,10 @@ const Today = () => {
       );
     }
 
-    const sorted = [...comingUp].sort((a, b) => a.planned_follow_up_date.localeCompare(b.planned_follow_up_date));
+    const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
     const next = sorted[0];
     const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
-    const nextDate = parseISO(next.planned_follow_up_date);
+    const nextDate = parseISO(next.planned_date);
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     const isTomorrow = format(nextDate, "yyyy-MM-dd") === format(tomorrow, "yyyy-MM-dd");
     const dayLabel = isTomorrow ? "tomorrow" : format(nextDate, "EEEE");
@@ -161,10 +170,6 @@ const Today = () => {
             {renderComingUp()}
           </section>
         </div>
-      )}
-
-      {target && (
-        <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
       )}
     </div>
   );
