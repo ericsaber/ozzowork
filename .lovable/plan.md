@@ -1,89 +1,41 @@
 
 
-## Step 1: Drop and recreate tables with new schema + RLS
+## Steps 3 & 4: Rewrite log flow for new tables
 
-All existing data in `interactions`, `follow_ups`, and `follow_up_edits` will be lost. `task_records` and all other tables remain untouched. No component changes.
+Two files modified. No other files touched.
 
-### Single migration
+### File 1: `src/components/LogInteractionSheet.tsx`
 
-One migration that:
+**Props & state cleanup:**
+- Remove `existingTaskRecordId` from props interface and destructuring
+- Remove `savedTaskRecordId` state
+- Add skipFollowupStep stub at top of logMutation that logs and returns early
 
-1. **Drops** existing tables in dependency order: `follow_up_edits` → `follow_ups` → `interactions` (cascade)
-2. **Creates** the three new tables with the exact schema from your spec
-3. **Enables RLS** on all three
-4. **Creates RLS policies** (select/insert/update/delete scoped to `auth.uid() = user_id`) on all three
+**Query changes:**
+- `activeFollowup` query: read from `follow_ups` table instead of `task_records`. Select `id, planned_type, planned_date, status`. Remove `planned_follow_up_date`/`related_task_record_id` filters.
+- `invalidateAll`: replace `task-records*` keys with `interactions` and `follow-ups`
 
-Existing RLS policies are dropped automatically when the tables are dropped.
+**Mutation rewrites (all switching from `task_records` to `interactions` + `follow_ups`):**
+- `logMutation`: write drafts to `interactions` table. Remove skipFollowupStep DB path (stub instead). On success, reference `activeFollowup.planned_type`/`planned_date` instead of old field names.
+- `followupMutation`: complete path marks existing `follow_ups` row as completed (writing connect_type/connect_date/note onto it), publishes interaction draft, optionally inserts new `follow_ups` row. Normal path publishes draft + inserts `follow_ups`. Remove all `isTailsOnly` logic.
+- `handleSkip`: complete path marks follow_up completed + publishes draft. Normal path just publishes draft (no "promote to active" — it's already a separate interaction).
+- `handleOutstandingUpdate`: insert `follow_up_edits` (without `task_record_id`), update `follow_ups.planned_date`, publish interaction draft. Remove `related_task_record_id`/`follow_up_action` fields.
+- `handleOutstandingCancelConfirm`: mark `follow_ups` cancelled, publish interaction draft. Remove `related_task_record_id`.
+- `handleChangeContact`: delete draft from `interactions` table
+- `handleUpdateLog`: update draft in `interactions` table
+- Discard dialog: delete from `interactions` table
 
-### SQL
+**Remove all references to:** `related_task_record_id`, `follow_up_action`, `isTailsOnly`, `planned_follow_up_date`, `planned_follow_up_type`, `savedTaskRecordId`
 
-```sql
--- Drop in dependency order
-DROP TABLE IF EXISTS follow_up_edits CASCADE;
-DROP TABLE IF EXISTS follow_ups CASCADE;
-DROP TABLE IF EXISTS interactions CASCADE;
+### File 2: `src/components/OutstandingFollowupStep.tsx`
 
--- Create interactions
-CREATE TABLE interactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  contact_id uuid REFERENCES contacts(id) ON DELETE CASCADE NOT NULL,
-  user_id uuid REFERENCES auth.users(id) NOT NULL,
-  connect_type text,
-  connect_date timestamptz NOT NULL DEFAULT now(),
-  note text,
-  status text NOT NULL DEFAULT 'draft',
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+**Props interface:** change to `{ id: string; planned_type: string | null; planned_date: string; status: string }`
 
--- Create follow_ups
-CREATE TABLE follow_ups (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  contact_id uuid REFERENCES contacts(id) ON DELETE CASCADE NOT NULL,
-  user_id uuid REFERENCES auth.users(id) NOT NULL,
-  planned_type text,
-  planned_date date NOT NULL,
-  status text NOT NULL DEFAULT 'active',
-  completed_at timestamptz,
-  connect_type text,
-  connect_date timestamptz,
-  note text,
-  reminder_note varchar(55),
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+**Field references throughout:**
+- `planned_follow_up_date` → `planned_date` (lines 40, 47, 54, 101, 190, 195, 256)
+- `planned_follow_up_type` → `planned_type` (lines 49, 75, 76)
+- Remove `isTailsOnly` log line (line 50) — replace with just `status: existingFollowup.status`
+- Remove references to `connect_type` and `note` on the followup object
 
--- Create follow_up_edits
-CREATE TABLE follow_up_edits (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  follow_up_id uuid REFERENCES follow_ups(id) ON DELETE CASCADE NOT NULL,
-  user_id uuid REFERENCES auth.users(id) NOT NULL,
-  previous_type text,
-  previous_due_date date NOT NULL,
-  changed_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE interactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE follow_ups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE follow_up_edits ENABLE ROW LEVEL SECURITY;
-
--- RLS: interactions
-CREATE POLICY "Users can select own interactions" ON interactions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own interactions" ON interactions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own interactions" ON interactions FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own interactions" ON interactions FOR DELETE USING (auth.uid() = user_id);
-
--- RLS: follow_ups
-CREATE POLICY "Users can select own follow_ups" ON follow_ups FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own follow_ups" ON follow_ups FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own follow_ups" ON follow_ups FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own follow_ups" ON follow_ups FOR DELETE USING (auth.uid() = user_id);
-
--- RLS: follow_up_edits
-CREATE POLICY "Users can select own follow_up_edits" ON follow_up_edits FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own follow_up_edits" ON follow_up_edits FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own follow_up_edits" ON follow_up_edits FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own follow_up_edits" ON follow_up_edits FOR DELETE USING (auth.uid() = user_id);
-```
-
-No files modified. Database-only change.
+All existing `console.log` statements preserved (updated to use new field names).
 
