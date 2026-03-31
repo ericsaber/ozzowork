@@ -155,6 +155,8 @@ const LogInteractionSheet = ({
     queryClient.invalidateQueries({ queryKey: ["interactions"] });
     queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
     queryClient.invalidateQueries({ queryKey: ["active-followup"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-history"] });
   };
 
   // ── Main log mutation: creates or updates draft ──
