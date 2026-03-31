@@ -290,13 +290,17 @@ const LogInteractionSheet = ({
       }
 
       // Normal step 2 path — no outstanding follow-up
-      // 1. Publish interaction draft
-      const { error: publishError } = await supabase
-        .from("interactions")
-        .update({ status: "published" })
-        .eq("id", draftId);
-      if (publishError) throw publishError;
-      console.log("[followupMutation] interaction draft published:", draftId);
+      // 1. Publish interaction draft if one exists (null when Step 1 was skipped)
+      if (draftId) {
+        const { error: publishError } = await supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", draftId);
+        if (publishError) throw publishError;
+        console.log("[followupMutation] interaction draft published:", draftId);
+      } else {
+        console.log("[followupMutation] no interaction draft — follow-up only");
+      }
 
       // 2. Insert new follow_up
       const { error: insertError } = await supabase
