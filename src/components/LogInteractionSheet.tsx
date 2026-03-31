@@ -563,7 +563,20 @@ const LogInteractionSheet = ({
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : () => logMutation.mutate()}
+                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : async () => {
+                    console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
+                    // If user previously hit Next → (creating a draft) then came back and hit skip,
+                    // delete the draft so no empty interaction record is left behind
+                    if (draftId) {
+                      await supabase.from("interactions").delete().eq("id", draftId);
+                      console.log("[skip] deleted existing draft on skip:", draftId);
+                      setDraftId(null);
+                    }
+                    setConnectType("");
+                    setNote("");
+                    setSkippedInteraction(true);
+                    setStep(2);
+                  }}
                   onChangeContact={handleChangeContact}
                   submitLabel={skipFollowupStep ? "Save →" : undefined}
                   showDateRow={skipFollowupStep}
