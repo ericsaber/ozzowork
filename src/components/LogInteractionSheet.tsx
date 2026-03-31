@@ -234,7 +234,9 @@ const LogInteractionSheet = ({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      if (!draftId) throw new Error("No draft interaction");
+      if (!draftId && !existingFollowup) {
+        console.log("[followupMutation] no draft, no existing follow-up — follow-up only path");
+      }
 
       const computedConnectDate = new Date().toISOString();
 
