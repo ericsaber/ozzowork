@@ -15,8 +15,8 @@ const typeLabels: Record<string, string> = {
 interface ContactFollowupCardProps {
   taskRecord: {
     id: string;
-    planned_follow_up_type: string;
-    planned_follow_up_date: string;
+    planned_type: string | null;
+    planned_date: string;
     contact_id: string;
   };
   variant: "upcoming" | "overdue";
@@ -43,8 +43,8 @@ const ContactFollowupCard = ({
   rescheduleCount,
 }: ContactFollowupCardProps) => {
   const [checkHovered, setCheckHovered] = useState(false);
-  const followUpDate = parseISO(taskRecord.planned_follow_up_date);
-  const plannedType = taskRecord.planned_follow_up_type;
+  const followUpDate = parseISO(taskRecord.planned_date);
+  const plannedType = taskRecord.planned_type;
   const TypeIcon = plannedType ? (typeIcons[plannedType] || CalendarIcon) : CalendarIcon;
 
   // Date label
