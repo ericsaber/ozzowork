@@ -57,6 +57,7 @@ const Today = () => {
   );
 
   const records = followUpsData || [];
+  console.log("[Today] raw records:", records.map((r: any) => ({ id: r.id, contact_id: r.contact_id, planned_date: r.planned_date, status: r.status, contact_name: r.contacts ? `${r.contacts.first_name} ${r.contacts.last_name}` : "no contact" })));
   const overdue: any[] = [];
   const dueToday: any[] = [];
   const comingUp: any[] = [];
