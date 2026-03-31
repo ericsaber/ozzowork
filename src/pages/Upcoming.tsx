@@ -41,7 +41,7 @@ const Upcoming = () => {
           {items.map((item: any) => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
             return (
-              <button key={item.id} onClick={() => navigate(`/interaction/${item.id}`)} className="w-full text-left bg-card rounded-lg border border-border p-4 flex items-center justify-between active:scale-[0.98] transition-transform">
+              <button key={item.id} onClick={() => navigate(`/contact/${item.contact_id}`)} className="w-full text-left bg-card rounded-lg border border-border p-4 flex items-center justify-between active:scale-[0.98] transition-transform">
                 <div className="min-w-0">
                   <h3 className="font-semibold text-foreground truncate">{name}</h3>
                   {item.contacts?.company && <p className="text-sm text-muted-foreground">{item.contacts.company}</p>}
