@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video, ClipboardList,
-  Plus, Pencil, Trash2, X, MoreHorizontal, ArrowRight, ChevronRight, Clock, Calendar, Check,
+  Plus, Pencil, Trash2, X, MoreHorizontal, Clock, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,13 +18,9 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
-import RescheduleSheet from "@/components/RescheduleSheet";
-import ScheduleFollowupSheet from "@/components/ScheduleFollowupSheet";
-import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
-import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { toast } from "sonner";
-import { format, parseISO, startOfToday, startOfDay, isPast, isToday } from "date-fns";
+import { format, parseISO, startOfToday } from "date-fns";
 
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
 const typeIcons: Record<string, typeof Phone> = { call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video };
@@ -40,17 +36,7 @@ const ContactHistory = () => {
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
-  const [rescheduleTask, setRescheduleTask] = useState<any | null>(null);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [logSheetOpen, setLogSheetOpen] = useState(false);
-
-  const { target, sheetOpen, startComplete, handleSheetClose } = useCompleteTask({
-    onCompleted: () => {
-      queryClient.invalidateQueries({ queryKey: ["task-records", id] });
-      queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
-      queryClient.invalidateQueries({ queryKey: ["latest-interaction", id] });
-    },
-  });
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
@@ -62,81 +48,121 @@ const ContactHistory = () => {
     enabled: !!id,
   });
 
-  const { data: taskRecords, isLoading } = useQuery({
-    queryKey: ["task-records", id],
+  // Query 1 — active follow-up
+  const { data: activeFollowup } = useQuery({
+    queryKey: ["follow-ups-active", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("task_records" as any)
-        .select("*, follow_up_edits(*)").eq("contact_id", id!).not("status", "eq", "draft").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("follow_ups")
+        .select("*")
+        .eq("contact_id", id!)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
-      console.log("[ContactHistory] follow_up_edits fetched:", data);
+      console.log("[ContactHistory] active follow-up:", data);
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Query 2 — published interactions
+  const { data: interactions, isLoading: interactionsLoading } = useQuery({
+    queryKey: ["interactions", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("interactions")
+        .select("*")
+        .eq("contact_id", id!)
+        .eq("status", "published")
+        .order("connect_date", { ascending: false });
+      if (error) throw error;
+      console.log("[ContactHistory] interactions fetched:", data?.length);
       return data as any[];
     },
     enabled: !!id,
   });
 
-  // Categorize
-  const activeFollowups = (taskRecords || []).filter((r: any) => r.planned_follow_up_date && r.status === "active" && !r.related_task_record_id);
-  const upcomingFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date >= todayStr);
-  const overdueFollowups = activeFollowups.filter((r: any) => r.planned_follow_up_date < todayStr);
-  const hasActiveFollowups = activeFollowups.length > 0;
-
-  // History: records with connect_type OR note
-  const historyRecords = (taskRecords || [])
-    .filter((r: any) =>
-      r.connect_type ||
-      r.note ||
-      r.status === 'cleared' ||
-      (r.status === 'cancelled' && !(taskRecords || []).some((other: any) => other.related_task_record_id === r.id)) ||
-      (r.status === 'completed' && !r.connect_type && !r.note && r.planned_follow_up_date && !(taskRecords || []).some((other: any) => other.related_task_record_id === r.id))
-    )
-    .sort((a: any, b: any) => new Date(b.connect_date || b.created_at).getTime() - new Date(a.connect_date || a.created_at).getTime());
-
-  const interactionCount = historyRecords.filter((r: any) => r.connect_type || r.note).length;
-  const firstContactDate = historyRecords.length > 0
-    ? format(parseISO(historyRecords[historyRecords.length - 1].connect_date || historyRecords[historyRecords.length - 1].created_at), "MMM d")
-    : null;
-
-  // Build interleaved follow-up event rows
-  const followUpEvents: { type: string; date: string; targetDate?: string; newDate?: string }[] = [];
-  (taskRecords || []).forEach((coin: any) => {
-    if (!coin.planned_follow_up_date || coin.related_task_record_id) return;
-    const edits = (coin.follow_up_edits || []).sort((a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
-
-    // Only emit scheduled/rescheduled for non-active coins
-    if (coin.status !== 'active') {
-      if (edits.length > 0 || coin.status === 'cancelled') {
-        followUpEvents.push({
-          type: 'scheduled', date: coin.created_at,
-          targetDate: edits.length > 0 ? edits[0].previous_due_date : coin.planned_follow_up_date
-        });
-      }
-      edits.forEach((edit: any, i: number) => {
-        const newDate = edits[i + 1]?.previous_due_date ?? coin.planned_follow_up_date;
-        followUpEvents.push({ type: 'rescheduled', date: edit.changed_at, newDate });
-      });
-    }
-
-    // Cancelled event
-    if (coin.status === 'cancelled') {
-      followUpEvents.push({ type: 'cancelled', date: coin.completed_at || coin.updated_at });
-    }
+  // Query 3 — completed/cancelled follow-ups + their edits
+  const { data: followUps, isLoading: followUpsLoading } = useQuery({
+    queryKey: ["follow-ups-history", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("follow_ups")
+        .select("*, follow_up_edits(*)")
+        .eq("contact_id", id!)
+        .in("status", ["completed", "cancelled"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      console.log("[ContactHistory] follow-ups history fetched:", data?.length);
+      return data as any[];
+    },
+    enabled: !!id,
   });
 
-  // Merge events with history rows and sort
-  type TimelineItem = { kind: 'interaction'; record: any; date: string } | { kind: 'event'; event: typeof followUpEvents[0]; date: string };
-  const timelineItems: TimelineItem[] = [
-    ...historyRecords.map((r: any) => ({ kind: 'interaction' as const, record: r, date: r.connect_date || r.created_at })),
-    ...followUpEvents.map((e) => ({ kind: 'event' as const, event: e, date: e.date })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const isLoading = interactionsLoading || followUpsLoading;
 
-  // Find featured (last) interaction for the card above the timeline
-  const featuredItem = timelineItems.find(
-    (item) => item.kind === 'interaction' && (item.record.connect_type || (item.record.note && item.record.note.trim()))
+  // Active follow-up display logic
+  const hasActiveFollowup = !!activeFollowup;
+  const isOverdue = activeFollowup
+    ? activeFollowup.planned_date < todayStr
+    : false;
+  const isUpcoming = activeFollowup
+    ? activeFollowup.planned_date >= todayStr
+    : false;
+
+  // Featured: most recent published interaction with connect_type or note
+  const featuredInteraction = (interactions || []).find(
+    (r: any) => r.connect_type || (r.note && r.note.trim())
+  ) || null;
+
+  // Build timeline items from three sources:
+  type TimelineItem =
+    | { kind: "interaction"; record: any; date: string }
+    | { kind: "follow_up"; record: any; date: string }
+    | { kind: "follow_up_edit"; edit: any; followUp: any; date: string }
+    | { kind: "follow_up_scheduled"; followUp: any; date: string };
+
+  const timelineItems: TimelineItem[] = [];
+
+  // 1. All published interactions (excluding featured)
+  (interactions || []).forEach((r: any) => {
+    if (featuredInteraction && r.id === featuredInteraction.id) return;
+    timelineItems.push({ kind: "interaction", record: r, date: r.connect_date || r.created_at });
+  });
+
+  // 2. Completed/cancelled follow-ups + their edits
+  (followUps || []).forEach((fu: any) => {
+    // Always emit a "scheduled" row for every follow-up
+    timelineItems.push({ kind: "follow_up_scheduled", followUp: fu, date: fu.created_at });
+
+    // Emit a row for each reschedule edit
+    const edits = (fu.follow_up_edits || []).sort(
+      (a: any, b: any) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime()
+    );
+    edits.forEach((edit: any) => {
+      timelineItems.push({ kind: "follow_up_edit", edit, followUp: fu, date: edit.changed_at });
+    });
+
+    // Emit the follow_up outcome row (completed or cancelled)
+    timelineItems.push({
+      kind: "follow_up",
+      record: fu,
+      date: fu.completed_at || fu.created_at,
+    });
+  });
+
+  // Sort all items by date descending
+  timelineItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const interactionCount = (interactions || []).length;
+
+  const allInteractionDates = (interactions || []).map(
+    (r: any) => new Date(r.connect_date || r.created_at).getTime()
   );
-  const featuredId = featuredItem?.kind === 'interaction' ? featuredItem.record.id : null;
-
-  // Filter timeline items excluding the featured one
-  const filteredTimeline = featuredId ? timelineItems.filter((item) => !(item.kind === 'interaction' && item.record.id === featuredId)) : timelineItems;
+  const firstContactDate = allInteractionDates.length > 0
+    ? format(new Date(Math.min(...allInteractionDates)), "MMM d")
+    : null;
 
   // Mutations
   const updateContact = useMutation({
@@ -166,17 +192,6 @@ const ContactHistory = () => {
 
   const fullName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "";
   const initials = fullName ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "?";
-
-  const handleComplete = (item: any) => {
-    startComplete({
-      taskRecordId: item.id,
-      contactId: item.contact_id,
-      contactName: fullName,
-      followUpType: item.planned_follow_up_type || "",
-      userId: item.user_id,
-      hasInteraction: !!(item.connect_type || item.note),
-    });
-  };
 
   return (
     <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
@@ -248,280 +263,279 @@ const ContactHistory = () => {
         </div>
       )}
 
-      {/* Schedule CTA when no active follow-ups */}
-      {!hasActiveFollowups && contact && (
+      {/* No follow-up scheduled */}
+      {!hasActiveFollowup && contact && (
         <div className="mb-5">
-          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
-          <button onClick={() => setScheduleOpen(true)} className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}>
-            <p className="text-muted-foreground mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>No follow-up scheduled</p>
-            <span className="text-[12px] text-primary font-medium" style={{ fontFamily: "var(--font-body)" }}>+ Schedule a follow-up</span>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2"
+            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+            Next follow-up
+          </p>
+          <button
+            onClick={() => setLogSheetOpen(true)}
+            className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors"
+            style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
+          >
+            <p className="text-muted-foreground mb-1"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+              No follow-up scheduled
+            </p>
+            <span className="text-[12px] text-primary font-medium"
+              style={{ fontFamily: "var(--font-body)" }}>
+              + Schedule a follow-up
+            </span>
           </button>
         </div>
       )}
 
-      {/* Next follow-up */}
-      {upcomingFollowups.length > 0 && (
+      {/* Active follow-up card */}
+      {activeFollowup && (
         <div className="mb-5">
-          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Next follow-up</p>
-          <div className="space-y-3">
-            {upcomingFollowups.map((r: any) => (
-              <ContactFollowupCard
-                key={r.id}
-                taskRecord={r}
-                variant="upcoming"
-                hidePlannedFallback
-                rescheduleCount={r.follow_up_edits?.length || 0}
-                onTap={() => navigate(`/interaction/${r.id}`)}
-                onComplete={() => handleComplete(r)}
-                onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
-                onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
-                menuOpen={openMenuId === `card-${r.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Overdue */}
-      {overdueFollowups.length > 0 && (
-        <div className="mb-5">
-          <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Overdue</p>
-          <div className="space-y-3">
-            {overdueFollowups.map((r: any) => (
-              <ContactFollowupCard
-                key={r.id}
-                taskRecord={r}
-                variant="overdue"
-                hidePlannedFallback
-                rescheduleCount={r.follow_up_edits?.length || 0}
-                onTap={() => navigate(`/interaction/${r.id}`)}
-                onComplete={() => handleComplete(r)}
-                onEdit={() => { setOpenMenuId(null); navigate(`/edit-task/${r.id}`); }}
-                onReschedule={() => { setOpenMenuId(null); setRescheduleTask(r); }}
-                menuOpen={openMenuId === `card-${r.id}`}
-                onMenuOpenChange={(o) => setOpenMenuId(o ? `card-${r.id}` : null)}
-              />
-            ))}
-          </div>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2"
+            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+            {isOverdue ? "Overdue" : "Next follow-up"}
+          </p>
+          <ContactFollowupCard
+            taskRecord={activeFollowup}
+            variant={isOverdue ? "overdue" : "upcoming"}
+            hidePlannedFallback
+            rescheduleCount={0}
+            onComplete={() => {
+              // TODO Step 10: rewrite complete flow for new schema
+              console.log("[ContactHistory] complete flow not yet migrated");
+            }}
+          />
         </div>
       )}
 
       {/* Featured Last Interaction Card */}
-      {!isLoading && featuredItem && featuredItem.kind === 'interaction' && (() => {
-        const record = featuredItem.record;
+      {!isLoading && featuredInteraction && (() => {
+        const record = featuredInteraction;
         const type = record.connect_type;
         const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
-        const verb = type ? (typeVerbs[type] || type) : "Interacted";
+        const verb = type ? (typeVerbs[type] || type) : "Connected";
         return (
           <div className="mb-5">
-            <p className="font-medium uppercase tracking-[0.08em] mb-2" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>Last interaction</p>
-            <button
-              onClick={() => navigate(`/interaction/${activeFollowups[0]?.id || record.id}`)}
-              className="w-full flex gap-3 bg-white rounded-xl p-3 text-left hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer items-center"
+            <p className="font-medium uppercase tracking-[0.08em] mb-2"
+              style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+              Last interaction
+            </p>
+            <div
+              className="w-full flex gap-3 bg-white rounded-xl p-3 text-left items-center"
               style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}
             >
-              <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: "#f5ede7" }}>
+              <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0"
+                style={{ background: "#f5ede7" }}>
                 <TypeIcon size={14} style={{ color: "#c8622a" }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
-                  <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
+                  <span className="font-medium text-foreground"
+                    style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                    {verb}
+                  </span>
+                  <span className="text-muted-foreground"
+                    style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+                    {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                  </span>
                 </div>
                 {record.note && record.note.trim() && (
-                  <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "'Crimson Pro', var(--font-body)", fontSize: "13px", fontStyle: "italic" }}>{record.note}</p>
+                  <p className="line-clamp-2 mt-0.5"
+                    style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                    {record.note}
+                  </p>
                 )}
               </div>
-              <ChevronRight size={14} className="text-muted-foreground shrink-0" />
-            </button>
+              {/* TODO Step 8: add pencil icon for inline interaction edit */}
+            </div>
           </div>
         );
       })()}
 
       {/* History */}
-      {!isLoading && filteredTimeline.length > 0 && (
+      {!isLoading && timelineItems.length > 0 && (
         <div className="mb-5">
-          <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>History</p>
+          <p className="font-medium uppercase tracking-[0.08em] mb-2 pt-[10px]"
+            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+            History
+          </p>
           <div>
-            {filteredTimeline.map((item, idx) => {
-              if (item.kind === 'event') {
-                const evt = item.event;
-                const isScheduled = evt.type === 'scheduled';
-                const isRescheduled = evt.type === 'rescheduled';
-                const isCancelled = evt.type === 'cancelled';
+            {timelineItems.map((item, idx) => {
+              const isLast = idx === timelineItems.length - 1;
+              const dividerStyle = !isLast ? { borderBottom: "1px solid #e8e4de" } : {};
 
-                let label = '';
-                let IconComp = Clock;
-                let iconBg = '#f0ede8';
-                let iconColor = '#9e9e99';
-                let textOpacity = 1;
-
-                if (isScheduled) {
-                  label = `Follow-up scheduled for ${evt.targetDate ? format(parseISO(evt.targetDate), "MMM d") : "—"}`;
-                } else if (isRescheduled) {
-                  label = `Follow-up rescheduled to ${evt.newDate ? format(parseISO(evt.newDate), "MMM d") : "—"}`;
-                } else if (isCancelled) {
-                  IconComp = X;
-                  iconColor = '#a32d2d';
-                  textOpacity = 0.6;
-                  label = 'Follow-up cancelled';
-                }
-
+              // Follow-up scheduled row
+              if (item.kind === "follow_up_scheduled") {
+                const fu = item.followUp;
+                const plannedDate = fu.planned_date
+                  ? format(parseISO(fu.planned_date), "MMM d")
+                  : "—";
+                const setDate = format(parseISO(fu.created_at), "MMM d");
                 return (
-                  <div key={`event-${evt.type}-${idx}`} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: isCancelled ? 0.6 : 0.7 }}>
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                        <IconComp size={14} style={{ color: iconColor }} />
+                  <div key={`scheduled-${fu.id}`} style={dividerStyle}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "#f0ede8" }}>
+                        <Clock size={14} style={{ color: "#9e9e99" }} />
                       </div>
                       <div className="flex-1 min-w-0 flex items-center">
-                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: '#71717a' }}>
-                          {label}
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                          Follow-up for {plannedDate} · Set {setDate}
                         </span>
                       </div>
                     </div>
                   </div>
                 );
+              }
+
+              // Follow-up edit (reschedule) row
+              if (item.kind === "follow_up_edit") {
+                const edit = item.edit;
+                const newDate = edit.previous_due_date
+                  ? format(parseISO(edit.previous_due_date), "MMM d")
+                  : "—";
+                return (
+                  <div key={`edit-${edit.id}`} style={dividerStyle}>
+                    <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "#f0ede8" }}>
+                        <Clock size={14} style={{ color: "#9e9e99" }} />
+                      </div>
+                      <div className="flex-1 min-w-0 flex items-center">
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                          Follow-up rescheduled to {newDate}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Follow-up outcome row (completed or cancelled)
+              if (item.kind === "follow_up") {
+                const fu = item.record;
+
+                if (fu.status === "cancelled") {
+                  return (
+                    <div key={`fu-${fu.id}`} style={dividerStyle}>
+                      <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
+                        <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                          style={{ background: "#f0ede8" }}>
+                          <X size={14} style={{ color: "#a32d2d" }} />
+                        </div>
+                        <div className="flex-1 min-w-0 flex items-center">
+                          <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                            Follow-up cancelled
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (fu.status === "completed") {
+                  const type = fu.connect_type;
+                  const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
+                  const verb = type ? (typeVerbs[type] || type) : null;
+                  const dateStr = fu.connect_date
+                    ? format(parseISO(fu.connect_date), "MMM d")
+                    : fu.completed_at
+                    ? format(parseISO(fu.completed_at), "MMM d")
+                    : "";
+
+                  if (verb) {
+                    // Completed with connect_type — show as interaction row
+                    return (
+                      <div key={`fu-${fu.id}`} style={dividerStyle}>
+                        <div className="flex gap-3 py-3 px-2 -mx-2 items-start">
+                          <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                            style={{ background: "#f0ede8" }}>
+                            <TypeIcon size={14} className="text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground"
+                                style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                                {verb}
+                              </span>
+                              <span className="text-muted-foreground"
+                                style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+                                {dateStr}
+                              </span>
+                            </div>
+                            {fu.note && fu.note.trim() && (
+                              <p className="line-clamp-2 mt-0.5"
+                                style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                                {fu.note}
+                              </p>
+                            )}
+                            <p className="mt-0.5"
+                              style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: "#9e9e99" }}>
+                              Follow-up completed
+                            </p>
+                          </div>
+                          {/* TODO Step 8: add pencil icon for inline edit */}
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    // Completed without connect_type
+                    return (
+                      <div key={`fu-${fu.id}`} style={dividerStyle}>
+                        <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6 }}>
+                          <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                            style={{ background: "#e9f2eb" }}>
+                            <Check size={14} style={{ color: "#3d7a4a" }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                              Follow-up completed{dateStr ? ` · ${dateStr}` : ""}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                }
               }
 
               // Interaction row
-              const record = item.record;
-
-              // Cleared record rendering
-              if (record.status === 'cleared') {
-                const typeLbl = record.planned_follow_up_type
-                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Follow-up";
-                const dateStr = record.planned_follow_up_date
-                  ? format(parseISO(record.planned_follow_up_date), "MMM d")
-                  : "";
+              if (item.kind === "interaction") {
+                const record = item.record;
+                const type = record.connect_type;
+                const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
+                const verb = type ? (typeVerbs[type] || type) : "Connected";
                 return (
-                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.55 }}>
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
-                        <Calendar size={14} className="text-muted-foreground" />
+                  <div key={`interaction-${record.id}`} style={dividerStyle}>
+                    <div className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}>
+                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: "#f0ede8" }}>
+                        <TypeIcon size={14} className="text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                          {typeLbl} follow-up{dateStr ? ` · ${dateStr}` : ""}
-                        </span>
-                        <div className="mt-1">
-                          <span
-                            className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                            style={{ background: "#f3f2f0", color: "#7a746c", fontFamily: "var(--font-body)" }}
-                          >
-                            Cleared
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground"
+                            style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                            {verb}
+                          </span>
+                          <span className="text-muted-foreground"
+                            style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+                            {format(parseISO(record.connect_date || record.created_at), "MMM d")}
                           </span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Cancelled tails-only record rendering
-              if (record.status === 'cancelled' && !record.connect_type && !record.note) {
-                const typeLbl = record.planned_follow_up_type
-                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Follow-up";
-                const plannedDateStr = record.planned_follow_up_date
-                  ? format(parseISO(record.planned_follow_up_date), "MMM d")
-                  : "";
-                const cancelledDateStr = record.completed_at
-                  ? format(parseISO(record.completed_at), "MMM d")
-                  : "";
-
-                return (
-                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <button
-                      className="flex gap-3 py-3 px-2 -mx-2 w-full text-left hover:bg-secondary/50 rounded-lg active:scale-[0.98] transition-all cursor-pointer items-center"
-                      style={{ opacity: 0.55 }}
-                      onClick={() => navigate(`/interaction/${record.id}`)}
-                    >
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#f0ede8" }}>
-                        <Calendar size={14} className="text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[12px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                          {typeLbl} follow-up{plannedDateStr ? ` · ${plannedDateStr}` : ""}
-                        </span>
-                        {cancelledDateStr && plannedDateStr && cancelledDateStr !== plannedDateStr && (
-                          <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
-                            Cancelled {cancelledDateStr} · Was due {plannedDateStr}
+                        {record.note && record.note.trim() && (
+                          <p className="line-clamp-2 mt-0.5"
+                            style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                            {record.note}
                           </p>
                         )}
                       </div>
-                      <ChevronRight size={16} className="text-muted-foreground shrink-0" />
-                    </button>
-                  </div>
-                );
-              }
-
-              // Completed tails-only record
-              if (record.status === 'completed' && !record.connect_type && !record.note && record.planned_follow_up_date) {
-                const typeLbl = record.planned_follow_up_type
-                  ? (typeLabels[record.planned_follow_up_type] || record.planned_follow_up_type)
-                  : "Follow-up";
-                const plannedDateStr = format(parseISO(record.planned_follow_up_date), "MMM d");
-                const completedDateStr = record.completed_at
-                  ? format(parseISO(record.completed_at), "MMM d")
-                  : "";
-
-                return (
-                  <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                    <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6 }}>
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#e9f2eb" }}>
-                        <Check size={14} style={{ color: "#3d7a4a" }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[12px] font-medium" style={{ fontFamily: "var(--font-body)", color: "#1c1812" }}>
-                          {typeLbl} follow-up · Was due {plannedDateStr}
-                        </span>
-                        {completedDateStr && completedDateStr !== plannedDateStr && (
-                          <p className="text-[10px] mt-0.5" style={{ color: "#b0a89e", fontFamily: "var(--font-body)" }}>
-                            Completed {completedDateStr}
-                          </p>
-                        )}
-                        <div className="mt-1">
-                          <span
-                            className="inline-block text-[10px] px-2 py-0.5 rounded-full"
-                            style={{ background: "#e9f2eb", color: "#3d7a4a", fontFamily: "var(--font-body)" }}
-                          >
-                            Done
-                          </span>
-                        </div>
-                      </div>
+                      {/* TODO Step 8: add pencil icon for inline interaction edit */}
                     </div>
                   </div>
                 );
               }
 
-              // Regular interaction row
-              const type = record.connect_type;
-              const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
-              const verb = type ? (typeVerbs[type] || type) : "Interacted";
-
-              const iconBg = "#f0ede8";
-
-              return (
-                <div key={record.id} style={{ borderBottom: idx < filteredTimeline.length - 1 ? '1px solid #e8e4de' : 'none' }}>
-                  <button onClick={() => navigate(`/interaction/${record.id}`)} className={`flex gap-3 py-3 group w-full text-left hover:bg-secondary/50 rounded-lg px-2 -mx-2 active:scale-[0.98] transition-all cursor-pointer ${record.note && record.note.trim() ? 'items-start' : 'items-center'}`}>
-                    <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: iconBg }}>
-                      <TypeIcon size={14} className="text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>{verb}</span>
-                        <span className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{format(parseISO(record.connect_date || record.created_at), "MMM d")}</span>
-                      </div>
-                      {record.note && record.note.trim() && (
-                        <p className="line-clamp-1 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-body)", fontSize: "13px" }}>{record.note}</p>
-                      )}
-                    </div>
-                    <ChevronRight size={14} className="text-muted-foreground shrink-0 self-center" />
-                  </button>
-                </div>
-              );
+              return null;
             })}
           </div>
         </div>
@@ -537,16 +551,6 @@ const ContactHistory = () => {
       )}
 
       {/* Sheets */}
-      {contact && <ScheduleFollowupSheet open={scheduleOpen} onOpenChange={setScheduleOpen} contactId={id!} contactName={fullName} />}
-
-      {rescheduleTask && contact && (
-        <RescheduleSheet open={!!rescheduleTask} onOpenChange={(o) => { if (!o) setRescheduleTask(null); }} taskRecordId={rescheduleTask.id} contactName={fullName} currentType={rescheduleTask.planned_follow_up_type} dueDate={rescheduleTask.planned_follow_up_date} contactId={id!} />
-      )}
-
-      {target && (
-        <CompleteFollowupSheet open={sheetOpen} onOpenChange={handleSheetClose} taskRecordId={target.taskRecordId} contactId={target.contactId} contactName={target.contactName} followUpType={target.followUpType} userId={target.userId} hasInteraction={target.hasInteraction} />
-      )}
-
       <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
 
       {/* Delete contact */}
