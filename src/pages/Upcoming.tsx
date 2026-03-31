@@ -9,16 +9,16 @@ const Upcoming = () => {
   const today = format(new Date(), "yyyy-MM-dd");
 
   const { data: items, isLoading } = useQuery({
-    queryKey: ["task-records-upcoming"],
+    queryKey: ["follow-ups-upcoming"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("task_records" as any)
+      const { data, error } = await supabase
+        .from("follow_ups")
         .select("*, contacts(*)")
         .eq("status", "active")
-        .not("planned_follow_up_date", "is", null)
-        .is('related_task_record_id', null)
-        .gt("planned_follow_up_date", today)
-        .order("planned_follow_up_date", { ascending: true });
+        .gt("planned_date", today)
+        .order("planned_date", { ascending: true });
       if (error) throw error;
+      console.log("[Upcoming] follow_ups fetched:", data?.length);
       const seen = new Set<string>();
       return (data || []).filter((item: any) => {
         if (seen.has(item.contact_id)) return false;
