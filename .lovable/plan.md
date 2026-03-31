@@ -1,26 +1,45 @@
 
 
-## Fix: Skip Step 1 should not create an interaction draft
+## Step 5: Rewrite contact record for new schema
 
-Single file change: `src/components/LogInteractionSheet.tsx`
+Two files modified: `ContactFollowupCard.tsx` and `ContactHistory.tsx`.
 
-### Change 1 — `onSkipToFollowup` prop (line 566)
+### File 1: `ContactFollowupCard.tsx` — field rename only
 
-Replace the current `() => logMutation.mutate()` with an async handler that:
-- Logs the skip
-- Deletes any existing draft (if user previously hit Next then came back)
-- Clears connectType/note, sets skippedInteraction true, routes to Step 2
-- Does NOT call logMutation
+Update the prop interface and all internal references:
+- `planned_follow_up_type` → `planned_type` (lines 18, 47)
+- `planned_follow_up_date` → `planned_date` (lines 19, 46)
 
-### Change 2 — `followupMutation` guard (line 237)
+### File 2: `ContactHistory.tsx` — full data layer + JSX rewrite
 
-Replace `if (!draftId) throw new Error("No draft interaction")` with a soft log when no draft and no existing follow-up, allowing the follow-up-only path to proceed.
+**Imports (lines 1-27):**
+- Remove imports: `RescheduleSheet`, `ScheduleFollowupSheet`, `CompleteFollowupSheet`, `useCompleteTask`
+- Remove unused icons: `ArrowRight`, `ChevronRight`, `Calendar`
 
-### Change 3 — `followupMutation` normal path (lines 290-310)
+**State & hooks (lines 39-53):**
+- Remove: `rescheduleTask`/`setRescheduleTask`, `scheduleOpen`/`setScheduleOpen`
+- Remove: `useCompleteTask` destructuring and its callback block
 
-Wrap the publish step in `if (draftId)` so it's skipped when Step 1 was skipped. Add else-branch log.
+**Queries (lines 65-75):**
+- Replace `task_records` query with three separate queries:
+  1. Active follow-up from `follow_ups` (status=active, limit 1)
+  2. Published interactions from `interactions` (status=published, ordered by connect_date desc)
+  3. Completed/cancelled follow-ups with nested `follow_up_edits` from `follow_ups`
+- Combine loading: `const isLoading = interactionsLoading || followUpsLoading`
 
-### Change 4 — `handleSkip` normal path (lines 365-375)
+**Derived data (lines 78-139):**
+- Replace `activeFollowups`/`upcomingFollowups`/`overdueFollowups` with `hasActiveFollowup`, `isOverdue`, `isUpcoming` derived from single `activeFollowup`
+- Replace `historyRecords` + `followUpEvents` + `timelineItems` with new 4-kind timeline builder (interaction, follow_up, follow_up_edit, follow_up_scheduled)
+- Replace `featuredItem` with `featuredInteraction` from interactions array
+- Replace `interactionCount`/`firstContactDate` to use interactions array
 
-Add an else-branch log when no draftId exists (already conditionally publishes, just needs the log line).
+**Remove `handleComplete` function (lines 170-179)**
+
+**JSX rewrites:**
+- Lines 251-308: Replace schedule CTA + upcoming/overdue card sections with single `hasActiveFollowup` / `activeFollowup` block. Schedule CTA opens `setLogSheetOpen(true)`. Complete handler is a TODO stub.
+- Lines 310-340: Replace featured card — remove navigate, remove ChevronRight, use "Connected" as default verb
+- Lines 342-527: Replace entire timeline renderer with new 4-kind renderer (follow_up_scheduled, follow_up_edit, follow_up outcome, interaction). Remove all `cleared`/`cancelled tails-only`/`completed tails-only` legacy branches.
+- Lines 539-548: Remove `ScheduleFollowupSheet`, `RescheduleSheet`, `CompleteFollowupSheet` JSX blocks. Keep `LogInteractionSheet`.
+
+**Query invalidation:** Any remaining `invalidateQueries` calls updated from `task-records*` keys to `interactions`/`follow-ups*` keys.
 
