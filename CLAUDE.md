@@ -231,6 +231,41 @@ Do not reference these pages in new code.
 
 Do not reference these components in new code.
 
+## Full file inventory (as of migration start)
+
+### Pages
+- `Auth.tsx`
+- `ContactHistory.tsx`
+- `Contacts.tsx`
+- `EditTaskRecord.tsx` — being deleted
+- `FollowupTask.tsx`
+- `InteractionDetail.tsx` — being deleted
+- `LogInteraction.tsx`
+- `NotFound.tsx`
+- `Today.tsx`
+- `Upcoming.tsx`
+
+### Components
+- `BottomNav.tsx`
+- `CelebrationHeader.tsx`
+- `CompleteFollowupSheet.tsx` — Step 10 concern
+- `ContactCombobox.tsx`
+- `ContactFollowupCard.tsx`
+- `EditFollowupSheet.tsx` — Step 9 concern
+- `EditInteractionSheet.tsx` — Step 8 concern
+- `FollowupCard.tsx`
+- `InteractionItem.tsx`
+- `LogInteractionSheet.tsx` — primary log flow handler
+- `LogStep1.tsx` — presentational only
+- `LogStep2.tsx` — presentational only
+- `NavLink.tsx`
+- `OutstandingFollowupStep.tsx`
+- `PasswordGate.tsx`
+- `RescheduleSheet.tsx` — being deleted
+- `ScheduleFollowupSheet.tsx` — being deleted
+- `ScrollToTop.tsx`
+- `StepIndicator.tsx`
+
 ---
 
 ## Standing implementation rules
