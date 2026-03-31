@@ -78,8 +78,8 @@ const EditInteractionSheet = ({ open, onClose, interaction, followUp, contactId 
         const { error: fuErr } = await supabase
           .from("follow_ups")
           .update({
-            follow_up_type: followUpType,
-            due_date: followUpDate,
+            planned_type: followUpType,
+            planned_date: followUpDate,
           })
           .eq("id", followUp.id);
         if (fuErr) throw fuErr;

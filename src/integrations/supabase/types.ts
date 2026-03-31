@@ -53,29 +53,26 @@ export type Database = {
       follow_up_edits: {
         Row: {
           changed_at: string
-          follow_up_id: string | null
+          follow_up_id: string
           id: string
           previous_due_date: string
-          previous_type: string
-          task_record_id: string | null
+          previous_type: string | null
           user_id: string
         }
         Insert: {
           changed_at?: string
-          follow_up_id?: string | null
+          follow_up_id: string
           id?: string
           previous_due_date: string
-          previous_type: string
-          task_record_id?: string | null
+          previous_type?: string | null
           user_id: string
         }
         Update: {
           changed_at?: string
-          follow_up_id?: string | null
+          follow_up_id?: string
           id?: string
           previous_due_date?: string
-          previous_type?: string
-          task_record_id?: string | null
+          previous_type?: string | null
           user_id?: string
         }
         Relationships: [
@@ -86,47 +83,49 @@ export type Database = {
             referencedRelation: "follow_ups"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "follow_up_edits_task_record_id_fkey"
-            columns: ["task_record_id"]
-            isOneToOne: false
-            referencedRelation: "task_records"
-            referencedColumns: ["id"]
-          },
         ]
       }
       follow_ups: {
         Row: {
-          completed: boolean
           completed_at: string | null
+          connect_date: string | null
+          connect_type: string | null
           contact_id: string
           created_at: string
-          due_date: string
-          follow_up_type: string
           id: string
-          interaction_id: string | null
+          note: string | null
+          planned_date: string
+          planned_type: string | null
+          reminder_note: string | null
+          status: string
           user_id: string
         }
         Insert: {
-          completed?: boolean
           completed_at?: string | null
+          connect_date?: string | null
+          connect_type?: string | null
           contact_id: string
           created_at?: string
-          due_date: string
-          follow_up_type: string
           id?: string
-          interaction_id?: string | null
+          note?: string | null
+          planned_date: string
+          planned_type?: string | null
+          reminder_note?: string | null
+          status?: string
           user_id: string
         }
         Update: {
-          completed?: boolean
           completed_at?: string | null
+          connect_date?: string | null
+          connect_type?: string | null
           contact_id?: string
           created_at?: string
-          due_date?: string
-          follow_up_type?: string
           id?: string
-          interaction_id?: string | null
+          note?: string | null
+          planned_date?: string
+          planned_type?: string | null
+          reminder_note?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: [
@@ -137,47 +136,37 @@ export type Database = {
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "follow_ups_interaction_id_fkey"
-            columns: ["interaction_id"]
-            isOneToOne: false
-            referencedRelation: "interactions"
-            referencedColumns: ["id"]
-          },
         ]
       }
       interactions: {
         Row: {
+          connect_date: string
           connect_type: string | null
           contact_id: string
           created_at: string
-          date: string
-          follow_up_date: string | null
           id: string
           note: string | null
-          planned_follow_up_type: string
+          status: string
           user_id: string
         }
         Insert: {
+          connect_date?: string
           connect_type?: string | null
           contact_id: string
           created_at?: string
-          date?: string
-          follow_up_date?: string | null
           id?: string
           note?: string | null
-          planned_follow_up_type?: string
+          status?: string
           user_id: string
         }
         Update: {
+          connect_date?: string
           connect_type?: string | null
           contact_id?: string
           created_at?: string
-          date?: string
-          follow_up_date?: string | null
           id?: string
           note?: string | null
-          planned_follow_up_type?: string
+          status?: string
           user_id?: string
         }
         Relationships: [

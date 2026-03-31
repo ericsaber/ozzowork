@@ -56,8 +56,8 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
       const { error } = await supabase
         .from("follow_ups")
         .update({
-          follow_up_type: followUpType,
-          due_date: selectedDate,
+          planned_type: followUpType,
+          planned_date: selectedDate,
         })
         .eq("id", followUp.id);
       if (error) throw error;
