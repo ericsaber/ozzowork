@@ -46,7 +46,7 @@ const Upcoming = () => {
                   <h3 className="font-semibold text-foreground truncate">{name}</h3>
                   {item.contacts?.company && <p className="text-sm text-muted-foreground">{item.contacts.company}</p>}
                 </div>
-                <span className="text-xs text-muted-foreground shrink-0 ml-3">{format(parseISO(item.planned_follow_up_date), "MMM d")}</span>
+                <span className="text-xs text-muted-foreground shrink-0 ml-3">{format(parseISO(item.planned_date), "MMM d")}</span>
               </button>
             );
           })}
