@@ -20,10 +20,9 @@ const dateChips = [
 interface OutstandingFollowupStepProps {
   existingFollowup: {
     id: string;
-    planned_follow_up_type: string | null;
-    planned_follow_up_date: string;
-    connect_type: string | null;
-    note: string | null;
+    planned_type: string | null;
+    planned_date: string;
+    status: string;
   };
   contactName: string;
   onComplete: () => void;
@@ -37,21 +36,21 @@ type Choice = "complete" | "update" | "cancel" | null;
 const OutstandingFollowupStep = ({
   existingFollowup, contactName, onComplete, onUpdate, onCancel, onBack,
 }: OutstandingFollowupStepProps) => {
-  const fuDate = startOfDay(parseISO(existingFollowup.planned_follow_up_date));
+  const fuDate = startOfDay(parseISO(existingFollowup.planned_date));
   const isToday = isDateToday(fuDate);
   const isOverdue = !isToday && isPast(fuDate);
   const status: "today" | "overdue" | "future" = isToday ? "today" : isOverdue ? "overdue" : "future";
 
   console.log("[OutstandingFollowupStep] rendering:", {
     id: existingFollowup.id,
-    plannedDate: existingFollowup.planned_follow_up_date,
+    plannedDate: existingFollowup.planned_date,
     status,
-    type: existingFollowup.planned_follow_up_type,
-    isTailsOnly: !existingFollowup.connect_type && !existingFollowup.note,
+    type: existingFollowup.planned_type,
+    followupStatus: existingFollowup.status,
   });
 
   const [choice, setChoice] = useState<Choice>(null);
-  const [rescheduleDate, setRescheduleDate] = useState(status === "future" ? existingFollowup.planned_follow_up_date : "");
+  const [rescheduleDate, setRescheduleDate] = useState(status === "future" ? existingFollowup.planned_date : "");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const badgeConfig = {
@@ -72,8 +71,8 @@ const OutstandingFollowupStep = ({
     ? `Was due ${format(fuDate, "MMM d")}`
     : `Due ${format(fuDate, "MMM d, yyyy")}`;
 
-  const typeLabel = existingFollowup.planned_follow_up_type
-    ? typeLabels[existingFollowup.planned_follow_up_type] || existingFollowup.planned_follow_up_type
+  const typeLabel = existingFollowup.planned_type
+    ? typeLabels[existingFollowup.planned_type] || existingFollowup.planned_type
     : null;
 
   const options: { id: Choice; color: string; label: string; sub: string }[] =
@@ -98,7 +97,7 @@ const OutstandingFollowupStep = ({
     }
     if (choice === "update") {
       if (!rescheduleDate) return "Save log";
-      if (rescheduleDate === existingFollowup.planned_follow_up_date) return "Save log and keep follow-up";
+      if (rescheduleDate === existingFollowup.planned_date) return "Save log and keep follow-up";
       return "Save log and reschedule follow-up";
     }
     return "Save log and cancel follow-up";
@@ -187,12 +186,12 @@ const OutstandingFollowupStep = ({
                   <div className="flex flex-wrap gap-2">
                     {status === "future" && (
                       <button
-                        onClick={() => setRescheduleDate(existingFollowup.planned_follow_up_date)}
+                        onClick={() => setRescheduleDate(existingFollowup.planned_date)}
                         className="transition-colors"
                         style={{
                           borderRadius: "100px", padding: "8px 13px", fontSize: "13px",
                           fontFamily: "var(--font-body)", fontWeight: 500,
-                          ...(rescheduleDate === existingFollowup.planned_follow_up_date
+                          ...(rescheduleDate === existingFollowup.planned_date
                             ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
                             : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
                         }}
@@ -253,7 +252,7 @@ const OutstandingFollowupStep = ({
                       </PopoverContent>
                     </Popover>
                     {rescheduleDate &&
-                      rescheduleDate !== existingFollowup.planned_follow_up_date &&
+                      rescheduleDate !== existingFollowup.planned_date &&
                       !dateChips.some((c) => c.date() === rescheduleDate) && (() => {
                         const parsed = parseISO(rescheduleDate);
                         const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "EEE, MMM d") : format(parsed, "EEE, MMM d, yyyy");
