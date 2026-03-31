@@ -1,45 +1,36 @@
 
 
-## Step 5: Rewrite contact record for new schema
+## Step 6: Rewrite Today screen for new schema
 
-Two files modified: `ContactFollowupCard.tsx` and `ContactHistory.tsx`.
+Two files modified: `FollowupCard.tsx` and `Today.tsx`.
 
-### File 1: `ContactFollowupCard.tsx` — field rename only
+### File 1: `FollowupCard.tsx`
 
-Update the prop interface and all internal references:
-- `planned_follow_up_type` → `planned_type` (lines 18, 47)
-- `planned_follow_up_date` → `planned_date` (lines 19, 46)
+**Props** (lines 5-18): Replace `connectType`, `connectDate`, `note` with single `lastInteraction` object. Change `plannedType` from `string` to `string | null`.
 
-### File 2: `ContactHistory.tsx` — full data layer + JSX rewrite
+**Navigation** (line 45): Change `/interaction/${taskRecordId}` → `/contact/${contactId}`.
 
-**Imports (lines 1-27):**
-- Remove imports: `RescheduleSheet`, `ScheduleFollowupSheet`, `CompleteFollowupSheet`, `useCompleteTask`
-- Remove unused icons: `ArrowRight`, `ChevronRight`, `Calendar`
+**Internal refs** (lines 36-37): Derive `ConnectIcon`/`connectVerb` from `lastInteraction?.connect_type`.
 
-**State & hooks (lines 39-53):**
-- Remove: `rescheduleTask`/`setRescheduleTask`, `scheduleOpen`/`setScheduleOpen`
-- Remove: `useCompleteTask` destructuring and its callback block
+**Last connect section** (line 83): Gate on `lastInteraction?.connect_type` instead of `connectType`. Use `lastInteraction?.connect_date` and `lastInteraction?.note`.
 
-**Queries (lines 65-75):**
-- Replace `task_records` query with three separate queries:
-  1. Active follow-up from `follow_ups` (status=active, limit 1)
-  2. Published interactions from `interactions` (status=published, ordered by connect_date desc)
-  3. Completed/cancelled follow-ups with nested `follow_up_edits` from `follow_ups`
-- Combine loading: `const isLoading = interactionsLoading || followUpsLoading`
+### File 2: `Today.tsx`
 
-**Derived data (lines 78-139):**
-- Replace `activeFollowups`/`upcomingFollowups`/`overdueFollowups` with `hasActiveFollowup`, `isOverdue`, `isUpcoming` derived from single `activeFollowup`
-- Replace `historyRecords` + `followUpEvents` + `timelineItems` with new 4-kind timeline builder (interaction, follow_up, follow_up_edit, follow_up_scheduled)
-- Replace `featuredItem` with `featuredInteraction` from interactions array
-- Replace `interactionCount`/`firstContactDate` to use interactions array
+**Imports** (lines 6-7): Remove `CompleteFollowupSheet`, `useCompleteTask`.
 
-**Remove `handleComplete` function (lines 170-179)**
+**Hooks** (lines 17-23): Remove `useCompleteTask` block.
 
-**JSX rewrites:**
-- Lines 251-308: Replace schedule CTA + upcoming/overdue card sections with single `hasActiveFollowup` / `activeFollowup` block. Schedule CTA opens `setLogSheetOpen(true)`. Complete handler is a TODO stub.
-- Lines 310-340: Replace featured card — remove navigate, remove ChevronRight, use "Connected" as default verb
-- Lines 342-527: Replace entire timeline renderer with new 4-kind renderer (follow_up_scheduled, follow_up_edit, follow_up outcome, interaction). Remove all `cleared`/`cancelled tails-only`/`completed tails-only` legacy branches.
-- Lines 539-548: Remove `ScheduleFollowupSheet`, `RescheduleSheet`, `CompleteFollowupSheet` JSX blocks. Keep `LogInteractionSheet`.
+**Query** (lines 25-56): Replace single `task_records` query with two queries:
+1. `follow-ups-today` — from `follow_ups` table, status=active, planned_date ≤ windowEnd, with contacts join
+2. `interactions-today` — from `interactions` table, status=published, filtered to contact IDs from query 1
 
-**Query invalidation:** Any remaining `invalidateQueries` calls updated from `task-records*` keys to `interactions`/`follow-ups*` keys.
+Build `lastInteractionByContact` map from query 2. Categorize into overdue/dueToday/comingUp using `planned_date`.
+
+**Remove** (lines 62-72): `handleComplete` function.
+
+**renderCard** (lines 74-89): Pass `lastInteraction={lastInteractionByContact[item.contact_id]}`, use `planned_date`/`planned_type`, stub `onComplete` with TODO log.
+
+**renderComingUp** (line 104, 107): Replace `planned_follow_up_date` → `planned_date`.
+
+**JSX** (lines 166-168): Remove `CompleteFollowupSheet` block.
 
