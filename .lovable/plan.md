@@ -1,41 +1,26 @@
 
 
-## Steps 3 & 4: Rewrite log flow for new tables
+## Fix: Skip Step 1 should not create an interaction draft
 
-Two files modified. No other files touched.
+Single file change: `src/components/LogInteractionSheet.tsx`
 
-### File 1: `src/components/LogInteractionSheet.tsx`
+### Change 1 — `onSkipToFollowup` prop (line 566)
 
-**Props & state cleanup:**
-- Remove `existingTaskRecordId` from props interface and destructuring
-- Remove `savedTaskRecordId` state
-- Add skipFollowupStep stub at top of logMutation that logs and returns early
+Replace the current `() => logMutation.mutate()` with an async handler that:
+- Logs the skip
+- Deletes any existing draft (if user previously hit Next then came back)
+- Clears connectType/note, sets skippedInteraction true, routes to Step 2
+- Does NOT call logMutation
 
-**Query changes:**
-- `activeFollowup` query: read from `follow_ups` table instead of `task_records`. Select `id, planned_type, planned_date, status`. Remove `planned_follow_up_date`/`related_task_record_id` filters.
-- `invalidateAll`: replace `task-records*` keys with `interactions` and `follow-ups`
+### Change 2 — `followupMutation` guard (line 237)
 
-**Mutation rewrites (all switching from `task_records` to `interactions` + `follow_ups`):**
-- `logMutation`: write drafts to `interactions` table. Remove skipFollowupStep DB path (stub instead). On success, reference `activeFollowup.planned_type`/`planned_date` instead of old field names.
-- `followupMutation`: complete path marks existing `follow_ups` row as completed (writing connect_type/connect_date/note onto it), publishes interaction draft, optionally inserts new `follow_ups` row. Normal path publishes draft + inserts `follow_ups`. Remove all `isTailsOnly` logic.
-- `handleSkip`: complete path marks follow_up completed + publishes draft. Normal path just publishes draft (no "promote to active" — it's already a separate interaction).
-- `handleOutstandingUpdate`: insert `follow_up_edits` (without `task_record_id`), update `follow_ups.planned_date`, publish interaction draft. Remove `related_task_record_id`/`follow_up_action` fields.
-- `handleOutstandingCancelConfirm`: mark `follow_ups` cancelled, publish interaction draft. Remove `related_task_record_id`.
-- `handleChangeContact`: delete draft from `interactions` table
-- `handleUpdateLog`: update draft in `interactions` table
-- Discard dialog: delete from `interactions` table
+Replace `if (!draftId) throw new Error("No draft interaction")` with a soft log when no draft and no existing follow-up, allowing the follow-up-only path to proceed.
 
-**Remove all references to:** `related_task_record_id`, `follow_up_action`, `isTailsOnly`, `planned_follow_up_date`, `planned_follow_up_type`, `savedTaskRecordId`
+### Change 3 — `followupMutation` normal path (lines 290-310)
 
-### File 2: `src/components/OutstandingFollowupStep.tsx`
+Wrap the publish step in `if (draftId)` so it's skipped when Step 1 was skipped. Add else-branch log.
 
-**Props interface:** change to `{ id: string; planned_type: string | null; planned_date: string; status: string }`
+### Change 4 — `handleSkip` normal path (lines 365-375)
 
-**Field references throughout:**
-- `planned_follow_up_date` → `planned_date` (lines 40, 47, 54, 101, 190, 195, 256)
-- `planned_follow_up_type` → `planned_type` (lines 49, 75, 76)
-- Remove `isTailsOnly` log line (line 50) — replace with just `status: existingFollowup.status`
-- Remove references to `connect_type` and `note` on the followup object
-
-All existing `console.log` statements preserved (updated to use new field names).
+Add an else-branch log when no draftId exists (already conditionally publishes, just needs the log line).
 
