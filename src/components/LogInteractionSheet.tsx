@@ -368,13 +368,15 @@ const LogInteractionSheet = ({
       return;
     }
 
-    // Normal skip — publish interaction draft, no follow-up created
+    // Normal skip — publish interaction draft if exists, no follow-up created
     if (draftId) {
       await supabase
         .from("interactions")
         .update({ status: "published" })
         .eq("id", draftId);
       console.log("[handleSkip] draft published, no follow-up:", draftId);
+    } else {
+      console.log("[handleSkip] no draft and no follow-up — nothing to save");
     }
     invalidateAll();
     toast.success("Log saved.");
