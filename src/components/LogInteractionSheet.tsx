@@ -234,7 +234,9 @@ const LogInteractionSheet = ({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      if (!draftId) throw new Error("No draft interaction");
+      if (!draftId && !existingFollowup) {
+        console.log("[followupMutation] no draft, no existing follow-up — follow-up only path");
+      }
 
       const computedConnectDate = new Date().toISOString();
 
@@ -288,13 +290,17 @@ const LogInteractionSheet = ({
       }
 
       // Normal step 2 path — no outstanding follow-up
-      // 1. Publish interaction draft
-      const { error: publishError } = await supabase
-        .from("interactions")
-        .update({ status: "published" })
-        .eq("id", draftId);
-      if (publishError) throw publishError;
-      console.log("[followupMutation] interaction draft published:", draftId);
+      // 1. Publish interaction draft if one exists (null when Step 1 was skipped)
+      if (draftId) {
+        const { error: publishError } = await supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", draftId);
+        if (publishError) throw publishError;
+        console.log("[followupMutation] interaction draft published:", draftId);
+      } else {
+        console.log("[followupMutation] no interaction draft — follow-up only");
+      }
 
       // 2. Insert new follow_up
       const { error: insertError } = await supabase
@@ -362,13 +368,15 @@ const LogInteractionSheet = ({
       return;
     }
 
-    // Normal skip — publish interaction draft, no follow-up created
+    // Normal skip — publish interaction draft if exists, no follow-up created
     if (draftId) {
       await supabase
         .from("interactions")
         .update({ status: "published" })
         .eq("id", draftId);
       console.log("[handleSkip] draft published, no follow-up:", draftId);
+    } else {
+      console.log("[handleSkip] no draft and no follow-up — nothing to save");
     }
     invalidateAll();
     toast.success("Log saved.");
@@ -563,7 +571,20 @@ const LogInteractionSheet = ({
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : () => logMutation.mutate()}
+                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : async () => {
+                    console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
+                    // If user previously hit Next → (creating a draft) then came back and hit skip,
+                    // delete the draft so no empty interaction record is left behind
+                    if (draftId) {
+                      await supabase.from("interactions").delete().eq("id", draftId);
+                      console.log("[skip] deleted existing draft on skip:", draftId);
+                      setDraftId(null);
+                    }
+                    setConnectType("");
+                    setNote("");
+                    setSkippedInteraction(true);
+                    setStep(2);
+                  }}
                   onChangeContact={handleChangeContact}
                   submitLabel={skipFollowupStep ? "Save →" : undefined}
                   showDateRow={skipFollowupStep}
