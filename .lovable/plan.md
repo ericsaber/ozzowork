@@ -1,26 +1,26 @@
 
 
-## Step 8: Fix EditInteractionSheet for new schema
+## Step 9: Fix EditFollowupSheet for new schema
 
-Single file: `EditInteractionSheet.tsx`
+Single file: `EditFollowupSheet.tsx`
 
 ### Changes
 
-1. **Imports**: Add `Trash2` to lucide imports. Add `AlertDialog` components from `@/components/ui/alert-dialog`.
+1. **Props**: Replace `follow_up_type`/`due_date` with `planned_type`/`planned_date`, add `reminder_note`. Make `planned_type` nullable.
 
-2. **Props** (lines 20-36): Remove `followUp` prop. Change `interaction.date` → `interaction.connect_date`. Remove `followUp` from destructured params (line 38).
+2. **State**: Initialize from new field names. Add `reminderNote` state.
 
-3. **State** (lines 40-48): Fix `interaction.date` → `interaction.connect_date`. Remove follow-up state variables (`followUpType`, `followUpDate`, `showFollowUpDatePicker`). Add `showDeleteConfirm` state.
+3. **Original type derivation**: Handle null `planned_type` gracefully. Update subtitle to conditionally show type.
 
-4. **Save mutation** (lines 50-97): Fix `date:` → `connect_date:` with `T12:00:00` timezone guard. Remove entire follow-up update block (lines 66-86). Fix `onSuccess` invalidations — remove `follow-ups`/`followups-today`/`followups-upcoming`, add generic `["interactions"]`.
+4. **Mutation rewrite**:
+   - Only insert into `follow_up_edits` when `planned_date` actually changed (per schema rules — type/reminder changes don't create edit rows).
+   - Add `reminder_note` to the update payload.
+   - Add console.log statements for both edit insert and follow-up update.
+   - Fix query invalidation keys: `follow-ups`, `follow-ups-active`, `follow-ups-today`, `follow-ups-upcoming`, `interactions`.
 
-5. **Delete mutation**: Add new `deleteMutation` after save mutation with delete from `interactions`, console.log, invalidation of `["interactions", contactId]` and `["interactions"]`.
+5. **handleClose**: Reset all three state values using new field names.
 
-6. **Date picker** (line 152-163): Add `disabled={(d) => d > new Date()}` to prevent future dates.
+6. **Type pills**: Allow deselecting (toggle off) via `followUpType === t.value ? "" : t.value`.
 
-7. **Remove follow-up JSX** (lines 182-253): Delete entire follow-up section (divider, type picker, date picker).
-
-8. **Add delete button**: Below save button, add trash icon button that triggers `setShowDeleteConfirm(true)`.
-
-9. **Add AlertDialog**: After the Drawer, render confirmation dialog with Cancel/Delete actions.
+7. **Reminder note field**: Add between due date section and Save button — text input with 55-char hard limit, character counter, styled consistently.
 
