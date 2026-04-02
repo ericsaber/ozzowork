@@ -22,8 +22,9 @@ interface EditFollowupSheetProps {
   onOpenChange: (open: boolean) => void;
   followUp: {
     id: string;
-    follow_up_type: string;
-    due_date: string;
+    planned_type: string | null;
+    planned_date: string;
+    reminder_note: string | null;
     created_at: string;
     contact_id: string;
   };
@@ -31,54 +32,73 @@ interface EditFollowupSheetProps {
 
 const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetProps) => {
   const queryClient = useQueryClient();
-  const [followUpType, setFollowUpType] = useState(followUp.follow_up_type);
-  const [selectedDate, setSelectedDate] = useState(followUp.due_date);
+  const [followUpType, setFollowUpType] = useState(followUp.planned_type || "");
+  const [selectedDate, setSelectedDate] = useState(followUp.planned_date);
+  const [reminderNote, setReminderNote] = useState(followUp.reminder_note || "");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const originalDate = format(parseISO(followUp.created_at), "MMM d");
-  const originalType = followUp.follow_up_type.charAt(0).toUpperCase() + followUp.follow_up_type.slice(1);
+  const originalType = followUp.planned_type
+    ? followUp.planned_type.charAt(0).toUpperCase() + followUp.planned_type.slice(1)
+    : null;
 
   const mutation = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Write edit history with previous values
-      const { error: editErr } = await supabase.from("follow_up_edits").insert({
-        follow_up_id: followUp.id,
-        previous_type: followUp.follow_up_type,
-        previous_due_date: followUp.due_date,
-        user_id: user.id,
-      });
-      if (editErr) throw editErr;
+      const dateChanged = selectedDate !== followUp.planned_date;
 
-      // Update the follow-up
+      // Only insert follow_up_edits if planned_date changed
+      if (dateChanged) {
+        const { error: editErr } = await supabase.from("follow_up_edits").insert({
+          follow_up_id: followUp.id,
+          previous_type: followUp.planned_type || null,
+          previous_due_date: followUp.planned_date,
+          user_id: user.id,
+        });
+        if (editErr) throw editErr;
+        console.log("[EditFollowupSheet] follow_up_edits inserted:", {
+          follow_up_id: followUp.id,
+          previous_due_date: followUp.planned_date,
+        });
+      }
+
+      // Always update the follow-up
       const { error } = await supabase
         .from("follow_ups")
         .update({
-          planned_type: followUpType,
+          planned_type: followUpType || null,
           planned_date: selectedDate,
+          reminder_note: reminderNote || null,
         })
         .eq("id", followUp.id);
       if (error) throw error;
+      console.log("[EditFollowupSheet] follow_up updated:", {
+        id: followUp.id,
+        planned_type: followUpType,
+        planned_date: selectedDate,
+        date_changed: dateChanged,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
       queryClient.invalidateQueries({ queryKey: ["interactions", followUp.contact_id] });
-      queryClient.invalidateQueries({ queryKey: ["followups-today"] });
-      queryClient.invalidateQueries({ queryKey: ["followups-upcoming"] });
-      queryClient.invalidateQueries({ queryKey: ["follow-up", followUp.id] });
       toast.success("Follow-up updated");
       handleClose();
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const handleClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setFollowUpType(followUp.follow_up_type);
-      setSelectedDate(followUp.due_date);
+      setFollowUpType(followUp.planned_type || "");
+      setSelectedDate(followUp.planned_date);
+      setReminderNote(followUp.reminder_note || "");
     }, 300);
   };
 
@@ -90,7 +110,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
             Edit follow-up
           </h2>
           <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-            Originally set {originalDate} · {originalType}
+            Originally set {originalDate}{originalType ? ` · ${originalType}` : ""}
           </p>
         </div>
 
@@ -106,7 +126,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
                 return (
                   <button
                     key={t.value}
-                    onClick={() => setFollowUpType(t.value)}
+                    onClick={() => setFollowUpType(followUpType === t.value ? "" : t.value)}
                     className={`inline-flex items-center gap-1.5 rounded-[20px] px-[13px] py-[7px] text-[13px] font-medium transition-colors ${
                       selected
                         ? "bg-[#fdf0e8] border-[1.5px] border-[#f0c4a8] text-[#c8622a]"
@@ -153,6 +173,28 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          {/* Reminder note */}
+          <div>
+            <p className="font-medium uppercase tracking-[0.1em] mb-2"
+              style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
+              Reminder note
+            </p>
+            <input
+              type="text"
+              value={reminderNote}
+              onChange={(e) => {
+                if (e.target.value.length <= 55) setReminderNote(e.target.value);
+              }}
+              maxLength={55}
+              placeholder="Optional short note…"
+              className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-[#f0c4a8] transition-colors"
+              style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
+            />
+            <p className="text-right mt-1" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#bbb" }}>
+              {reminderNote.length}/55
+            </p>
           </div>
 
           {/* Save */}
