@@ -260,7 +260,7 @@ const FollowupCard = ({
               <Rewind size={10} style={{ color: "#717171", fill: "#D9D9D9", flexShrink: 0 }} />
               <span style={{
                 fontWeight: 400,
-                fontSize: "11px",
+                fontSize: "13px",
                 color: "#717171",
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
