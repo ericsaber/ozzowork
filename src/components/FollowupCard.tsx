@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight, CornerUpRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight, Rewind } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
