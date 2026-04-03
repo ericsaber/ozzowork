@@ -105,7 +105,7 @@ const FollowupCard = ({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
             fontWeight: 600,
-            fontSize: "15px",
+            fontSize: "16px",
             color: "#383838",
             lineHeight: "normal",
             fontFamily: "var(--font-body)",
