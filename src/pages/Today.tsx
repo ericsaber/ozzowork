@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
+import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
