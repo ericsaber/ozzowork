@@ -88,7 +88,7 @@ const LogInteractionSheet = ({
   const clearAndClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setStep(1);
+      setStep(startStep);
       setContactId(preselectedContactId || "");
       setConnectType("");
       setNote("");
