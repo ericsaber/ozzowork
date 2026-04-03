@@ -92,9 +92,6 @@ const CompleteFollowupSheet = ({
         .update({
           status: "completed",
           completed_at: connectDate,
-          connect_type: connectType || null,
-          connect_date: connectDate,
-          note: note || null,
         })
         .eq("id", followUpId);
       if (completeError) throw completeError;
