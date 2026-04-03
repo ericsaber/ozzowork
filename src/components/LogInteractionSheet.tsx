@@ -209,7 +209,7 @@ const LogInteractionSheet = ({
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
 
-      if (activeFollowup && !skipFollowupStep) {
+      if (activeFollowup) {
         setExistingFollowup(activeFollowup);
         console.log("[outstanding] active follow-up found:", {
           followUpId: activeFollowup.id,
