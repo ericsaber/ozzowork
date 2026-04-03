@@ -563,6 +563,17 @@ const ContactHistory = () => {
 
       {/* Sheets */}
       <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
+      {completeTarget && (
+        <CompleteFollowupSheet
+          open={!!completeTarget}
+          onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
+          followUpId={completeTarget.followUpId}
+          contactId={completeTarget.contactId}
+          contactName={completeTarget.contactName}
+          plannedType={completeTarget.plannedType}
+          userId=""
+        />
+      )}
 
       {/* Delete contact */}
       <AlertDialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>

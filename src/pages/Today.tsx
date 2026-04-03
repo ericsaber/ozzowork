@@ -183,6 +183,17 @@ const Today = () => {
           </section>
         </div>
       )}
+      {completeTarget && (
+        <CompleteFollowupSheet
+          open={!!completeTarget}
+          onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
+          followUpId={completeTarget.followUpId}
+          contactId={completeTarget.contactId}
+          contactName={completeTarget.contactName}
+          plannedType={completeTarget.plannedType}
+          userId=""
+        />
+      )}
     </div>
   );
 };
