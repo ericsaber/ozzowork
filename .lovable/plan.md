@@ -1,18 +1,23 @@
 
 
-## Pre-Step 12: Fix remaining task_records references
+## Replace "+ Log" button with "New ▾" dropdown in ContactHistory.tsx
 
-Three surgical edits across three files.
+Single file change: `src/pages/ContactHistory.tsx`
 
-### 1. `src/App.tsx` (line 40-44)
+### Changes
 
-Replace `"task_records" as any` with `"interactions"` in the draft cleanup query. Keep the console.log.
+**1. Add state** (after line 46, near other state declarations)
+- Add `newMenuOpen` boolean state
 
-### 2. `src/components/CelebrationHeader.tsx` (lines 27-32)
+**2. Remove `Plus` from imports** (line 7)
+- Remove `Plus` from the lucide-react import
 
-Replace the `task_records` query with a simpler `interactions` query filtered by `status: "published"`. Remove the `.not()` and `.or()` filters.
+**3. Replace action row** (lines 233–247)
+- Replace the entire action row div with the new dropdown button ("New ▾") and three menu options:
+  - **Log + Set Follow-up** (primary, orange background) → opens `logSheetOpen`
+  - **Log only** → opens `logSheetOpen` + TODO comment
+  - **Follow-up only** → opens `logSheetOpen` + TODO comment
+- Keep Call, Email, Text buttons with identical logic
 
-### 3. `src/pages/Contacts.tsx` (line 73)
-
-Delete the `task_records` delete line. The `follow_up_edits`, `follow_ups`, and `interactions` deletes on lines 70-72 are sufficient.
+The dropdown uses a fixed backdrop for outside-tap dismissal and absolute positioning below the button. All three options currently open `logSheetOpen = true` with TODO comments for future mode routing.
 
