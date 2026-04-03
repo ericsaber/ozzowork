@@ -87,15 +87,16 @@ const Today = () => {
   const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
 
-  const renderCard = (item: any, variant: "overdue" | "today") => (
+  const renderCard = (item: any, variant: "overdue" | "today" | "upcoming") => (
     <FollowupCard
       key={item.id}
       taskRecordId={item.id}
       contactId={item.contact_id}
       name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
-      company={item.contacts?.company}
+      company={item.contacts?.company ?? null}
       dueDate={item.planned_date}
       plannedType={item.planned_type || null}
+      reminderNote={item.reminder_note || null}
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
       onComplete={() => {
