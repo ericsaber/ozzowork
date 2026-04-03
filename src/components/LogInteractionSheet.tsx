@@ -204,7 +204,7 @@ const LogInteractionSheet = ({
       return { id: data.id };
     },
     onSuccess: (result) => {
-      if (!result) return; // skipFollowupStep stub path
+      
 
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
