@@ -1,40 +1,36 @@
 
 
-## Step 10: Rewrite CompleteFollowupSheet + wire up completion flow
+## Step 11: Delete old pages and components
 
-Four files modified: `CompleteFollowupSheet.tsx`, `LogInteractionSheet.tsx`, `Today.tsx`, `ContactHistory.tsx`
+### Summary
 
-### 1. CompleteFollowupSheet.tsx — full rewrite
+Delete 4 obsolete files and clean up their references in `App.tsx`. No other files import them.
 
-- **Props**: Replace `taskRecordId` → `followUpId`, `followUpType` → `plannedType` (nullable), remove `hasInteraction`. Remove `useRef` import, add `draftId` state.
-- **invalidateAll**: Replace task-record keys with `interactions`, `follow-ups`, `follow-ups-active`, `follow-ups-today`, `follow-ups-upcoming`, `follow-ups-history`, `active-followup`.
-- **logMutation** (Step 1): Create an interaction draft in `interactions` table (status: "draft"). Store `draftId` in state. Move to step 2 on success.
-- **followupMutation** (Step 2 save): Mark follow-up completed (write connect_type/connect_date/note onto `follow_ups` row), publish interaction draft, optionally insert new active follow-up.
-- **handleSkip** (Step 2 skip): Same as followupMutation but no new follow-up created.
-- **handleClose**: Reset `draftId`, `connectType` from `plannedType`, `note`, `step`.
-- **handleUpdateLog**: Update local state + update draft in DB if exists.
-- **JSX**: `onBack` always `() => setStep(1)`. Remove `hasInteraction` conditional.
+### Import analysis
 
-### 2. LogInteractionSheet.tsx — remove skipFollowupStep
+| File to delete | Imported by |
+|---|---|
+| `InteractionDetail.tsx` | `App.tsx` (import + route) |
+| `EditTaskRecord.tsx` | `App.tsx` (import + route) |
+| `RescheduleSheet.tsx` | `InteractionDetail.tsx` only (being deleted) |
+| `ScheduleFollowupSheet.tsx` | No imports found |
 
-- Remove `skipFollowupStep` from props interface and destructuring.
-- Remove the TODO stub block (lines 169-174).
-- Remove `onSuccess` guard for `skipFollowupStep` stub (line 214 `if (!result) return;`).
-- Line 219: `activeFollowup && !skipFollowupStep` → `activeFollowup`.
-- Line 539: `!skipFollowupStep && step !== "outstanding"` → `step !== "outstanding"`.
-- Line 576: `skipFollowupStep || activeFollowup ? undefined :` → `activeFollowup ? undefined :`.
-- Line 591: Remove `submitLabel={skipFollowupStep ? "Save →" : undefined}`.
-- Line 592: Remove `showDateRow={skipFollowupStep}`.
+### Changes
 
-### 3. Today.tsx — wire complete button
+**1. `src/App.tsx`** — Remove 2 imports and 2 routes
 
-- Add `completeTarget` state with `{ followUpId, contactId, contactName, plannedType }`.
-- Update `renderCard` `onComplete` to set `completeTarget` from item data.
-- Import and render `CompleteFollowupSheet` at bottom of JSX, passing new props. `userId=""` (unused, fetched internally).
+- Remove `import InteractionDetail from "./pages/InteractionDetail";` (line 14)
+- Remove `import EditTaskRecord from "./pages/EditTaskRecord";` (line 15)
+- Remove `<Route path="/interaction/:id" element={<InteractionDetail />} />` (line 70)
+- Remove `<Route path="/edit-task/:id" element={<EditTaskRecord />} />` (line 71)
+- Keep `FollowupTask` import and `/followup/:id` route (still used as redirect)
 
-### 4. ContactHistory.tsx — wire complete button
+**2. Delete files**
 
-- Add `completeTarget` state.
-- Update `ContactFollowupCard` `onComplete` to set `completeTarget`.
-- Import and render `CompleteFollowupSheet` at bottom of JSX.
+- `src/pages/InteractionDetail.tsx`
+- `src/pages/EditTaskRecord.tsx`
+- `src/components/RescheduleSheet.tsx`
+- `src/components/ScheduleFollowupSheet.tsx`
+
+No other files reference any of these four.
 
