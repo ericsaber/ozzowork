@@ -307,8 +307,7 @@ const ContactHistory = () => {
                       <button
                         onClick={() => {
                           setNewMenuOpen(false);
-                          // TODO: route to log-only flow (skip Step 2)
-                          setLogSheetOpen(true);
+                          setLogSheetMode({ startStep: 1, logOnly: true });
                         }}
                         className="w-full text-left hover:bg-secondary transition-colors"
                         style={{
