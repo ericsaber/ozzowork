@@ -566,7 +566,7 @@ const LogInteractionSheet = ({
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : async () => {
+                  onSkipToFollowup={activeFollowup ? undefined : async () => {
                     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
                     // If user previously hit Next → (creating a draft) then came back and hit skip,
                     // delete the draft so no empty interaction record is left behind
