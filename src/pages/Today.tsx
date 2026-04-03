@@ -12,6 +12,12 @@ const Today = () => {
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
   const windowEnd = format(addDays(new Date(), 14), "yyyy-MM-dd");
+  const [completeTarget, setCompleteTarget] = useState<{
+    followUpId: string;
+    contactId: string;
+    contactName: string;
+    plannedType: string | null;
+  } | null>(null);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
