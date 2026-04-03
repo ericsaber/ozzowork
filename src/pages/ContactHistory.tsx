@@ -38,6 +38,12 @@ const ContactHistory = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [completeTarget, setCompleteTarget] = useState<{
+    followUpId: string;
+    contactId: string;
+    contactName: string;
+    plannedType: string | null;
+  } | null>(null);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
