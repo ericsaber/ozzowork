@@ -25,7 +25,6 @@ interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
-  skipFollowupStep?: boolean;
 }
 
 const LogInteractionSheet = ({
