@@ -38,7 +38,7 @@ const AppContent = () => {
     const cleanup = async () => {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
       const { error } = await supabase
-        .from("task_records" as any)
+        .from("interactions")
         .delete()
         .eq("status", "draft")
         .lt("created_at", twoHoursAgo);
