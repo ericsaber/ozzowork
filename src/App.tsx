@@ -65,8 +65,6 @@ const AppContent = () => {
         <Route path="/contact/:id" element={<ContactHistory />} />
         <Route path="/log" element={<LogInteraction />} />
         <Route path="/followup/:id" element={<FollowupTask />} />
-        <Route path="/interaction/:id" element={<InteractionDetail />} />
-        <Route path="/edit-task/:id" element={<EditTaskRecord />} />
         <Route path="/upcoming" element={<Upcoming />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
