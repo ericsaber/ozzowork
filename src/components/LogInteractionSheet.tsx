@@ -611,7 +611,7 @@ const LogInteractionSheet = ({
                 logDate={format(new Date(), "MMM d, yyyy")}
                 onBack={handleStepBack}
                 onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-                onSkip={handleSkip}
+                onSkip={startStep === 2 ? undefined : handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 skippedInteraction={skippedInteraction}

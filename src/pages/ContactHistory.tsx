@@ -694,7 +694,13 @@ const ContactHistory = () => {
       )}
 
       {/* Sheets */}
-      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
+      <LogInteractionSheet
+        open={logSheetOpen}
+        onOpenChange={(o) => { if (!o) setLogSheetMode(null); }}
+        preselectedContactId={id}
+        startStep={logSheetMode?.startStep ?? 1}
+        logOnly={logSheetMode?.logOnly ?? false}
+      />
       {completeTarget && (
         <CompleteFollowupSheet
           open={!!completeTarget}
