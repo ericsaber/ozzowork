@@ -11,8 +11,6 @@ import Contacts from "./pages/Contacts";
 import ContactHistory from "./pages/ContactHistory";
 import LogInteraction from "./pages/LogInteraction";
 import FollowupTask from "./pages/FollowupTask";
-import InteractionDetail from "./pages/InteractionDetail";
-import EditTaskRecord from "./pages/EditTaskRecord";
 import Upcoming from "./pages/Upcoming";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
