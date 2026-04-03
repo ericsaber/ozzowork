@@ -422,9 +422,9 @@ const ContactHistory = () => {
               style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
               No follow-up scheduled
             </p>
-            <span className="text-[12px] text-primary font-medium"
-              style={{ fontFamily: "var(--font-body)" }}>
-              + Schedule a follow-up
+            <span className="text-[12px] font-medium"
+              style={{ fontFamily: "var(--font-body)", color: "#c8622a" }}>
+              + Set a follow-up
             </span>
           </button>
         </div>
