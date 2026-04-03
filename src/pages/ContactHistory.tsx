@@ -281,7 +281,7 @@ const ContactHistory = () => {
                       <button
                         onClick={() => {
                           setNewMenuOpen(false);
-                          setLogSheetOpen(true);
+                          setLogSheetMode({ startStep: 1, logOnly: false });
                         }}
                         className="w-full text-left"
                         style={{
