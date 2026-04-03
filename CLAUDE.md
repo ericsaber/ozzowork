@@ -74,8 +74,9 @@ Standalone logs. One row per logged connection.
 | created_at | timestamptz | |
 
 ### `follow_ups`
-One active follow-up per contact at a time. On completion, interaction
-details are written directly onto this row — no new record is created.
+One active follow-up per contact at a time. On completion, status is set to
+'completed' and completed_at is set. Interaction details are stored in a
+separate `interactions` row — not written onto the follow_up row.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -86,9 +87,6 @@ details are written directly onto this row — no new record is created.
 | planned_date | date | Today or future only. Never past. |
 | status | text | active / completed / cancelled |
 | completed_at | timestamptz | Set on completion or cancellation |
-| connect_type | text | Filled on completion only |
-| connect_date | timestamptz | Filled on completion only |
-| note | text | Filled on completion only |
 | reminder_note | varchar(55) | Optional. Always fully visible. No truncation. |
 | created_at | timestamptz | |
 
@@ -113,9 +111,6 @@ Schema unchanged. Client-side validation only:
 - `phone` varchar(15) — optional, digits only, display formatted
 - `email` varchar(254) — optional, RFC 5321 format
 
-### Legacy table
-`task_records` — still exists during migration. Do not drop it until all
-components are confirmed working on the new schema. Do not write to it.
 
 ---
 
@@ -217,29 +212,13 @@ moralizing copy, no suggestion.
 
 ---
 
-## Pages being deleted during migration
-
-- `InteractionDetail.tsx` — replaced by inline expand + inline edit
-- `EditTaskRecord.tsx` — replaced by inline interaction edit card
-
-Do not reference these pages in new code.
-
-## Components being deleted during migration
-
-- `RescheduleSheet.tsx` — replaced by inline follow-up edit
-- `ScheduleFollowupSheet.tsx` — replaced by log flow Step 2 without steppers
-
-Do not reference these components in new code.
-
-## Full file inventory (as of migration start)
+## Full file inventory
 
 ### Pages
 - `Auth.tsx`
 - `ContactHistory.tsx`
 - `Contacts.tsx`
-- `EditTaskRecord.tsx` — being deleted
 - `FollowupTask.tsx`
-- `InteractionDetail.tsx` — being deleted
 - `LogInteraction.tsx`
 - `NotFound.tsx`
 - `Today.tsx`
@@ -248,11 +227,11 @@ Do not reference these components in new code.
 ### Components
 - `BottomNav.tsx`
 - `CelebrationHeader.tsx`
-- `CompleteFollowupSheet.tsx` — Step 10 concern
+- `CompleteFollowupSheet.tsx`
 - `ContactCombobox.tsx`
 - `ContactFollowupCard.tsx`
-- `EditFollowupSheet.tsx` — Step 9 concern
-- `EditInteractionSheet.tsx` — Step 8 concern
+- `EditFollowupSheet.tsx`
+- `EditInteractionSheet.tsx`
 - `FollowupCard.tsx`
 - `InteractionItem.tsx`
 - `LogInteractionSheet.tsx` — primary log flow handler
@@ -261,8 +240,6 @@ Do not reference these components in new code.
 - `NavLink.tsx`
 - `OutstandingFollowupStep.tsx`
 - `PasswordGate.tsx`
-- `RescheduleSheet.tsx` — being deleted
-- `ScheduleFollowupSheet.tsx` — being deleted
 - `ScrollToTop.tsx`
 - `StepIndicator.tsx`
 
@@ -272,9 +249,7 @@ Do not reference these components in new code.
 
 1. **Leave all existing console.log statements in place.** Never remove them.
 2. **Always run plan mode before implementing** multi-file changes.
-3. **Never implement step N+1 before step N is confirmed working.**
-4. **`task_records` stays alive** until every component is confirmed on new schema.
-5. **RLS is always highest-priority** — no table exists without it.
-6. **No undo flows** — completed and deleted records are permanent.
-7. **Lucide icons only** — no other icon library.
-8. **WCAG AA contrast** on all color usage.
+3. **RLS is always highest-priority** — no table exists without it.
+4. **No undo flows** — completed and deleted records are permanent.
+5. **Lucide icons only** — no other icon library.
+6. **WCAG AA contrast** on all color usage.
