@@ -257,7 +257,7 @@ const FollowupCard = ({
             gap: "4px",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <CornerUpRight size={10} style={{ color: "#717171", flexShrink: 0 }} />
+              <Rewind size={10} style={{ color: "#717171", fill: "#D9D9D9", flexShrink: 0 }} />
               <span style={{
                 fontWeight: 400,
                 fontSize: "11px",
