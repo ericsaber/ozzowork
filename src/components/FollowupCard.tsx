@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight, CornerUpRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight, Rewind } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 interface FollowupCardProps {
@@ -105,7 +105,7 @@ const FollowupCard = ({
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
             fontWeight: 600,
-            fontSize: "15px",
+            fontSize: "16px",
             color: "#383838",
             lineHeight: "normal",
             fontFamily: "var(--font-body)",
@@ -119,7 +119,7 @@ const FollowupCard = ({
           {company && (
             <p style={{
               fontWeight: 400,
-              fontSize: "11px",
+              fontSize: "12px",
               color: "#777",
               lineHeight: "normal",
               fontFamily: "var(--font-body)",
@@ -188,7 +188,7 @@ const FollowupCard = ({
               <ActionIcon size={16} style={{ color: tokens.color, flexShrink: 0 }} />
               <span style={{
                 fontWeight: 600,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -205,7 +205,7 @@ const FollowupCard = ({
                 borderRadius: "20px",
                 padding: "6px 14px",
                 fontWeight: 500,
-                fontSize: "11px",
+                fontSize: "12px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -257,10 +257,10 @@ const FollowupCard = ({
             gap: "4px",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <CornerUpRight size={10} style={{ color: "#717171", flexShrink: 0 }} />
+              <Rewind size={10} style={{ color: "#717171", fill: "#D9D9D9", flexShrink: 0 }} />
               <span style={{
                 fontWeight: 400,
-                fontSize: "11px",
+                fontSize: "13px",
                 color: "#717171",
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -272,7 +272,7 @@ const FollowupCard = ({
             {lastInteraction?.note && (
               <p style={{
                 fontWeight: 400,
-                fontSize: "11px",
+                fontSize: "13px",
                 color: "#717171",
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
