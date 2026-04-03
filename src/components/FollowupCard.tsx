@@ -188,7 +188,7 @@ const FollowupCard = ({
               <ActionIcon size={16} style={{ color: tokens.color, flexShrink: 0 }} />
               <span style={{
                 fontWeight: 600,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
