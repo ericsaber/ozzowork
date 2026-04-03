@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
+import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
 
@@ -11,6 +12,12 @@ const Today = () => {
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
   const windowEnd = format(addDays(new Date(), 14), "yyyy-MM-dd");
+  const [completeTarget, setCompleteTarget] = useState<{
+    followUpId: string;
+    contactId: string;
+    contactName: string;
+    plannedType: string | null;
+  } | null>(null);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -92,8 +99,12 @@ const Today = () => {
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
       onComplete={() => {
-        // TODO Step 10: rewrite complete flow for new schema
-        console.log("[Today] complete flow not yet migrated:", item.id);
+        setCompleteTarget({
+          followUpId: item.id,
+          contactId: item.contact_id,
+          contactName: item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown",
+          plannedType: item.planned_type || null,
+        });
       }}
     />
   );
@@ -171,6 +182,17 @@ const Today = () => {
             {renderComingUp()}
           </section>
         </div>
+      )}
+      {completeTarget && (
+        <CompleteFollowupSheet
+          open={!!completeTarget}
+          onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
+          followUpId={completeTarget.followUpId}
+          contactId={completeTarget.contactId}
+          contactName={completeTarget.contactName}
+          plannedType={completeTarget.plannedType}
+          userId=""
+        />
       )}
     </div>
   );

@@ -25,11 +25,10 @@ interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
-  skipFollowupStep?: boolean;
 }
 
 const LogInteractionSheet = ({
-  open, onOpenChange, preselectedContactId, skipFollowupStep = false,
+  open, onOpenChange, preselectedContactId,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
@@ -166,12 +165,6 @@ const LogInteractionSheet = ({
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
-      // TODO Step 10: rewrite skipFollowupStep path for new schema
-      if (skipFollowupStep) {
-        console.log("[LogInteractionSheet] skipFollowupStep path not yet migrated");
-        clearAndClose();
-        return;
-      }
 
       const computedConnectDate =
         connectDate === format(new Date(), "yyyy-MM-dd")
@@ -211,12 +204,12 @@ const LogInteractionSheet = ({
       return { id: data.id };
     },
     onSuccess: (result) => {
-      if (!result) return; // skipFollowupStep stub path
+      
 
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
 
-      if (activeFollowup && !skipFollowupStep) {
+      if (activeFollowup) {
         setExistingFollowup(activeFollowup);
         console.log("[outstanding] active follow-up found:", {
           followUpId: activeFollowup.id,
@@ -536,7 +529,7 @@ const LogInteractionSheet = ({
       <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
         <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
-            {!skipFollowupStep && step !== "outstanding" && (
+            {step !== "outstanding" && (
               <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
             )}
 
@@ -573,7 +566,7 @@ const LogInteractionSheet = ({
                   contacts={contacts}
                   onContactSelect={setContactId}
                   onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={skipFollowupStep || activeFollowup ? undefined : async () => {
+                  onSkipToFollowup={activeFollowup ? undefined : async () => {
                     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
                     // If user previously hit Next → (creating a draft) then came back and hit skip,
                     // delete the draft so no empty interaction record is left behind
@@ -588,8 +581,6 @@ const LogInteractionSheet = ({
                     setStep(2);
                   }}
                   onChangeContact={handleChangeContact}
-                  submitLabel={skipFollowupStep ? "Save →" : undefined}
-                  showDateRow={skipFollowupStep}
                   connectDate={connectDate}
                   setConnectDate={setConnectDate}
                 />

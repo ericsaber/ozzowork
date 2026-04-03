@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
+import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import { toast } from "sonner";
 import { format, parseISO, startOfToday } from "date-fns";
 
@@ -37,6 +38,12 @@ const ContactHistory = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [completeTarget, setCompleteTarget] = useState<{
+    followUpId: string;
+    contactId: string;
+    contactName: string;
+    plannedType: string | null;
+  } | null>(null);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
@@ -300,8 +307,12 @@ const ContactHistory = () => {
             hidePlannedFallback
             rescheduleCount={0}
             onComplete={() => {
-              // TODO Step 10: rewrite complete flow for new schema
-              console.log("[ContactHistory] complete flow not yet migrated");
+              setCompleteTarget({
+                followUpId: activeFollowup.id,
+                contactId: id!,
+                contactName: fullName,
+                plannedType: activeFollowup.planned_type || null,
+              });
             }}
           />
         </div>
@@ -552,6 +563,17 @@ const ContactHistory = () => {
 
       {/* Sheets */}
       <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
+      {completeTarget && (
+        <CompleteFollowupSheet
+          open={!!completeTarget}
+          onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
+          followUpId={completeTarget.followUpId}
+          contactId={completeTarget.contactId}
+          contactName={completeTarget.contactName}
+          plannedType={completeTarget.plannedType}
+          userId=""
+        />
+      )}
 
       {/* Delete contact */}
       <AlertDialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,155 +12,187 @@ import LogStep2 from "@/components/LogStep2";
 interface CompleteFollowupSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  taskRecordId: string;
+  followUpId: string;
   contactId: string;
   contactName: string;
-  followUpType: string;
+  plannedType: string | null;
   userId: string;
-  hasInteraction: boolean;
   showToast?: boolean;
 }
 
 const CompleteFollowupSheet = ({
   open,
   onOpenChange,
-  taskRecordId,
+  followUpId,
   contactId,
   contactName,
-  followUpType,
+  plannedType,
   userId,
-  hasInteraction,
   showToast = true,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2>(1);
-  const [connectType, setConnectType] = useState(followUpType || "");
+  const [connectType, setConnectType] = useState(plannedType || "");
   const [note, setNote] = useState("");
-  const connectDateRef = useRef<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["task-records"] });
-    queryClient.invalidateQueries({ queryKey: ["task-record"] });
-    queryClient.invalidateQueries({ queryKey: ["task-records-today"] });
-    queryClient.invalidateQueries({ queryKey: ["task-records-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["interactions"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-history"] });
+    queryClient.invalidateQueries({ queryKey: ["active-followup"] });
   };
 
   const logMutation = useMutation({
     mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const connectDate = new Date().toISOString();
-      connectDateRef.current = connectDate;
 
-      console.log("[completion] op1 UPDATE:", taskRecordId, { status: "completed" });
-
-      const { error } = await supabase
-        .from("task_records" as any)
-        .update({
-          status: "completed",
-          completed_at: connectDate,
+      const { data, error } = await supabase
+        .from("interactions")
+        .insert({
+          contact_id: contactId,
+          user_id: user.id,
+          connect_type: connectType || null,
+          connect_date: connectDate,
+          note: note || null,
+          status: "draft",
         })
-        .eq("id", taskRecordId);
-
+        .select("id")
+        .single();
       if (error) throw error;
+      console.log("[completion] interaction draft created:", data.id);
+      return { id: data.id };
     },
-    onSuccess: () => {
-      invalidateAll();
+    onSuccess: (result) => {
+      setDraftId(result.id);
       setStep(2);
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const insertCompletionRecord = async ({
-    plannedFollowUpType,
-    plannedFollowUpDate,
-  }: {
-    plannedFollowUpType: string | null;
-    plannedFollowUpDate: string | null;
-  }) => {
-    const connectDate = connectDateRef.current ?? new Date().toISOString();
-
-    console.log("[completion] op2 INSERT:", {
-      connect_type: connectType || null,
-      note: note || null,
-      connect_date: connectDate,
-    });
-
-    // op2 — interaction record only (no follow-up fields)
-    const { error } = await supabase.from("task_records" as any).insert({
-      contact_id: contactId,
-      user_id: userId,
-      connect_type: connectType || null,
-      note: note || null,
-      connect_date: connectDate,
-      status: "completed",
-      related_task_record_id: taskRecordId,
-    });
-
-    console.log("[completion] op2 linked to completed coin:", {
-      taskRecordId,
-      related_task_record_id: taskRecordId,
-    });
-
-    if (error) throw error;
-
-    // op3 — new follow-up coin if date is set
-    if (plannedFollowUpDate) {
-      console.log('[completion] op3 new follow-up coin:', { planned_follow_up_date: plannedFollowUpDate });
-      const { error: op3Error } = await supabase.from("task_records" as any).insert({
-        contact_id: contactId,
-        user_id: userId,
-        status: "active",
-        planned_follow_up_type: plannedFollowUpType || null,
-        planned_follow_up_date: plannedFollowUpDate,
-      });
-      if (op3Error) throw op3Error;
-    }
-  };
-
   const followupMutation = useMutation({
     mutationFn: async ({ type, date }: { type: string; date: string }) => {
-      console.log("[completion] followupMutation received:", { type, date });
-      console.log('[completion] op2 follow-up payload:', { type, date, planned_follow_up_type: type || null, planned_follow_up_date: date ? date : null });
-      await insertCompletionRecord({
-        plannedFollowUpType: type || null,
-        plannedFollowUpDate: date ? date : null,
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      if (!draftId) throw new Error("No interaction draft");
+
+      const connectDate = new Date().toISOString();
+
+      console.log("[completion] followupMutation:", { followUpId, draftId, type, date });
+
+      // 1. Mark follow-up as completed, write interaction details onto it
+      const { error: completeError } = await supabase
+        .from("follow_ups")
+        .update({
+          status: "completed",
+          completed_at: connectDate,
+          connect_type: connectType || null,
+          connect_date: connectDate,
+          note: note || null,
+        })
+        .eq("id", followUpId);
+      if (completeError) throw completeError;
+      console.log("[completion] follow_up marked completed:", followUpId);
+
+      // 2. Publish the interaction draft
+      const { error: publishError } = await supabase
+        .from("interactions")
+        .update({ status: "published" })
+        .eq("id", draftId);
+      if (publishError) throw publishError;
+      console.log("[completion] interaction draft published:", draftId);
+
+      // 3. Insert new follow-up if date set
+      if (date) {
+        const { error: insertError } = await supabase
+          .from("follow_ups")
+          .insert({
+            contact_id: contactId,
+            user_id: user.id,
+            planned_type: type || null,
+            planned_date: date,
+            status: "active",
+          });
+        if (insertError) throw insertError;
+        console.log("[completion] new follow_up inserted:", { type, date });
+      }
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success("Follow-up set");
+      toast.success(note || connectType ? "Nice work. Follow-up marked complete." : "Done. Follow-up marked complete.");
       handleClose();
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const handleClose = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      setStep(1);
-      setConnectType(followUpType || "");
-      setNote("");
-      connectDateRef.current = null;
-    }, 300);
-  };
-
   const handleSkip = async () => {
     try {
-      await insertCompletionRecord({
-        plannedFollowUpType: null,
-        plannedFollowUpDate: null,
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const connectDate = new Date().toISOString();
+
+      console.log("[completion] handleSkip:", { followUpId, draftId });
+
+      // Mark follow-up as completed with whatever was logged
+      const { error: completeError } = await supabase
+        .from("follow_ups")
+        .update({
+          status: "completed",
+          completed_at: connectDate,
+          connect_type: connectType || null,
+          connect_date: connectDate,
+          note: note || null,
+        })
+        .eq("id", followUpId);
+      if (completeError) throw completeError;
+      console.log("[completion] follow_up marked completed on skip:", followUpId);
+
+      // Publish interaction draft if exists
+      if (draftId) {
+        const { error: publishError } = await supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", draftId);
+        if (publishError) throw publishError;
+        console.log("[completion] interaction draft published on skip:", draftId);
+      }
 
       invalidateAll();
-      toast.success("Interaction logged");
+      toast.success("Follow-up marked complete.");
       handleClose();
     } catch (error: any) {
       toast.error(error.message);
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setStep(1);
+      setConnectType(plannedType || "");
+      setNote("");
+      setDraftId(null);
+    }, 300);
+  };
+
   const handleUpdateLog = async (newConnectType: string, newNote: string) => {
     setConnectType(newConnectType);
     setNote(newNote);
+    // Update draft if it exists
+    if (draftId) {
+      await supabase.from("interactions").update({
+        connect_type: newConnectType || null,
+        note: newNote || null,
+      }).eq("id", draftId);
+      console.log("[completion] draft updated via handleUpdateLog:", draftId);
+    }
   };
 
   return (
@@ -190,7 +222,7 @@ const CompleteFollowupSheet = ({
               contactName={contactName}
               note={note}
               logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={hasInteraction ? undefined : () => setStep(1)}
+              onBack={() => setStep(1)}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
