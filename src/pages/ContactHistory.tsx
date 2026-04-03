@@ -37,7 +37,8 @@ const ContactHistory = () => {
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
-  const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [logSheetMode, setLogSheetMode] = useState<{ startStep: 1 | 2; logOnly: boolean } | null>(null);
+  const logSheetOpen = !!logSheetMode;
   const [completeTarget, setCompleteTarget] = useState<{
     followUpId: string;
     contactId: string;
@@ -280,7 +281,7 @@ const ContactHistory = () => {
                       <button
                         onClick={() => {
                           setNewMenuOpen(false);
-                          setLogSheetOpen(true);
+                          setLogSheetMode({ startStep: 1, logOnly: false });
                         }}
                         className="w-full text-left"
                         style={{
@@ -306,8 +307,7 @@ const ContactHistory = () => {
                       <button
                         onClick={() => {
                           setNewMenuOpen(false);
-                          // TODO: route to log-only flow (skip Step 2)
-                          setLogSheetOpen(true);
+                          setLogSheetMode({ startStep: 1, logOnly: true });
                         }}
                         className="w-full text-left hover:bg-secondary transition-colors"
                         style={{
@@ -328,8 +328,7 @@ const ContactHistory = () => {
                       <button
                         onClick={() => {
                           setNewMenuOpen(false);
-                          // TODO: route to follow-up-only flow (skip Step 1)
-                          setLogSheetOpen(true);
+                          setLogSheetMode({ startStep: 2, logOnly: false });
                         }}
                         className="w-full text-left hover:bg-secondary transition-colors"
                         style={{
@@ -411,7 +410,7 @@ const ContactHistory = () => {
             Next follow-up
           </p>
           <button
-            onClick={() => setLogSheetOpen(true)}
+            onClick={() => setLogSheetMode({ startStep: 2, logOnly: false })}
             className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors"
             style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
           >
@@ -695,7 +694,13 @@ const ContactHistory = () => {
       )}
 
       {/* Sheets */}
-      <LogInteractionSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} preselectedContactId={id} />
+      <LogInteractionSheet
+        open={logSheetOpen}
+        onOpenChange={(o) => { if (!o) setLogSheetMode(null); }}
+        preselectedContactId={id}
+        startStep={logSheetMode?.startStep ?? 1}
+        logOnly={logSheetMode?.logOnly ?? false}
+      />
       {completeTarget && (
         <CompleteFollowupSheet
           open={!!completeTarget}

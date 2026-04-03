@@ -25,14 +25,16 @@ interface LogInteractionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedContactId?: string | null;
+  startStep?: 1 | 2;
+  logOnly?: boolean;
 }
 
 const LogInteractionSheet = ({
-  open, onOpenChange, preselectedContactId,
+  open, onOpenChange, preselectedContactId, startStep = 1, logOnly = false,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(1);
+  const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
@@ -86,7 +88,7 @@ const LogInteractionSheet = ({
   const clearAndClose = () => {
     onOpenChange(false);
     setTimeout(() => {
-      setStep(1);
+      setStep(startStep);
       setContactId(preselectedContactId || "");
       setConnectType("");
       setNote("");
@@ -204,10 +206,23 @@ const LogInteractionSheet = ({
       return { id: data.id };
     },
     onSuccess: (result) => {
-      
-
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
+
+      // logOnly mode — publish draft immediately and close, no Step 2
+      if (logOnly) {
+        supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", result.id)
+          .then(() => {
+            console.log("[LogInteractionSheet] logOnly — draft published:", result.id);
+            invalidateAll();
+            toast.success("Log saved.");
+            clearAndClose();
+          });
+        return;
+      }
 
       if (activeFollowup) {
         setExistingFollowup(activeFollowup);
@@ -523,7 +538,7 @@ const LogInteractionSheet = ({
       <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
         <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
-            {step !== "outstanding" && (
+            {step !== "outstanding" && startStep !== 2 && (
               <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
             )}
 
@@ -596,7 +611,7 @@ const LogInteractionSheet = ({
                 logDate={format(new Date(), "MMM d, yyyy")}
                 onBack={handleStepBack}
                 onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-                onSkip={handleSkip}
+                onSkip={startStep === 2 ? undefined : handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 skippedInteraction={skippedInteraction}
