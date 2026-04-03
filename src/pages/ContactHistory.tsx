@@ -410,7 +410,7 @@ const ContactHistory = () => {
             Next follow-up
           </p>
           <button
-            onClick={() => setLogSheetOpen(true)}
+            onClick={() => setLogSheetMode({ startStep: 2, logOnly: false })}
             className="w-full rounded-[14px] border-[1.5px] border-dashed border-border bg-card px-4 py-4 text-center hover:border-primary/40 transition-colors"
             style={{ boxShadow: "0 1px 5px rgba(0,0,0,.04)" }}
           >
