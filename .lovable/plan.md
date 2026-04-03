@@ -1,26 +1,40 @@
 
 
-## Step 9: Fix EditFollowupSheet for new schema
+## Step 10: Rewrite CompleteFollowupSheet + wire up completion flow
 
-Single file: `EditFollowupSheet.tsx`
+Four files modified: `CompleteFollowupSheet.tsx`, `LogInteractionSheet.tsx`, `Today.tsx`, `ContactHistory.tsx`
 
-### Changes
+### 1. CompleteFollowupSheet.tsx — full rewrite
 
-1. **Props**: Replace `follow_up_type`/`due_date` with `planned_type`/`planned_date`, add `reminder_note`. Make `planned_type` nullable.
+- **Props**: Replace `taskRecordId` → `followUpId`, `followUpType` → `plannedType` (nullable), remove `hasInteraction`. Remove `useRef` import, add `draftId` state.
+- **invalidateAll**: Replace task-record keys with `interactions`, `follow-ups`, `follow-ups-active`, `follow-ups-today`, `follow-ups-upcoming`, `follow-ups-history`, `active-followup`.
+- **logMutation** (Step 1): Create an interaction draft in `interactions` table (status: "draft"). Store `draftId` in state. Move to step 2 on success.
+- **followupMutation** (Step 2 save): Mark follow-up completed (write connect_type/connect_date/note onto `follow_ups` row), publish interaction draft, optionally insert new active follow-up.
+- **handleSkip** (Step 2 skip): Same as followupMutation but no new follow-up created.
+- **handleClose**: Reset `draftId`, `connectType` from `plannedType`, `note`, `step`.
+- **handleUpdateLog**: Update local state + update draft in DB if exists.
+- **JSX**: `onBack` always `() => setStep(1)`. Remove `hasInteraction` conditional.
 
-2. **State**: Initialize from new field names. Add `reminderNote` state.
+### 2. LogInteractionSheet.tsx — remove skipFollowupStep
 
-3. **Original type derivation**: Handle null `planned_type` gracefully. Update subtitle to conditionally show type.
+- Remove `skipFollowupStep` from props interface and destructuring.
+- Remove the TODO stub block (lines 169-174).
+- Remove `onSuccess` guard for `skipFollowupStep` stub (line 214 `if (!result) return;`).
+- Line 219: `activeFollowup && !skipFollowupStep` → `activeFollowup`.
+- Line 539: `!skipFollowupStep && step !== "outstanding"` → `step !== "outstanding"`.
+- Line 576: `skipFollowupStep || activeFollowup ? undefined :` → `activeFollowup ? undefined :`.
+- Line 591: Remove `submitLabel={skipFollowupStep ? "Save →" : undefined}`.
+- Line 592: Remove `showDateRow={skipFollowupStep}`.
 
-4. **Mutation rewrite**:
-   - Only insert into `follow_up_edits` when `planned_date` actually changed (per schema rules — type/reminder changes don't create edit rows).
-   - Add `reminder_note` to the update payload.
-   - Add console.log statements for both edit insert and follow-up update.
-   - Fix query invalidation keys: `follow-ups`, `follow-ups-active`, `follow-ups-today`, `follow-ups-upcoming`, `interactions`.
+### 3. Today.tsx — wire complete button
 
-5. **handleClose**: Reset all three state values using new field names.
+- Add `completeTarget` state with `{ followUpId, contactId, contactName, plannedType }`.
+- Update `renderCard` `onComplete` to set `completeTarget` from item data.
+- Import and render `CompleteFollowupSheet` at bottom of JSX, passing new props. `userId=""` (unused, fetched internally).
 
-6. **Type pills**: Allow deselecting (toggle off) via `followUpType === t.value ? "" : t.value`.
+### 4. ContactHistory.tsx — wire complete button
 
-7. **Reminder note field**: Add between due date section and Save button — text input with 55-char hard limit, character counter, styled consistently.
+- Add `completeTarget` state.
+- Update `ContactFollowupCard` `onComplete` to set `completeTarget`.
+- Import and render `CompleteFollowupSheet` at bottom of JSX.
 
