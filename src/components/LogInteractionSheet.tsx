@@ -538,7 +538,7 @@ const LogInteractionSheet = ({
       <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
         <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
           <div className="overflow-y-auto px-5 pb-6">
-            {step !== "outstanding" && startStep !== 2 && (
+            {step !== "outstanding" && startStep !== 2 && !logOnly && (
               <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
             )}
 
