@@ -155,7 +155,7 @@ const FollowupCard = ({
             }}
           >
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{ width: "2.5px", height: "2.5px", borderRadius: "50%", background: "#bbb" }} />
+              <div key={i} style={{ width: "2.5px", height: "2.5px", borderRadius: "50%", background: "#777" }} />
             ))}
           </div>
         )}
