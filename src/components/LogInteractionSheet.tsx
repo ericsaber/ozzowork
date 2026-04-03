@@ -582,7 +582,6 @@ const LogInteractionSheet = ({
                   }}
                   onChangeContact={handleChangeContact}
                   connectDate={connectDate}
-                  connectDate={connectDate}
                   setConnectDate={setConnectDate}
                 />
               </div>

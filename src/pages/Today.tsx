@@ -99,8 +99,12 @@ const Today = () => {
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
       onComplete={() => {
-        // TODO Step 10: rewrite complete flow for new schema
-        console.log("[Today] complete flow not yet migrated:", item.id);
+        setCompleteTarget({
+          followUpId: item.id,
+          contactId: item.contact_id,
+          contactName: item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown",
+          plannedType: item.planned_type || null,
+        });
       }}
     />
   );
