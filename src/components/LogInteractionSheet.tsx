@@ -581,8 +581,7 @@ const LogInteractionSheet = ({
                     setStep(2);
                   }}
                   onChangeContact={handleChangeContact}
-                  submitLabel={skipFollowupStep ? "Save →" : undefined}
-                  showDateRow={skipFollowupStep}
+                  connectDate={connectDate}
                   connectDate={connectDate}
                   setConnectDate={setConnectDate}
                 />
