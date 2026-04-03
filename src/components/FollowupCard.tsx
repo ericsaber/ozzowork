@@ -145,18 +145,17 @@ const FollowupCard = ({
           <div
             onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "3px",
               paddingLeft: "8px",
               paddingTop: "3px",
               flexShrink: 0,
               cursor: "pointer",
             }}
           >
-            {[0, 1, 2].map((i) => (
-              <div key={i} style={{ width: "3.5px", height: "3.5px", borderRadius: "50%", background: "#888" }} />
-            ))}
+            <svg width="3" height="14" viewBox="0 0 3 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.5 7.5C1.91421 7.5 2.25 7.16421 2.25 6.75C2.25 6.33579 1.91421 6 1.5 6C1.08579 6 0.75 6.33579 0.75 6.75C0.75 7.16421 1.08579 7.5 1.5 7.5Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.5 2.25C1.91421 2.25 2.25 1.91421 2.25 1.5C2.25 1.08579 1.91421 0.75 1.5 0.75C1.08579 0.75 0.75 1.08579 0.75 1.5C0.75 1.91421 1.08579 2.25 1.5 2.25Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.5 12.75C1.91421 12.75 2.25 12.4142 2.25 12C2.25 11.5858 1.91421 11.25 1.5 11.25C1.08579 11.25 0.75 11.5858 0.75 12C0.75 12.4142 1.08579 12.75 1.5 12.75Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         )}
       </div>
