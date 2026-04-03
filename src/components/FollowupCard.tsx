@@ -258,10 +258,10 @@ const FollowupCard = ({
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               <svg
-                width="12"
-                height="12"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
-                fill="#D9D9D9"
+                fill="#C0C0C0"
                 stroke="#717171"
                 strokeWidth="2"
                 strokeLinecap="round"
