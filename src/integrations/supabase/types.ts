@@ -179,65 +179,6 @@ export type Database = {
           },
         ]
       }
-      task_records: {
-        Row: {
-          completed_at: string | null
-          connect_date: string | null
-          connect_type: string | null
-          contact_id: string
-          created_at: string
-          follow_up_action: string | null
-          id: string
-          note: string | null
-          planned_follow_up_date: string | null
-          planned_follow_up_type: string | null
-          related_task_record_id: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          connect_date?: string | null
-          connect_type?: string | null
-          contact_id: string
-          created_at?: string
-          follow_up_action?: string | null
-          id?: string
-          note?: string | null
-          planned_follow_up_date?: string | null
-          planned_follow_up_type?: string | null
-          related_task_record_id?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          connect_date?: string | null
-          connect_type?: string | null
-          contact_id?: string
-          created_at?: string
-          follow_up_action?: string | null
-          id?: string
-          note?: string | null
-          planned_follow_up_date?: string | null
-          planned_follow_up_type?: string | null
-          related_task_record_id?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_records_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video, ClipboardList,
-  Plus, Pencil, Trash2, X, MoreHorizontal, Clock, Check,
+  Pencil, Trash2, X, MoreHorizontal, Clock, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ const ContactHistory = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
+  const [newMenuOpen, setNewMenuOpen] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
@@ -230,18 +231,150 @@ const ContactHistory = () => {
             </DropdownMenu>
           </div>
 
-          {/* Action row — flush left */}
-          <div className="flex items-center justify-start gap-2 mt-4">
-            <button onClick={() => setLogSheetOpen(true)} className="inline-flex items-center gap-1.5 rounded-[10px] px-4 py-[9px] font-medium text-primary-foreground shadow-sm" style={{ background: "#c8622a", border: "1px solid #c8622a", fontFamily: "var(--font-body)", fontSize: "13px" }}>
-              <Plus size={14} /> Log
-            </button>
-            <button onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+          {/* Action row */}
+          <div className="flex items-center justify-start gap-2 mt-4" style={{ position: "relative" }}>
+            {/* New ▾ dropdown */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setNewMenuOpen((o) => !o)}
+                className="inline-flex items-center gap-1.5 font-semibold text-primary-foreground shadow-sm"
+                style={{
+                  background: "#c8622a",
+                  border: "1px solid #c8622a",
+                  borderRadius: "10px",
+                  padding: "9px 14px",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "13px",
+                }}
+              >
+                New
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" style={{ opacity: 0.75 }}>
+                  <path d="M2 3.5L5 6.5L8 3.5" />
+                </svg>
+              </button>
+
+              {newMenuOpen && (
+                <>
+                  {/* Backdrop to close on outside tap */}
+                  <div
+                    style={{ position: "fixed", inset: 0, zIndex: 10 }}
+                    onClick={() => setNewMenuOpen(false)}
+                  />
+                  {/* Dropdown card */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 6px)",
+                      left: 0,
+                      background: "#faf8f5",
+                      borderRadius: "14px",
+                      border: "1px solid #e8e4de",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.10)",
+                      minWidth: "240px",
+                      overflow: "hidden",
+                      zIndex: 20,
+                    }}
+                  >
+                    <div style={{ padding: "5px" }}>
+                      {/* Option 1 — primary */}
+                      <button
+                        onClick={() => {
+                          setNewMenuOpen(false);
+                          setLogSheetOpen(true);
+                        }}
+                        className="w-full text-left"
+                        style={{
+                          padding: "12px 14px",
+                          borderRadius: "10px",
+                          background: "#c8622a",
+                          marginBottom: "4px",
+                          display: "block",
+                        }}
+                      >
+                        <p style={{ fontSize: "14px", fontWeight: 700, color: "#fff", margin: "0 0 2px", fontFamily: "var(--font-body)", letterSpacing: "-0.01em" }}>
+                          Log + Set Follow-up
+                        </p>
+                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", margin: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+                          What happened · What's next
+                        </p>
+                      </button>
+
+                      {/* Hairline divider */}
+                      <div style={{ height: "0.5px", background: "#e8e4de", margin: "2px 0 4px" }} />
+
+                      {/* Option 2 — Log only */}
+                      <button
+                        onClick={() => {
+                          setNewMenuOpen(false);
+                          // TODO: route to log-only flow (skip Step 2)
+                          setLogSheetOpen(true);
+                        }}
+                        className="w-full text-left hover:bg-secondary transition-colors"
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          display: "block",
+                        }}
+                      >
+                        <p style={{ fontSize: "13px", fontWeight: 500, color: "#1c1812", margin: "0 0 2px", fontFamily: "var(--font-body)" }}>
+                          Log only
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#9e9e99", margin: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+                          Document a call, meeting, and more
+                        </p>
+                      </button>
+
+                      {/* Option 3 — Follow-up only */}
+                      <button
+                        onClick={() => {
+                          setNewMenuOpen(false);
+                          // TODO: route to follow-up-only flow (skip Step 1)
+                          setLogSheetOpen(true);
+                        }}
+                        className="w-full text-left hover:bg-secondary transition-colors"
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          display: "block",
+                        }}
+                      >
+                        <p style={{ fontSize: "13px", fontWeight: 500, color: "#1c1812", margin: "0 0 2px", fontFamily: "var(--font-body)" }}>
+                          Follow-up only
+                        </p>
+                        <p style={{ fontSize: "11px", color: "#9e9e99", margin: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+                          Set your next reminder
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Call */}
+            <button
+              onClick={() => { if (contact.phone) window.location.href = `tel:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
+            >
               <Phone size={14} /> Call
             </button>
-            <button onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else toast("No email added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+
+            {/* Email */}
+            <button
+              onClick={() => { if (contact.email) window.location.href = `mailto:${contact.email}`; else toast("No email added.", { action: { label: "Add", onClick: startEditing } }); }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
+            >
               <Mail size={14} /> Email
             </button>
-            <button onClick={() => { if (contact.phone) window.location.href = `sms:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }} className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+
+            {/* Text */}
+            <button
+              onClick={() => { if (contact.phone) window.location.href = `sms:${contact.phone}`; else toast("No phone number added.", { action: { label: "Add", onClick: startEditing } }); }}
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-border px-4 py-[9px] font-medium text-muted-foreground"
+              style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}
+            >
               <MessageSquare size={14} /> Text
             </button>
           </div>
