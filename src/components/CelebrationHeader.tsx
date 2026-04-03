@@ -25,11 +25,10 @@ const CelebrationHeader = ({ contactId, contactName, open }: CelebrationHeaderPr
     setAnimKey((k) => k + 1);
     (async () => {
       const { count } = await supabase
-        .from("task_records" as any)
+        .from("interactions")
         .select("id", { count: "exact", head: true })
         .eq("contact_id", contactId)
-        .not("status", "eq", "draft")
-        .or("connect_type.not.is.null,note.not.is.null");
+        .eq("status", "published");
       setInteractionCount(count ?? 0);
     })();
   }, [open, contactId]);

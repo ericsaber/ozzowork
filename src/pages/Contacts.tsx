@@ -70,7 +70,7 @@ const Contacts = () => {
       await supabase.from("follow_up_edits").delete().eq("user_id", user.id);
       await supabase.from("follow_ups").delete().eq("user_id", user.id);
       await supabase.from("interactions").delete().eq("user_id", user.id);
-      await supabase.from("task_records").delete().eq("user_id", user.id);
+      
       const { error } = await supabase.from("contacts").delete().eq("user_id", user.id);
       if (error) throw error;
     },
