@@ -325,25 +325,30 @@ const ContactHistory = () => {
                       </button>
 
                       {/* Option 3 — Follow-up only */}
-                      <button
-                        onClick={() => {
-                          setNewMenuOpen(false);
-                          setLogSheetMode({ startStep: 2, logOnly: false });
-                        }}
-                        className="w-full text-left hover:bg-secondary transition-colors"
-                        style={{
-                          padding: "10px 14px",
-                          borderRadius: "10px",
-                          display: "block",
-                        }}
-                      >
-                        <p style={{ fontSize: "13px", fontWeight: 500, color: "#1c1812", margin: "0 0 2px", fontFamily: "var(--font-body)" }}>
-                          Follow-up only
-                        </p>
-                        <p style={{ fontSize: "11px", color: "#9e9e99", margin: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
-                          Set your next reminder
-                        </p>
-                      </button>
+                      <div style={{ opacity: hasActiveFollowup ? 0.4 : 1 }}>
+                        <button
+                          onClick={() => {
+                            if (hasActiveFollowup) return;
+                            setNewMenuOpen(false);
+                            setLogSheetMode({ startStep: 2, logOnly: false });
+                          }}
+                          disabled={hasActiveFollowup}
+                          className="w-full text-left"
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "10px",
+                            display: "block",
+                            cursor: hasActiveFollowup ? "default" : "pointer",
+                          }}
+                        >
+                          <p style={{ fontSize: "13px", fontWeight: 500, color: "#1c1812", margin: "0 0 2px", fontFamily: "var(--font-body)" }}>
+                            Follow-up only
+                          </p>
+                          <p style={{ fontSize: "11px", color: "#9e9e99", margin: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>
+                            {hasActiveFollowup ? "Resolve your active follow-up first" : "Set your next reminder"}
+                          </p>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
