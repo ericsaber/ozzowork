@@ -37,7 +37,8 @@ const ContactHistory = () => {
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
-  const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [logSheetMode, setLogSheetMode] = useState<{ startStep: 1 | 2; logOnly: boolean } | null>(null);
+  const logSheetOpen = !!logSheetMode;
   const [completeTarget, setCompleteTarget] = useState<{
     followUpId: string;
     contactId: string;
