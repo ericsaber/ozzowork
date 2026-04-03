@@ -1,31 +1,31 @@
 
 
-## Wire up "New" dropdown log mode routing
+# Today Card Redesign
 
-Two files modified: `LogInteractionSheet.tsx` and `ContactHistory.tsx`.
+## Overview
+Full rewrite of `FollowupCard.tsx` and update `Today.tsx` to pass the new `reminderNote` prop and support the new `"upcoming"` variant.
 
-### 1. `LogInteractionSheet.tsx`
+## Changes
 
-**Props** (lines 24-28): Add `startStep?: 1 | 2` and `logOnly?: boolean` to interface, destructure with defaults `startStep = 1`, `logOnly = false`.
+### 1. FollowupCard.tsx — Full Rewrite
+- **New prop interface**: Add `reminderNote: string | null`, expand `variant` to `"overdue" | "today" | "upcoming"`; remove `isCompleting`
+- **State**: Add `expanded` toggle for upcoming cards (collapsed by default; today/overdue always show full content)
+- **Tokens**: Derive color palette per variant (green for today, sienna for upcoming, red for overdue) as specified in the design tokens
+- **Layout** — three vertical sections:
+  1. **Top row**: Name (15px/600/#383838) + company (11px/400/#777) + chevron (upcoming) or vertical dots menu (today/overdue)
+  2. **Action subframe**: Colored background with icon + label + "Done" pill button; optional reminder note row below with dashed border
+  3. **Previously section**: Gray background (#f7f5f2) with last interaction verb/date and 2-line clamped note; shown when data exists and card is not collapsed
+- **Imports**: Add `ChevronDown`, `CornerDownRight`, `CornerUpRight`; remove `Check`, `ClipboardList`; keep `useNavigate`
+- **Click behavior**: Upcoming cards toggle expand/collapse; today/overdue navigate to contact
 
-**Initial step state** (line 35): Change `useState<...>(1)` to `useState<...>(startStep)`.
+### 2. Today.tsx — Minimal Updates
+- Update `renderCard` signature to accept `"overdue" | "today" | "upcoming"` variant
+- Pass `reminderNote={item.reminder_note || null}` to `FollowupCard`
+- Pass `company={item.contacts?.company ?? null}` (already close, ensure `?? null`)
+- No other changes; all console.logs preserved
 
-**Reset on close** (line 89): Change `setStep(1)` to `setStep(startStep)`.
-
-**logOnly mode** (lines 206-222 in `logMutation.onSuccess`): Before the `activeFollowup` check, add early return for `logOnly` — publish draft immediately, toast, close.
-
-**StepIndicator** (line 526-528): Add `startStep !== 2` condition so stepper hides in follow-up-only mode.
-
-**LogStep2 onSkip** (line 599): Pass `undefined` when `startStep === 2` to hide skip link.
-
-### 2. `ContactHistory.tsx`
-
-**State** (line 40): Replace `logSheetOpen` boolean with `logSheetMode` state: `useState<{ startStep: 1 | 2; logOnly: boolean } | null>(null)`. Derive `logSheetOpen = !!logSheetMode`.
-
-**Dropdown handlers**: Update three option `onClick`s:
-- "Log + Set Follow-up" → `setLogSheetMode({ startStep: 1, logOnly: false })`
-- "Log only" → `setLogSheetMode({ startStep: 1, logOnly: true })`
-- "Follow-up only" → `setLogSheetMode({ startStep: 2, logOnly: false })`
-
-**Sheet call** (line 698): Pass `startStep`, `logOnly`, and update `onOpenChange` to set mode to `null`.
+## Technical Notes
+- Card uses inline styles per the spec (no Tailwind for the card internals)
+- `useState` import added to FollowupCard for `expanded` state
+- The "Coming Up" section in Today.tsx remains unchanged (it's a summary link, not individual cards)
 
