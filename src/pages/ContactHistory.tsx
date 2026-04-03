@@ -307,8 +307,12 @@ const ContactHistory = () => {
             hidePlannedFallback
             rescheduleCount={0}
             onComplete={() => {
-              // TODO Step 10: rewrite complete flow for new schema
-              console.log("[ContactHistory] complete flow not yet migrated");
+              setCompleteTarget({
+                followUpId: activeFollowup.id,
+                contactId: id!,
+                contactName: fullName,
+                plannedType: activeFollowup.planned_type || null,
+              });
             }}
           />
         </div>
