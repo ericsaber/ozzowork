@@ -44,6 +44,7 @@ const ContactHistory = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
+  const [newMenuOpen, setNewMenuOpen] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
