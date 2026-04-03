@@ -28,7 +28,7 @@ interface LogInteractionSheetProps {
 }
 
 const LogInteractionSheet = ({
-  open, onOpenChange, preselectedContactId, skipFollowupStep = false,
+  open, onOpenChange, preselectedContactId,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
 
