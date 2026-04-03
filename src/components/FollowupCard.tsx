@@ -257,7 +257,20 @@ const FollowupCard = ({
             gap: "4px",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <Rewind size={10} style={{ color: "#717171", fill: "#D9D9D9", flexShrink: 0 }} />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="#D9D9D9"
+                stroke="#717171"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ flexShrink: 0 }}
+              >
+                <polygon points="11 19 2 12 11 5 11 19" />
+                <polygon points="22 19 13 12 22 5 22 19" />
+              </svg>
               <span style={{
                 fontWeight: 400,
                 fontSize: "13px",
