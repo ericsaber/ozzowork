@@ -250,9 +250,6 @@ const LogInteractionSheet = ({
           .update({
             status: "completed",
             completed_at: computedConnectDate,
-            connect_type: connectType || null,
-            connect_date: computedConnectDate,
-            note: note || null,
           })
           .eq("id", existingFollowup.id);
         if (completeError) throw completeError;
