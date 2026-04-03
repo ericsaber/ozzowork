@@ -621,7 +621,7 @@ const LogInteractionSheet = ({
                 onSkip={startStep === 2 ? undefined : handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
-                skippedInteraction={skippedInteraction}
+                skippedInteraction={skippedInteraction || startStep === 2}
                 onAddInteraction={handleAddInteraction}
               />
             ) : step === 3 ? (
