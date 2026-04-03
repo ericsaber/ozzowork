@@ -206,10 +206,23 @@ const LogInteractionSheet = ({
       return { id: data.id };
     },
     onSuccess: (result) => {
-      
-
       setDraftId(result.id);
       setSkippedInteraction(!connectType && !note);
+
+      // logOnly mode — publish draft immediately and close, no Step 2
+      if (logOnly) {
+        supabase
+          .from("interactions")
+          .update({ status: "published" })
+          .eq("id", result.id)
+          .then(() => {
+            console.log("[LogInteractionSheet] logOnly — draft published:", result.id);
+            invalidateAll();
+            toast.success("Log saved.");
+            clearAndClose();
+          });
+        return;
+      }
 
       if (activeFollowup) {
         setExistingFollowup(activeFollowup);
