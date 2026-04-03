@@ -2,52 +2,54 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authToken = req.headers.get('authorization')?.replace('Bearer ', '');
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const authToken = req.headers.get("authorization")?.replace("Bearer ", "");
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const validTokens = [cronSecret, anonKey, serviceKey].filter(Boolean);
     if (!authToken || !validTokens.includes(authToken)) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured');
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
-    const { data: taskRecords, error: queryError } = await supabase
-      .from('task_records')
-      .select('id, planned_follow_up_type, planned_follow_up_date, user_id, contact_id, note, contacts(first_name, last_name, company, email)')
-      .eq('planned_follow_up_date', today)
-      .eq('status', 'active');
+    const { data: followUps, error: queryError } = await supabase
+      .from("follow_ups")
+      .select(
+        "id, planned_type, planned_date, user_id, contact_id, reminder_note, contacts(first_name, last_name, company)",
+      )
+      .eq("planned_date", today)
+      .eq("status", "active");
 
     if (queryError) throw queryError;
 
-    if (!taskRecords || taskRecords.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: 'No follow-ups due today' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (!followUps || followUps.length === 0) {
+      return new Response(JSON.stringify({ sent: 0, message: "No follow-ups due today" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userIds = [...new Set(taskRecords.map((r: any) => r.user_id))];
+    const userIds = [...new Set(followUps.map((r: any) => r.user_id))];
     const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
     if (usersError) throw usersError;
 
@@ -58,18 +60,18 @@ serve(async (req) => {
       }
     }
 
-    const appUrl = 'https://app.ozzo.work';
+    const appUrl = "https://app.ozzo.work";
     let sent = 0;
 
-    for (const record of taskRecords as any[]) {
+    for (const record of followUps as any[]) {
       const userEmail = userEmailMap[record.user_id];
       if (!userEmail) continue;
 
       const contact = record.contacts;
-      const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : 'Unknown';
-      const company = contact?.company ? ` (${contact.company})` : '';
-      const lastNote = record.note || 'No notes recorded.';
-      const deepLink = `${appUrl}/interaction/${record.id}`;
+      const contactName = contact ? `${contact.first_name} ${contact.last_name}`.trim() : "Unknown";
+      const company = contact?.company ? ` (${contact.company})` : "";
+      const lastNote = record.reminder_note || "No notes recorded.";
+      const deepLink = `${appUrl}/contact/${record.contact_id}`;
 
       const html = `
 <!DOCTYPE html>
@@ -92,14 +94,14 @@ serve(async (req) => {
 </body>
 </html>`;
 
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: 'ozzo <onboarding@resend.dev>',
+          from: "ozzo <onboarding@resend.dev>",
           to: [userEmail],
           subject: `Follow up with ${contactName} today`,
           html,
@@ -110,14 +112,14 @@ serve(async (req) => {
       else console.error(`Failed to send to ${userEmail}:`, await res.text());
     }
 
-    return new Response(JSON.stringify({ sent, total: taskRecords.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ sent, total: followUps.length }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error('send-followup-reminders error:', e);
-    return new Response(JSON.stringify({ error: 'Failed to send reminders' }), {
+    console.error("send-followup-reminders error:", e);
+    return new Response(JSON.stringify({ error: "Failed to send reminders" }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
