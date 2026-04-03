@@ -569,6 +569,7 @@ const LogInteractionSheet = ({
                   onSubmit={() => logMutation.mutate()}
                   isSubmitting={logMutation.isPending}
                   disabled={!contactId}
+                  submitLabel={logOnly ? "Save →" : undefined}
                   contactId={contactId}
                   contactName={contactName}
                   isContactPrefilled={isContactPrefilled}
