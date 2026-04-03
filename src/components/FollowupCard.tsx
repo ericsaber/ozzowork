@@ -147,7 +147,7 @@ const FollowupCard = ({
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "2.5px",
+              gap: "3px",
               paddingLeft: "8px",
               paddingTop: "3px",
               flexShrink: 0,
@@ -155,7 +155,7 @@ const FollowupCard = ({
             }}
           >
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{ width: "2.5px", height: "2.5px", borderRadius: "50%", background: "#777" }} />
+              <div key={i} style={{ width: "3.5px", height: "3.5px", borderRadius: "50%", background: "#888" }} />
             ))}
           </div>
         )}
@@ -258,10 +258,10 @@ const FollowupCard = ({
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               <svg
-                width="12"
-                height="12"
+                width="14"
+                height="14"
                 viewBox="0 0 24 24"
-                fill="#D9D9D9"
+                fill="#C0C0C0"
                 stroke="#717171"
                 strokeWidth="2"
                 strokeLinecap="round"
