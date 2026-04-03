@@ -205,7 +205,7 @@ const FollowupCard = ({
                 borderRadius: "20px",
                 padding: "6px 14px",
                 fontWeight: 500,
-                fontSize: "11px",
+                fontSize: "12px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
