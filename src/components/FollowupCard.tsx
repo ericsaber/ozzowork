@@ -119,7 +119,7 @@ const FollowupCard = ({
           {company && (
             <p style={{
               fontWeight: 400,
-              fontSize: "11px",
+              fontSize: "12px",
               color: "#777",
               lineHeight: "normal",
               fontFamily: "var(--font-body)",
