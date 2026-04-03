@@ -35,6 +35,12 @@ const LogInteractionSheet = ({
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
+
+  useEffect(() => {
+    if (open) {
+      setStep(startStep);
+    }
+  }, [open, startStep]);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
