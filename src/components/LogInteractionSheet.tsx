@@ -165,12 +165,6 @@ const LogInteractionSheet = ({
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
-      // TODO Step 10: rewrite skipFollowupStep path for new schema
-      if (skipFollowupStep) {
-        console.log("[LogInteractionSheet] skipFollowupStep path not yet migrated");
-        clearAndClose();
-        return;
-      }
 
       const computedConnectDate =
         connectDate === format(new Date(), "yyyy-MM-dd")
