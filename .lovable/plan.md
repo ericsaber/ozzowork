@@ -1,36 +1,18 @@
 
 
-## Step 11: Delete old pages and components
+## Pre-Step 12: Fix remaining task_records references
 
-### Summary
+Three surgical edits across three files.
 
-Delete 4 obsolete files and clean up their references in `App.tsx`. No other files import them.
+### 1. `src/App.tsx` (line 40-44)
 
-### Import analysis
+Replace `"task_records" as any` with `"interactions"` in the draft cleanup query. Keep the console.log.
 
-| File to delete | Imported by |
-|---|---|
-| `InteractionDetail.tsx` | `App.tsx` (import + route) |
-| `EditTaskRecord.tsx` | `App.tsx` (import + route) |
-| `RescheduleSheet.tsx` | `InteractionDetail.tsx` only (being deleted) |
-| `ScheduleFollowupSheet.tsx` | No imports found |
+### 2. `src/components/CelebrationHeader.tsx` (lines 27-32)
 
-### Changes
+Replace the `task_records` query with a simpler `interactions` query filtered by `status: "published"`. Remove the `.not()` and `.or()` filters.
 
-**1. `src/App.tsx`** — Remove 2 imports and 2 routes
+### 3. `src/pages/Contacts.tsx` (line 73)
 
-- Remove `import InteractionDetail from "./pages/InteractionDetail";` (line 14)
-- Remove `import EditTaskRecord from "./pages/EditTaskRecord";` (line 15)
-- Remove `<Route path="/interaction/:id" element={<InteractionDetail />} />` (line 70)
-- Remove `<Route path="/edit-task/:id" element={<EditTaskRecord />} />` (line 71)
-- Keep `FollowupTask` import and `/followup/:id` route (still used as redirect)
-
-**2. Delete files**
-
-- `src/pages/InteractionDetail.tsx`
-- `src/pages/EditTaskRecord.tsx`
-- `src/components/RescheduleSheet.tsx`
-- `src/components/ScheduleFollowupSheet.tsx`
-
-No other files reference any of these four.
+Delete the `task_records` delete line. The `follow_up_edits`, `follow_ups`, and `interactions` deletes on lines 70-72 are sufficient.
 
