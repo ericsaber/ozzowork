@@ -138,18 +138,15 @@ const CompleteFollowupSheet = ({
       console.log("[completion] handleSkip:", { followUpId, draftId });
 
       // Mark follow-up as completed with whatever was logged
-      const { error: completeError } = await supabase
-        .from("follow_ups")
-        .update({
-          status: "completed",
-          completed_at: connectDate,
-          connect_type: connectType || null,
-          connect_date: connectDate,
-          note: note || null,
-        })
-        .eq("id", followUpId);
-      if (completeError) throw completeError;
-      console.log("[completion] follow_up marked completed on skip:", followUpId);
+    const { error: completeError } = await supabase
+      .from("follow_ups")
+      .update({
+        status: "completed",
+        completed_at: connectDate,
+      })
+      .eq("id", followUpId);
+    if (completeError) throw completeError;
+    console.log("[completion] follow_up marked completed on skip:", followUpId);
 
       // Publish interaction draft if exists
       if (draftId) {
