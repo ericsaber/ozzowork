@@ -227,7 +227,7 @@ const FollowupCard = ({
                 justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <ActionIcon size={16} strokeWidth={1.5} style={{ color: tokens.color }} />
+                <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
               </div>
               <span style={{
                 fontWeight: 600,
@@ -248,7 +248,7 @@ const FollowupCard = ({
                 borderRadius: "20px",
                 padding: "6px 14px",
                 fontWeight: 500,
-                fontSize: "16px",
+                fontSize: "14px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
