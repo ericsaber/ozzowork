@@ -154,21 +154,42 @@ const FollowupCard = ({
             }}
           />
         ) : (
-          <div
-            onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
-            style={{
-              paddingLeft: "8px",
-              paddingTop: "3px",
-              flexShrink: 0,
-              cursor: "pointer",
-            }}
-          >
-            <svg width="3" height="14" viewBox="0 0 3 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1.5 7.5C1.91421 7.5 2.25 7.16421 2.25 6.75C2.25 6.33579 1.91421 6 1.5 6C1.08579 6 0.75 6.33579 0.75 6.75C0.75 7.16421 1.08579 7.5 1.5 7.5Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1.5 2.25C1.91421 2.25 2.25 1.91421 2.25 1.5C2.25 1.08579 1.91421 0.75 1.5 0.75C1.08579 0.75 0.75 1.08579 0.75 1.5C0.75 1.91421 1.08579 2.25 1.5 2.25Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1.5 12.75C1.91421 12.75 2.25 12.4142 2.25 12C2.25 11.5858 1.91421 11.25 1.5 11.25C1.08579 11.25 0.75 11.5858 0.75 12C0.75 12.4142 1.08579 12.75 1.5 12.75Z" stroke="#777777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "2px 0 0 8px",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "flex-start",
+                }}
+              >
+                <MoreVertical size={16} style={{ color: "#777" }} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[160px]">
+              {onEdit && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+                  <Pencil size={14} className="mr-2" /> Edit follow-up
+                </DropdownMenuItem>
+              )}
+              {onCancel && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => { e.stopPropagation(); onCancel(); }}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <X size={14} className="mr-2" /> Cancel follow-up
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 

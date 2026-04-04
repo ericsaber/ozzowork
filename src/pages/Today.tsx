@@ -232,6 +232,56 @@ const Today = () => {
           userId=""
         />
       )}
+      {editTarget && (
+        <EditFollowupSheet
+          open={!!editTarget}
+          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
+          followUp={{
+            id: editTarget.id,
+            planned_type: editTarget.planned_type || null,
+            planned_date: editTarget.planned_date,
+            reminder_note: editTarget.reminder_note || null,
+            created_at: editTarget.created_at,
+            contact_id: editTarget.contact_id,
+          }}
+        />
+      )}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this follow-up?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It will be recorded as cancelled in their history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => {
+                // TODO: route to log flow then cancel on save
+                cancelFollowUpMutation.mutate();
+              }}
+              className="w-full"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Cancel and log what happened
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => cancelFollowUpMutation.mutate()}
+              className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Yes, cancel
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() => { setShowCancelDialog(false); setCancelTarget(null); }}
+              className="w-full"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Don't cancel
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
