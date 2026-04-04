@@ -194,6 +194,26 @@ const ContactHistory = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const cancelFollowUpMutation = useMutation({
+    mutationFn: async (followUpId: string) => {
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({ status: "cancelled", completed_at: new Date().toISOString() })
+        .eq("id", followUpId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-active", id] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-history", id] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+      setShowCancelDialog(false);
+      setCancelTarget(null);
+      toast.success("Follow-up cancelled");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const startEditing = () => {
     if (contact) {
       setForm({ first_name: contact.first_name, last_name: contact.last_name, company: contact.company || "", phone: contact.phone || "", email: contact.email || "" });
