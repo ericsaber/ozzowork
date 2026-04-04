@@ -64,11 +64,14 @@ const ContactFollowupCard = ({
     ? typeVerb[taskRecord.planned_type] || taskRecord.planned_type
     : "Follow-up";
 
-  const dateStr = format(parseISO(taskRecord.planned_date), "M/d");
-
-  const actionLabel = isOverdue
-    ? `${typeStr} · Due ${dateStr}`
-    : `${typeStr} · ${format(parseISO(taskRecord.planned_date), "MMM d")}`;
+  const followUpDate = parseISO(taskRecord.planned_date);
+  const datePart = (() => {
+    if (isToday(followUpDate)) return "Today";
+    if (isTomorrow(followUpDate)) return "Tomorrow";
+    if (isOverdue) return `Due ${format(followUpDate, "MMM d")}`;
+    return format(followUpDate, "MMM d");
+  })();
+  const actionLabel = `${typeStr} · ${datePart}`;
 
   return (
     <div
