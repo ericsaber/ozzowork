@@ -218,9 +218,9 @@ const FollowupCard = ({
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div style={{
-                width: "22px",
-                height: "22px",
-                borderRadius: "5px",
+                width: "26px",
+                height: "26px",
+                borderRadius: "6px",
                 background: `${tokens.color}26`,
                 display: "flex",
                 alignItems: "center",
