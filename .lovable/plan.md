@@ -1,24 +1,34 @@
 
 
-## Plan: Wire three-dot menu on FollowupCard
+## Plan: Update ContactHistory.tsx for ContactFollowupCard redesign
 
 ### What changes
 
-**File 1: `src/components/FollowupCard.tsx`**
-- Add 4 new optional props: `onEdit`, `onCancel`, `menuOpen`, `onMenuOpenChange`
-- Import `DropdownMenu` components from shadcn, plus `MoreVertical`, `Pencil`, `X` from lucide-react
-- Replace the current inline SVG dots (lines 144-160) with a `DropdownMenu` containing "Edit follow-up" and "Cancel follow-up" items
-- Keep the `ChevronDown` for upcoming cards unchanged
+**File: `src/pages/ContactHistory.tsx`**
 
-**File 2: `src/pages/Today.tsx`**
-- Add state: `editTarget`, `cancelTarget`, `openMenuId`, `showCancelDialog`
-- Import `EditFollowupSheet`, `AlertDialog` components, `useMutation`
-- Add `cancelFollowUpMutation` that sets status='cancelled' and completed_at, then invalidates queries
-- Update `renderCard` to pass `menuOpen`, `onMenuOpenChange`, `onEdit`, `onCancel` props
-- Render `EditFollowupSheet` when `editTarget` is set
-- Render `AlertDialog` with three buttons per spec: "Cancel and log what happened" (TODO: routes to log flow, for now just cancels), "Yes, cancel" (immediate cancel), "Don't cancel" (dismiss)
+1. **Add cancel state** — new state variables:
+   - `cancelTarget` (follow-up object or null)
+   - `showCancelDialog` (boolean)
+
+2. **Add cancel mutation** — `cancelFollowUpMutation` matching Today.tsx pattern: sets `status: 'cancelled'`, `completed_at`, invalidates `follow-ups-active`, `follow-ups`, and contact-specific query keys.
+
+3. **Fix ContactFollowupCard prop call site** (around line 440):
+   - Remove `hidePlannedFallback`
+   - Remove `onTap` / `onReschedule` (if present)
+   - Add `onEdit={() => { ... }}` (opens EditFollowupSheet — or sets editTarget)
+   - Add `onCancel={() => { setCancelTarget(activeFollowup); setShowCancelDialog(true); }}`
+   - Add `menuOpen` / `onMenuOpenChange` tied to `openMenuId` state
+   - Ensure `taskRecord` object includes `reminder_note: activeFollowup.reminder_note`
+
+4. **Add cancel AlertDialog** — three-button dialog identical to Today.tsx:
+   - "Cancel and log what happened" → calls `cancelFollowUpMutation.mutate()` (TODO: route to log flow)
+   - "Yes, cancel" → calls `cancelFollowUpMutation.mutate()`
+   - "Don't cancel" → dismisses
 
 ### Technical details
 
-The dropdown uses controlled `open`/`onOpenChange` via `openMenuId` state so only one menu is open at a time. All click handlers call `e.stopPropagation()` to prevent card navigation. The cancel mutation invalidates `follow-ups-today`, `follow-ups`, and `follow-ups-active` query keys. The "Cancel and log what happened" option will cancel immediately with a TODO comment for the log-then-cancel routing.
+- The `activeFollowup` query already uses `select("*")` so `reminder_note` is already in the data; it just needs to be passed through in the `taskRecord` prop.
+- `openMenuId` state already exists in ContactHistory.tsx (line 38) for history item menus — reuse it for the follow-up card menu as well.
+- Cancel mutation invalidates `["follow-ups-active", id]` and `["follow-ups"]` to refresh both the contact record and any global lists.
+- All existing `console.log` statements preserved. No other files modified.
 
