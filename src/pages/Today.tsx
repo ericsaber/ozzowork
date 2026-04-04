@@ -154,8 +154,8 @@ const Today = () => {
       return (
         <div className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3">
           <div className="flex-1 min-w-0 text-left">
-            <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
-            <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>You're all caught up</p>
+            <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '16px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
+            <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '16px' }}>You're all caught up</p>
           </div>
         </div>
       );
@@ -172,8 +172,8 @@ const Today = () => {
     return (
       <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
         <div className="flex-1 min-w-0 text-left">
-          <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
-          <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
+          <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '16px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
+          <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
         </div>
         <span className="inline-flex items-center gap-1 bg-[#f5ede7] text-primary font-medium rounded-[20px] px-2.5 py-1 shrink-0" style={{ fontSize: '14px', lineHeight: '20px' }}><Eye size={16} />See all</span>
       </button>
