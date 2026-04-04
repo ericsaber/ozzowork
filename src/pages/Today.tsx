@@ -132,6 +132,10 @@ const Today = () => {
       reminderNote={item.reminder_note || null}
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
+      menuOpen={openMenuId === item.id}
+      onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
+      onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+      onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
       onComplete={() => {
         setCompleteTarget({
           followUpId: item.id,
