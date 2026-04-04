@@ -1,34 +1,33 @@
 
 
-## Plan: Update ContactHistory.tsx for ContactFollowupCard redesign
+## Upcoming Screen Redesign + FollowupCard Chevron Fix
 
-### What changes
+Two files modified: `FollowupCard.tsx` and `Upcoming.tsx`.
 
-**File: `src/pages/ContactHistory.tsx`**
+### 1. `FollowupCard.tsx` — Conditional chevron + click behavior
 
-1. **Add cancel state** — new state variables:
-   - `cancelTarget` (follow-up object or null)
-   - `showCancelDialog` (boolean)
+**Chevron** (around line 145): Wrap `ChevronDown` in a `hasLastInteraction` check so it only renders when there's prior interaction data to expand. If no last interaction, render nothing.
 
-2. **Add cancel mutation** — `cancelFollowUpMutation` matching Today.tsx pattern: sets `status: 'cancelled'`, `completed_at`, invalidates `follow-ups-active`, `follow-ups`, and contact-specific query keys.
+**onClick** (line 101): Update to navigate to contact record when upcoming card has no last interaction (nothing to expand), otherwise toggle expand as before.
 
-3. **Fix ContactFollowupCard prop call site** (around line 440):
-   - Remove `hidePlannedFallback`
-   - Remove `onTap` / `onReschedule` (if present)
-   - Add `onEdit={() => { ... }}` (opens EditFollowupSheet — or sets editTarget)
-   - Add `onCancel={() => { setCancelTarget(activeFollowup); setShowCancelDialog(true); }}`
-   - Add `menuOpen` / `onMenuOpenChange` tied to `openMenuId` state
-   - Ensure `taskRecord` object includes `reminder_note: activeFollowup.reminder_note`
+### 2. `Upcoming.tsx` — Full rewrite using FollowupCard
 
-4. **Add cancel AlertDialog** — three-button dialog identical to Today.tsx:
-   - "Cancel and log what happened" → calls `cancelFollowUpMutation.mutate()` (TODO: route to log flow)
-   - "Yes, cancel" → calls `cancelFollowUpMutation.mutate()`
-   - "Don't cancel" → dismisses
+**New imports**: `useState`, `useMutation`, `useQueryClient` from tanstack, `FollowupCard`, `CompleteFollowupSheet`, `EditFollowupSheet`, `AlertDialog` components, `addDays` from date-fns.
 
-### Technical details
+**New state**: `completeTarget`, `editTarget`, `cancelTarget`, `showCancelDialog`, `openMenuId`.
 
-- The `activeFollowup` query already uses `select("*")` so `reminder_note` is already in the data; it just needs to be passed through in the `taskRecord` prop.
-- `openMenuId` state already exists in ContactHistory.tsx (line 38) for history item menus — reuse it for the follow-up card menu as well.
-- Cancel mutation invalidates `["follow-ups-active", id]` and `["follow-ups"]` to refresh both the contact record and any global lists.
-- All existing `console.log` statements preserved. No other files modified.
+**New cancel mutation**: Updates follow-up status to `cancelled`, sets `completed_at`, invalidates relevant query keys (`follow-ups-upcoming`, `follow-ups-today`, `follow-ups`).
+
+**New interactions query**: Fetches last published interaction per contact to pass as `lastInteraction` prop to each FollowupCard.
+
+**Replace item list**: Swap plain button list with `FollowupCard` components using `variant="upcoming"`, passing all required props: `taskRecordId`, `contactId`, `name`, `company`, `dueDate`, `plannedType`, `reminderNote`, `lastInteraction`, `menuOpen`, `onMenuOpenChange`, `onComplete`, `onEdit`, `onCancel`.
+
+**Add bottom sheets/dialogs**: `CompleteFollowupSheet`, `EditFollowupSheet`, and the three-button cancel `AlertDialog` (Cancel and log / Yes cancel / Don't cancel) — same pattern as Today.tsx.
+
+Keep existing query, console.logs, back button, heading, loading skeleton, and empty state unchanged.
+
+### Technical notes
+- The existing deduplication logic (one card per contact) stays in the main query
+- `lastInteractionByContact` reduce pattern matches Today.tsx implementation
+- No other files touched
 
