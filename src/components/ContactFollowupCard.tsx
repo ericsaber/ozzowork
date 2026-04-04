@@ -208,7 +208,7 @@ const ContactFollowupCard = ({
             <CornerDownRight size={10} style={{ color: tokens.color, flexShrink: 0 }} />
             <span style={{
               fontWeight: 500,
-              fontSize: "10px",
+              fontSize: "12px",
               color: tokens.color,
               whiteSpace: "nowrap",
               fontFamily: "var(--font-body)",

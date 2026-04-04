@@ -697,7 +697,7 @@ const ContactHistory = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-foreground"
-                            style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                            style={{ fontFamily: "var(--font-body)", fontSize: "16px" }}>
                             {verb}
                           </span>
                           <span className="text-muted-foreground"
