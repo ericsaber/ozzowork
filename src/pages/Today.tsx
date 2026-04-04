@@ -132,6 +132,8 @@ const Today = () => {
       reminderNote={item.reminder_note || null}
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
+      contactPhone={item.contacts?.phone ?? null}
+      contactEmail={item.contacts?.email ?? null}
       menuOpen={openMenuId === item.id}
       onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
       onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}

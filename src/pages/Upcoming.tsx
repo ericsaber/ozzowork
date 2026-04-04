@@ -126,6 +126,8 @@ const Upcoming = () => {
                   note: lastInteraction.note,
                 } : null}
                 variant="upcoming"
+                contactPhone={item.contacts?.phone ?? null}
+                contactEmail={item.contacts?.email ?? null}
                 menuOpen={openMenuId === item.id}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
                 onComplete={() => setCompleteTarget({

@@ -257,7 +257,10 @@ const FollowupCard = ({
             padding: "10px 8px",
             background: tokens.subframeBg,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "6px", cursor: isActionable ? "pointer" : "default" }}
+              onClick={isActionable ? handleActionTap : undefined}
+            >
               <div style={{
                 width: "26px",
                 height: "26px",
