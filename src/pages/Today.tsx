@@ -6,7 +6,7 @@ import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
-import { Calendar, Eye, SquareUserRound } from "lucide-react";
+import { Calendar, Eye, UserRound } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -187,9 +187,9 @@ const Today = () => {
         <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
           ozzo
         </span>
-        <SquareUserRound size={32} style={{ color: "#999" }} />
+        <UserRound size={32} style={{ color: "#999" }} />
       </div>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#71717a", marginBottom: "20px" }}>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
       </p>
@@ -207,14 +207,14 @@ const Today = () => {
             <>
               {overdue.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
                   <div className="space-y-5 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
 
               {dueToday.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
                   <div className="space-y-5 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
@@ -222,7 +222,7 @@ const Today = () => {
           )}
 
           <section>
-            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
+            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
             {renderComingUp()}
           </section>
         </div>
