@@ -46,6 +46,8 @@ const ContactHistory = () => {
     plannedType: string | null;
   } | null>(null);
   const [newMenuOpen, setNewMenuOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<any>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
@@ -189,6 +191,26 @@ const ContactHistory = () => {
   const deleteContact = useMutation({
     mutationFn: async () => { const { error } = await supabase.from("contacts").delete().eq("id", id!); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); toast.success("Contact deleted"); navigate("/contacts", { replace: true }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const cancelFollowUpMutation = useMutation({
+    mutationFn: async (followUpId: string) => {
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({ status: "cancelled", completed_at: new Date().toISOString() })
+        .eq("id", followUpId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-active", id] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-history", id] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+      setShowCancelDialog(false);
+      setCancelTarget(null);
+      toast.success("Follow-up cancelled");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -438,9 +460,14 @@ const ContactHistory = () => {
             {isOverdue ? "Overdue" : "Next follow-up"}
           </p>
           <ContactFollowupCard
-            taskRecord={activeFollowup}
+            taskRecord={{
+              id: activeFollowup.id,
+              planned_type: activeFollowup.planned_type,
+              planned_date: activeFollowup.planned_date,
+              reminder_note: activeFollowup.reminder_note ?? null,
+              contact_id: activeFollowup.contact_id,
+            }}
             variant={isOverdue ? "overdue" : "upcoming"}
-            hidePlannedFallback
             rescheduleCount={0}
             onComplete={() => {
               setCompleteTarget({
@@ -450,6 +477,15 @@ const ContactHistory = () => {
                 plannedType: activeFollowup.planned_type || null,
               });
             }}
+            onEdit={() => {
+              // TODO: open EditFollowupSheet for this follow-up
+            }}
+            onCancel={() => {
+              setCancelTarget(activeFollowup);
+              setShowCancelDialog(true);
+            }}
+            menuOpen={openMenuId === `followup-${activeFollowup.id}`}
+            onMenuOpenChange={(o) => setOpenMenuId(o ? `followup-${activeFollowup.id}` : null)}
           />
         </div>
       )}
@@ -724,6 +760,38 @@ const ContactHistory = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteContact.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel follow-up dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={(o) => { if (!o) { setShowCancelDialog(false); setCancelTarget(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this follow-up?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This follow-up will be marked as cancelled. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => {
+                // TODO: route to log flow before cancelling
+                if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Cancel and log what happened
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, cancel
+            </AlertDialogAction>
+            <AlertDialogCancel>Don't cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, Check, MoreHorizontal, Pencil, Clock, Calendar as CalendarIcon } from "lucide-react";
-import { format, differenceInDays, isToday, isTomorrow, parseISO } from "date-fns";
+import { Phone, Mail, MessageSquare, Users, Video, Pencil, Clock, Calendar as CalendarIcon, CornerDownRight, X } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const typeIcons: Record<string, typeof Phone> = {
-  call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video,
+const typeVerb: Record<string, string> = {
+  call: "Call", email: "Email", text: "Text", meet: "Meeting", video: "Video call",
 };
-const typeLabels: Record<string, string> = {
-  call: "Call", email: "Email", text: "Text", meet: "Meeting", video: "Video",
+const typeIconMap: Record<string, React.ElementType> = {
+  call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video,
 };
 
 interface ContactFollowupCardProps {
@@ -17,137 +16,218 @@ interface ContactFollowupCardProps {
     id: string;
     planned_type: string | null;
     planned_date: string;
+    reminder_note: string | null;
     contact_id: string;
   };
   variant: "upcoming" | "overdue";
-  onTap?: () => void;
   onComplete?: () => void;
   onEdit?: () => void;
-  onReschedule?: () => void;
+  onCancel?: () => void;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
-  hidePlannedFallback?: boolean;
   rescheduleCount?: number;
 }
 
 const ContactFollowupCard = ({
   taskRecord,
   variant,
-  onTap,
   onComplete,
   onEdit,
-  onReschedule,
+  onCancel,
   menuOpen,
   onMenuOpenChange,
-  hidePlannedFallback = false,
   rescheduleCount,
 }: ContactFollowupCardProps) => {
-  const [checkHovered, setCheckHovered] = useState(false);
-  const followUpDate = parseISO(taskRecord.planned_date);
-  const plannedType = taskRecord.planned_type;
-  const TypeIcon = plannedType ? (typeIcons[plannedType] || CalendarIcon) : CalendarIcon;
+  const isOverdue = variant === "overdue";
 
-  // Date label
-  let dateLabel = "";
-  if (isToday(followUpDate)) dateLabel = "Today";
-  else if (isTomorrow(followUpDate)) dateLabel = variant === "upcoming" ? "Tomorrow" : `Due ${format(followUpDate, "MMM d")}`;
-  else dateLabel = `Due ${format(followUpDate, "MMM d")}`;
+  const tokens = isOverdue
+    ? {
+        subframeBg: "rgba(255,240,239,0.5)",
+        color: "#c0392b",
+        doneBorder: "1px solid rgba(192,57,43,0.35)",
+        reminderBg: "#fff0ef",
+        reminderBorderColor: "rgba(192,57,43,0.35)",
+      }
+    : {
+        subframeBg: "rgba(253,240,232,0.5)",
+        color: "#b05524",
+        doneBorder: "1px solid rgba(200,98,42,0.35)",
+        reminderBg: "rgba(253,240,232,0.5)",
+        reminderBorderColor: "rgba(176,85,36,0.35)",
+      };
 
-  // Relative time subtitle
-  let relativeTime = "";
-  if (variant === "upcoming") {
-    if (isToday(followUpDate)) relativeTime = "Due today";
-    else {
-      const daysAhead = differenceInDays(followUpDate, new Date());
-      if (daysAhead === 1) relativeTime = "Tomorrow";
-      else if (daysAhead > 0) relativeTime = `In ${daysAhead} day${daysAhead !== 1 ? "s" : ""}`;
-    }
-  } else {
-    const daysAgo = differenceInDays(new Date(), followUpDate);
-    relativeTime = `${daysAgo} day${daysAgo !== 1 ? "s" : ""} ago`;
-  }
+  const ActionIcon = taskRecord.planned_type
+    ? (typeIconMap[taskRecord.planned_type] || CalendarIcon)
+    : CalendarIcon;
 
-  const pillBg = variant === "upcoming" ? "#e9f2eb" : "#fce8e8";
-  const pillColor = variant === "upcoming" ? "#3d7a4a" : "#a32d2d";
+  const typeStr = taskRecord.planned_type
+    ? typeVerb[taskRecord.planned_type] || taskRecord.planned_type
+    : "Follow-up";
+
+  const dateStr = format(parseISO(taskRecord.planned_date), "M/d");
+
+  const actionLabel = isOverdue
+    ? `${typeStr} · Due ${dateStr}`
+    : `${typeStr} · ${format(parseISO(taskRecord.planned_date), "MMM d")}`;
 
   return (
     <div
-      className="rounded-[12px] overflow-hidden cursor-pointer"
-      style={{ background: 'white', border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,.05)" }}
-      onClick={onTap}
+      style={{
+        background: "white",
+        border: "1px solid #e8e4de",
+        borderRadius: "16px",
+        overflow: "hidden",
+        width: "100%",
+        maxWidth: "390px",
+        margin: "0 auto",
+        padding: "16px 0",
+      }}
     >
-      <div className="flex items-center gap-3" style={{ padding: "14px 12px" }}>
-        {/* Checkbox */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onComplete?.(); }}
-          onMouseEnter={() => setCheckHovered(true)}
-          onMouseLeave={() => setCheckHovered(false)}
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
-          style={{
-            border: `1.5px solid ${checkHovered ? "#4a9e4a" : "#e8e6e3"}`,
-            background: checkHovered ? "#eef7ee" : "transparent",
-          }}
-        >
-          <Check size={14} strokeWidth={2.5} className="transition-colors" style={{ color: checkHovered ? "#4a9e4a" : "#c5c3be" }} />
-        </button>
-
-        {/* Content block */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-foreground"
-              style={{ fontFamily: "var(--font-body)", fontSize: "15px", fontWeight: 500, lineHeight: "20px" }}
-            >
-              {dateLabel}
+      {/* Action subframe */}
+      <div style={{
+        width: "calc(100% - 24px)",
+        margin: "0 auto",
+        borderRadius: "5px",
+        overflow: "hidden",
+      }}>
+        {/* Main action row */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 8px",
+          background: tokens.subframeBg,
+        }}>
+          {/* Left: icon bubble + label */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{
+              width: "26px",
+              height: "26px",
+              borderRadius: "6px",
+              background: `${tokens.color}26`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+            </div>
+            <span style={{
+              fontWeight: 600,
+              fontSize: "13px",
+              color: tokens.color,
+              whiteSpace: "nowrap",
+              fontFamily: "var(--font-body)",
+            }}>
+              {actionLabel}
             </span>
-            {(plannedType || !hidePlannedFallback) && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full px-[9px] py-[2px] shrink-0"
-                style={{ background: pillBg, color: pillColor, fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-body)" }}
-              >
-                <TypeIcon size={11} />
-                {plannedType ? `${typeLabels[plannedType] || plannedType} planned` : "Planned"}
-              </span>
-            )}
           </div>
-          {relativeTime && (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", lineHeight: "16px", color: "#9e9e99", marginTop: "2px" }}>
-              {relativeTime}
-            </p>
-          )}
+
+          {/* Right: Done button + vertical dots */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onComplete?.(); }}
+              style={{
+                background: "white",
+                border: tokens.doneBorder,
+                borderRadius: "20px",
+                padding: "6px 14px",
+                fontWeight: 500,
+                fontSize: "11px",
+                color: tokens.color,
+                whiteSpace: "nowrap",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Done
+            </button>
+
+            {/* Vertical dots menu */}
+            <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2.5px",
+                    alignItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {[0,1,2].map((i) => (
+                    <div key={i} style={{
+                      width: "2px",
+                      height: "2px",
+                      borderRadius: "50%",
+                      background: "#bbb",
+                    }} />
+                  ))}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[160px]">
+                {onEdit && (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+                    <Pencil size={14} className="mr-2" /> Edit follow-up
+                  </DropdownMenuItem>
+                )}
+                {onCancel && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={(e) => { e.stopPropagation(); onCancel(); }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <X size={14} className="mr-2" /> Cancel follow-up
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
-        {/* Three-dot menu */}
-        {onMenuOpenChange && (
-          <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
-            <DropdownMenuTrigger asChild>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="p-1.5 rounded-full transition-colors shrink-0"
-                style={{ color: "#b0ada8" }}
-              >
-                <MoreHorizontal size={18} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[160px]">
-              {onEdit && (
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
-                  <Pencil size={14} className="mr-2" /> Edit
-                </DropdownMenuItem>
-              )}
-              {onReschedule && (
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onReschedule(); }}>
-                  <Clock size={14} className="mr-2" /> Reschedule
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Reminder row */}
+        {taskRecord.reminder_note && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "10px 17px",
+            gap: "7px",
+            borderTop: `1px dashed ${tokens.reminderBorderColor}`,
+            background: tokens.reminderBg,
+          }}>
+            <CornerDownRight size={10} style={{ color: tokens.color, flexShrink: 0 }} />
+            <span style={{
+              fontWeight: 500,
+              fontSize: "10px",
+              color: tokens.color,
+              whiteSpace: "nowrap",
+              fontFamily: "var(--font-body)",
+              flex: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}>
+              {taskRecord.reminder_note}
+            </span>
+          </div>
         )}
       </div>
 
       {/* Reschedule nudge */}
       {rescheduleCount !== undefined && rescheduleCount >= 3 && (
-        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "8px 12px 0",
+          marginTop: "8px",
+        }}>
           <Clock size={11} style={{ color: "#999" }} />
           <span style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
             Rescheduled {rescheduleCount} times
