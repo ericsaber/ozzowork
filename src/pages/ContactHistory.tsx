@@ -763,6 +763,38 @@ const ContactHistory = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Cancel follow-up dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={(o) => { if (!o) { setShowCancelDialog(false); setCancelTarget(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this follow-up?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This follow-up will be marked as cancelled. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => {
+                // TODO: route to log flow before cancelling
+                if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id);
+              }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Cancel and log what happened
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, cancel
+            </AlertDialogAction>
+            <AlertDialogCancel>Don't cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
