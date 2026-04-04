@@ -44,6 +44,7 @@ const connectVerbs: Record<string, string> = {
 const FollowupCard = ({
   taskRecordId, contactId, name, company, dueDate, variant,
   plannedType, reminderNote, lastInteraction, onComplete,
+  onEdit, onCancel, menuOpen, onMenuOpenChange,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
