@@ -561,7 +561,7 @@ const ContactHistory = () => {
                         <Clock size={14} style={{ color: "#9e9e99" }} />
                       </div>
                       <div className="flex-1 min-w-0 flex items-center">
-                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                           Follow-up for {plannedDate} · Set {setDate}
                         </span>
                       </div>
