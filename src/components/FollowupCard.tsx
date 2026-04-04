@@ -98,7 +98,14 @@ const FollowupCard = ({
 
   return (
     <div
-      onClick={() => isUpcoming ? setExpanded((e) => !e) : navigate(`/contact/${contactId}`)}
+      onClick={() => {
+        if (isUpcoming) {
+          if (hasLastInteraction) setExpanded((e) => !e);
+          else navigate(`/contact/${contactId}`);
+        } else {
+          navigate(`/contact/${contactId}`);
+        }
+      }}
       style={{
         background: "white",
         border: "1px solid #e8e4de",
@@ -143,16 +150,18 @@ const FollowupCard = ({
         </div>
 
         {isUpcoming ? (
-          <ChevronDown
-            size={14}
-            style={{
-              color: "#ccc",
-              flexShrink: 0,
-              marginTop: "3px",
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s ease",
-            }}
-          />
+          hasLastInteraction ? (
+            <ChevronDown
+              size={14}
+              style={{
+                color: "#ccc",
+                flexShrink: 0,
+                marginTop: "3px",
+                transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease",
+              }}
+            />
+          ) : null
         ) : (
           <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
             <DropdownMenuTrigger asChild>
