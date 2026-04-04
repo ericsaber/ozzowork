@@ -122,28 +122,36 @@ const FollowupCard = ({
         padding: "16px 20px 10px",
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{
-            fontWeight: 600,
-            fontSize: "16px",
-            color: "#383838",
-            lineHeight: "normal",
-            fontFamily: "var(--font-body)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            margin: 0,
-          }}>
+          <p
+            onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
+            style={{
+              fontWeight: 600,
+              fontSize: "16px",
+              color: "#383838",
+              lineHeight: "normal",
+              fontFamily: "var(--font-body)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              margin: 0,
+              cursor: "pointer",
+            }}
+          >
             {name}
           </p>
           {company && (
-            <p style={{
-              fontWeight: 400,
-              fontSize: "14px",
-              color: "#777",
-              lineHeight: "normal",
-              fontFamily: "var(--font-body)",
-              margin: 0,
-            }}>
+            <p
+              onClick={(e) => { e.stopPropagation(); navigate(`/contact/${contactId}`); }}
+              style={{
+                fontWeight: 400,
+                fontSize: "14px",
+                color: "#777",
+                lineHeight: "normal",
+                fontFamily: "var(--font-body)",
+                margin: 0,
+                cursor: "pointer",
+              }}
+            >
               {company}
             </p>
           )}
