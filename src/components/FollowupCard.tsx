@@ -264,7 +264,7 @@ const FollowupCard = ({
               </svg>
               <span style={{
                 fontWeight: 400,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#717171",
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
