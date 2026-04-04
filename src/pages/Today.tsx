@@ -6,7 +6,7 @@ import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
-import { Calendar, Eye, SquareUserRound } from "lucide-react";
+import { Calendar, Eye, UserRound } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
