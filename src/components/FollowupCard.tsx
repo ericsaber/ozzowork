@@ -162,7 +162,7 @@ const FollowupCard = ({
             <ChevronDown
               size={14}
               style={{
-                color: "#ccc",
+                color: "#777777",
                 flexShrink: 0,
                 marginTop: "3px",
                 transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
