@@ -181,9 +181,15 @@ const Today = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
-      <p className="text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>
+    <div className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto">
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
+          ozzo
+        </span>
+        <SquareUserRound size={32} style={{ color: "#999" }} />
+      </div>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
       </p>
