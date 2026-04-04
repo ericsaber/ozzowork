@@ -219,7 +219,18 @@ const FollowupCard = ({
             background: tokens.subframeBg,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <ActionIcon size={16} style={{ color: tokens.color, flexShrink: 0 }} />
+              <div style={{
+                width: "22px",
+                height: "22px",
+                borderRadius: "5px",
+                background: `${tokens.color}26`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <ActionIcon size={12} style={{ color: tokens.color }} />
+              </div>
               <span style={{
                 fontWeight: 600,
                 fontSize: "16px",
