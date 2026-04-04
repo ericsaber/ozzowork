@@ -276,7 +276,7 @@ const FollowupCard = ({
             {lastInteraction?.note && (
               <p style={{
                 fontWeight: 400,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#717171",
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
