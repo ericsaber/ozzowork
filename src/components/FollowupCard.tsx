@@ -47,9 +47,31 @@ const FollowupCard = ({
   taskRecordId, contactId, name, company, dueDate, variant,
   plannedType, reminderNote, lastInteraction, onComplete,
   onEdit, onCancel, menuOpen, onMenuOpenChange,
+  contactPhone, contactEmail,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+
+  const isActionable = plannedType === "call" || plannedType === "text" || plannedType === "email";
+
+  const handleActionTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (plannedType === "call" || plannedType === "text") {
+      if (contactPhone) {
+        window.location.href = plannedType === "call"
+          ? `tel:${contactPhone}`
+          : `sms:${contactPhone}`;
+      } else {
+        navigate(`/contact/${contactId}`);
+      }
+    } else if (plannedType === "email") {
+      if (contactEmail) {
+        window.location.href = `mailto:${contactEmail}`;
+      } else {
+        navigate(`/contact/${contactId}`);
+      }
+    }
+  };
 
   const isUpcoming = variant === "upcoming";
   const isOverdue = variant === "overdue";
