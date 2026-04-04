@@ -1,33 +1,36 @@
 
 
-## Upcoming Screen Redesign + FollowupCard Chevron Fix
+## Action Icon Tap Opens Native App
 
-Two files modified: `FollowupCard.tsx` and `Upcoming.tsx`.
+Three files modified: `FollowupCard.tsx`, `Today.tsx`, `Upcoming.tsx`.
 
-### 1. `FollowupCard.tsx` — Conditional chevron + click behavior
+### 1. `FollowupCard.tsx`
 
-**Chevron** (around line 145): Wrap `ChevronDown` in a `hasLastInteraction` check so it only renders when there's prior interaction data to expand. If no last interaction, render nothing.
+**Props** (lines 13-32): Add `contactPhone?: string | null` and `contactEmail?: string | null` to the interface.
 
-**onClick** (line 101): Update to navigate to contact record when upcoming card has no last interaction (nothing to expand), otherwise toggle expand as before.
+**Destructure** (line 44-48): Add `contactPhone`, `contactEmail` to destructured props.
 
-### 2. `Upcoming.tsx` — Full rewrite using FollowupCard
+**Handler** (after line 50): Add `handleActionTap` function and `isActionable` const:
+- `call`/`text` → `tel:`/`sms:` with `contactPhone`, fallback to navigate to contact record
+- `email` → `mailto:` with `contactEmail`, fallback to navigate to contact record
+- `meet`/`video` → no-op
 
-**New imports**: `useState`, `useMutation`, `useQueryClient` from tanstack, `FollowupCard`, `CompleteFollowupSheet`, `EditFollowupSheet`, `AlertDialog` components, `addDays` from date-fns.
+**Action row left side** (lines 236-259): Wrap icon bubble + action label in a clickable `<div>` with `onClick={isActionable ? handleActionTap : undefined}` and `cursor` set conditionally.
 
-**New state**: `completeTarget`, `editTarget`, `cancelTarget`, `showCancelDialog`, `openMenuId`.
+### 2. `Today.tsx` — `renderCard` (line 123-148)
 
-**New cancel mutation**: Updates follow-up status to `cancelled`, sets `completed_at`, invalidates relevant query keys (`follow-ups-upcoming`, `follow-ups-today`, `follow-ups`).
+Add two props to the `FollowupCard` call:
+- `contactPhone={item.contacts?.phone ?? null}`
+- `contactEmail={item.contacts?.email ?? null}`
 
-**New interactions query**: Fetches last published interaction per contact to pass as `lastInteraction` prop to each FollowupCard.
+### 3. `Upcoming.tsx` — items.map (lines 114-139)
 
-**Replace item list**: Swap plain button list with `FollowupCard` components using `variant="upcoming"`, passing all required props: `taskRecordId`, `contactId`, `name`, `company`, `dueDate`, `plannedType`, `reminderNote`, `lastInteraction`, `menuOpen`, `onMenuOpenChange`, `onComplete`, `onEdit`, `onCancel`.
+Add same two props:
+- `contactPhone={item.contacts?.phone ?? null}`
+- `contactEmail={item.contacts?.email ?? null}`
 
-**Add bottom sheets/dialogs**: `CompleteFollowupSheet`, `EditFollowupSheet`, and the three-button cancel `AlertDialog` (Cancel and log / Yes cancel / Don't cancel) — same pattern as Today.tsx.
-
-Keep existing query, console.logs, back button, heading, loading skeleton, and empty state unchanged.
-
-### Technical notes
-- The existing deduplication logic (one card per contact) stays in the main query
-- `lastInteractionByContact` reduce pattern matches Today.tsx implementation
-- No other files touched
+### Notes
+- All existing `console.log` statements preserved
+- No other files modified
+- The `contacts` join already fetches `phone` and `email` in both pages' queries
 
