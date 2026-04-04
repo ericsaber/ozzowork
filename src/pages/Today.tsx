@@ -6,7 +6,7 @@ import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
-import { Calendar, Eye } from "lucide-react";
+import { Calendar, Eye, SquareUserRound } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -153,7 +153,6 @@ const Today = () => {
     if (comingUp.length === 0) {
       return (
         <div className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3">
-          <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
           <div className="flex-1 min-w-0 text-left">
             <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>No follow-ups in the next 2 weeks</p>
             <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>You're all caught up</p>
@@ -172,7 +171,6 @@ const Today = () => {
 
     return (
       <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
-        <div className="w-[26px] h-[26px] flex items-center justify-center shrink-0"><Calendar size={16} className="text-muted-foreground" /></div>
         <div className="flex-1 min-w-0 text-left">
           <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
           <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '13px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
@@ -183,9 +181,15 @@ const Today = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-3xl font-heading text-foreground mb-1">Today</h1>
-      <p className="text-muted-foreground mb-6" style={{ fontFamily: 'var(--font-body)', fontSize: '15px', lineHeight: '20px' }}>
+    <div className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto">
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
+          ozzo
+        </span>
+        <SquareUserRound size={32} style={{ color: "#999" }} />
+      </div>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
       </p>
@@ -193,7 +197,7 @@ const Today = () => {
       {isLoading ? (
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
       ) : (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           {isEmpty ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg font-heading italic">All clear for today</p>
@@ -201,24 +205,24 @@ const Today = () => {
             </div>
           ) : (
             <>
-              {dueToday.length > 0 && (
+              {overdue.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
-                  <div className="space-y-3 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
+                  <div className="space-y-5 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
 
-              {overdue.length > 0 && (
+              {dueToday.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
-                  <div className="space-y-3 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
+                  <div className="space-y-5 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
             </>
           )}
 
           <section>
-            <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
+            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
             {renderComingUp()}
           </section>
         </div>
