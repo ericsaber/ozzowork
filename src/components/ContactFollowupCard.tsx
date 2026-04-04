@@ -60,6 +60,21 @@ const ContactFollowupCard = ({
         reminderBorderColor: "rgba(176,85,36,0.35)",
       };
 
+  const isActionable = taskRecord.planned_type === "call" || taskRecord.planned_type === "text" || taskRecord.planned_type === "email";
+
+  const handleActionTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (taskRecord.planned_type === "call" || taskRecord.planned_type === "text") {
+      if (contactPhone) {
+        window.location.href = taskRecord.planned_type === "call" ? `tel:${contactPhone}` : `sms:${contactPhone}`;
+      }
+    } else if (taskRecord.planned_type === "email") {
+      if (contactEmail) {
+        window.location.href = `mailto:${contactEmail}`;
+      }
+    }
+  };
+
   const ActionIcon = taskRecord.planned_type
     ? (typeIconMap[taskRecord.planned_type] || CalendarIcon)
     : CalendarIcon;
