@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, ChevronDown, CornerDownRight, MoreVertical, Pencil, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FollowupCardProps {
   taskRecordId: string;
@@ -18,6 +25,10 @@ interface FollowupCardProps {
   } | null;
   variant: "overdue" | "today" | "upcoming";
   onComplete: () => void;
+  onEdit?: () => void;
+  onCancel?: () => void;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
 }
 
 const typeVerb: Record<string, string> = {
