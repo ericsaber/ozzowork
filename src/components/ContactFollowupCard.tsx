@@ -1,5 +1,5 @@
 import { Phone, Mail, MessageSquare, Users, Video, Pencil, Clock, Calendar as CalendarIcon, CornerDownRight, X } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isTomorrow } from "date-fns";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -64,11 +64,14 @@ const ContactFollowupCard = ({
     ? typeVerb[taskRecord.planned_type] || taskRecord.planned_type
     : "Follow-up";
 
-  const dateStr = format(parseISO(taskRecord.planned_date), "M/d");
-
-  const actionLabel = isOverdue
-    ? `${typeStr} · Due ${dateStr}`
-    : `${typeStr} · ${format(parseISO(taskRecord.planned_date), "MMM d")}`;
+  const followUpDate = parseISO(taskRecord.planned_date);
+  const datePart = (() => {
+    if (isToday(followUpDate)) return "Today";
+    if (isTomorrow(followUpDate)) return "Tomorrow";
+    if (isOverdue) return `Due ${format(followUpDate, "MMM d")}`;
+    return format(followUpDate, "MMM d");
+  })();
+  const actionLabel = `${typeStr} · ${datePart}`;
 
   return (
     <div
@@ -114,7 +117,7 @@ const ContactFollowupCard = ({
             </div>
             <span style={{
               fontWeight: 600,
-              fontSize: "13px",
+              fontSize: "16px",
               color: tokens.color,
               whiteSpace: "nowrap",
               fontFamily: "var(--font-body)",
@@ -131,9 +134,9 @@ const ContactFollowupCard = ({
                 background: "white",
                 border: tokens.doneBorder,
                 borderRadius: "20px",
-                padding: "6px 14px",
+                padding: "8px 16px",
                 fontWeight: 500,
-                fontSize: "11px",
+                fontSize: "14px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 cursor: "pointer",
@@ -152,18 +155,18 @@ const ContactFollowupCard = ({
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    padding: 0,
+                    padding: "4px 8px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2.5px",
+                    gap: "3px",
                     alignItems: "center",
                     flexShrink: 0,
                   }}
                 >
                   {[0,1,2].map((i) => (
                     <div key={i} style={{
-                      width: "2px",
-                      height: "2px",
+                      width: "3px",
+                      height: "3px",
                       borderRadius: "50%",
                       background: "#bbb",
                     }} />
@@ -205,7 +208,7 @@ const ContactFollowupCard = ({
             <CornerDownRight size={10} style={{ color: tokens.color, flexShrink: 0 }} />
             <span style={{
               fontWeight: 500,
-              fontSize: "10px",
+              fontSize: "12px",
               color: tokens.color,
               whiteSpace: "nowrap",
               fontFamily: "var(--font-body)",

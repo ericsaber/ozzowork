@@ -561,7 +561,7 @@ const ContactHistory = () => {
                         <Clock size={14} style={{ color: "#9e9e99" }} />
                       </div>
                       <div className="flex-1 min-w-0 flex items-center">
-                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                           Follow-up for {plannedDate} · Set {setDate}
                         </span>
                       </div>
@@ -584,7 +584,7 @@ const ContactHistory = () => {
                         <Clock size={14} style={{ color: "#9e9e99" }} />
                       </div>
                       <div className="flex-1 min-w-0 flex items-center">
-                        <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                           Follow-up rescheduled to {newDate}
                         </span>
                       </div>
@@ -606,8 +606,8 @@ const ContactHistory = () => {
                           <X size={14} style={{ color: "#a32d2d" }} />
                         </div>
                         <div className="flex-1 min-w-0 flex items-center">
-                          <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
-                            Follow-up cancelled
+                          <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
+                            Follow-up cancelled{fu.completed_at ? ` · ${format(parseISO(fu.completed_at), "MMM d")}` : ""}
                           </span>
                         </div>
                       </div>
@@ -637,7 +637,7 @@ const ContactHistory = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-foreground"
-                                style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                                style={{ fontFamily: "var(--font-body)", fontSize: "16px" }}>
                                 {verb}
                               </span>
                               <span className="text-muted-foreground"
@@ -670,7 +670,7 @@ const ContactHistory = () => {
                             <Check size={14} style={{ color: "#3d7a4a" }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                             <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                               Follow-up completed{dateStr ? ` · ${dateStr}` : ""}
                             </span>
                           </div>
@@ -697,7 +697,7 @@ const ContactHistory = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-foreground"
-                            style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                            style={{ fontFamily: "var(--font-body)", fontSize: "16px" }}>
                             {verb}
                           </span>
                           <span className="text-muted-foreground"
