@@ -606,8 +606,8 @@ const ContactHistory = () => {
                           <X size={14} style={{ color: "#a32d2d" }} />
                         </div>
                         <div className="flex-1 min-w-0 flex items-center">
-                          <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
-                            Follow-up cancelled
+                          <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
+                            Follow-up cancelled{fu.completed_at ? ` · ${format(parseISO(fu.completed_at), "MMM d")}` : ""}
                           </span>
                         </div>
                       </div>
