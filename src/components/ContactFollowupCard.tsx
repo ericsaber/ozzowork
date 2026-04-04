@@ -120,29 +120,33 @@ const ContactFollowupCard = ({
           padding: "10px 8px",
           background: tokens.subframeBg,
         }}>
-          {/* Left: icon bubble + label */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <div style={{
-              width: "26px",
-              height: "26px",
-              borderRadius: "6px",
-              background: `${tokens.color}26`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "6px", cursor: isActionable ? "pointer" : "default" }}
+              onClick={isActionable ? handleActionTap : undefined}
+            >
+              <div style={{
+                width: "26px",
+                height: "26px",
+                borderRadius: "6px",
+                background: `${tokens.color}26`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+              </div>
+              <span style={{
+                fontWeight: 600,
+                fontSize: "16px",
+                color: tokens.color,
+                whiteSpace: "nowrap",
+                fontFamily: "var(--font-body)",
+              }}>
+                {actionLabel}
+              </span>
             </div>
-            <span style={{
-              fontWeight: 600,
-              fontSize: "16px",
-              color: tokens.color,
-              whiteSpace: "nowrap",
-              fontFamily: "var(--font-body)",
-            }}>
-              {actionLabel}
-            </span>
           </div>
 
           {/* Right: Done button + vertical dots */}
