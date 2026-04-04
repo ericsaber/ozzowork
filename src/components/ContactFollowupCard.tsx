@@ -155,10 +155,10 @@ const ContactFollowupCard = ({
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    padding: 0,
+                    padding: "4px 8px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2.5px",
+                    gap: "3px",
                     alignItems: "center",
                     flexShrink: 0,
                   }}
