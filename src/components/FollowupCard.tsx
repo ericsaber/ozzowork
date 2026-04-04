@@ -205,7 +205,7 @@ const FollowupCard = ({
       }}>
         {/* Action subframe */}
         <div style={{
-          width: "calc(100% - 24px)",
+          width: "302px",
           borderRadius: "5px",
           overflow: "hidden",
           flexShrink: 0,
