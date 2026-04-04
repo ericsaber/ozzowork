@@ -222,7 +222,7 @@ const Today = () => {
           )}
 
           <section>
-            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
+            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
             {renderComingUp()}
           </section>
         </div>
