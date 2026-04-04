@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Today = () => {
   const navigate = useNavigate();
@@ -18,6 +24,10 @@ const Today = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<any | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -83,6 +93,29 @@ const Today = () => {
   overdue.sort((a: any, b: any) => a.planned_date.localeCompare(b.planned_date));
   dueToday.sort((a: any, b: any) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
 
+  const cancelFollowUpMutation = useMutation({
+    mutationFn: async () => {
+      if (!cancelTarget) throw new Error("No target");
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({
+          status: "cancelled",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", cancelTarget.id);
+      if (error) throw error;
+      console.log("[Today] follow_up cancelled:", cancelTarget.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+      setCancelTarget(null);
+      setShowCancelDialog(false);
+    },
+    onError: (e: any) => console.error("[Today] cancel error:", e),
+  });
+
   const isLoading = followUpsLoading;
   const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
@@ -99,6 +132,10 @@ const Today = () => {
       reminderNote={item.reminder_note || null}
       lastInteraction={lastInteractionByContact[item.contact_id] || null}
       variant={variant}
+      menuOpen={openMenuId === item.id}
+      onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
+      onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+      onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
       onComplete={() => {
         setCompleteTarget({
           followUpId: item.id,
@@ -195,6 +232,56 @@ const Today = () => {
           userId=""
         />
       )}
+      {editTarget && (
+        <EditFollowupSheet
+          open={!!editTarget}
+          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
+          followUp={{
+            id: editTarget.id,
+            planned_type: editTarget.planned_type || null,
+            planned_date: editTarget.planned_date,
+            reminder_note: editTarget.reminder_note || null,
+            created_at: editTarget.created_at,
+            contact_id: editTarget.contact_id,
+          }}
+        />
+      )}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this follow-up?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It will be recorded as cancelled in their history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <AlertDialogAction
+              onClick={() => {
+                // TODO: route to log flow then cancel on save
+                cancelFollowUpMutation.mutate();
+              }}
+              className="w-full"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Cancel and log what happened
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => cancelFollowUpMutation.mutate()}
+              className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Yes, cancel
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() => { setShowCancelDialog(false); setCancelTarget(null); }}
+              className="w-full"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Don't cancel
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
