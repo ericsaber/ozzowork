@@ -1,31 +1,24 @@
 
 
-# Today Card Redesign
+## Plan: Wire three-dot menu on FollowupCard
 
-## Overview
-Full rewrite of `FollowupCard.tsx` and update `Today.tsx` to pass the new `reminderNote` prop and support the new `"upcoming"` variant.
+### What changes
 
-## Changes
+**File 1: `src/components/FollowupCard.tsx`**
+- Add 4 new optional props: `onEdit`, `onCancel`, `menuOpen`, `onMenuOpenChange`
+- Import `DropdownMenu` components from shadcn, plus `MoreVertical`, `Pencil`, `X` from lucide-react
+- Replace the current inline SVG dots (lines 144-160) with a `DropdownMenu` containing "Edit follow-up" and "Cancel follow-up" items
+- Keep the `ChevronDown` for upcoming cards unchanged
 
-### 1. FollowupCard.tsx — Full Rewrite
-- **New prop interface**: Add `reminderNote: string | null`, expand `variant` to `"overdue" | "today" | "upcoming"`; remove `isCompleting`
-- **State**: Add `expanded` toggle for upcoming cards (collapsed by default; today/overdue always show full content)
-- **Tokens**: Derive color palette per variant (green for today, sienna for upcoming, red for overdue) as specified in the design tokens
-- **Layout** — three vertical sections:
-  1. **Top row**: Name (15px/600/#383838) + company (11px/400/#777) + chevron (upcoming) or vertical dots menu (today/overdue)
-  2. **Action subframe**: Colored background with icon + label + "Done" pill button; optional reminder note row below with dashed border
-  3. **Previously section**: Gray background (#f7f5f2) with last interaction verb/date and 2-line clamped note; shown when data exists and card is not collapsed
-- **Imports**: Add `ChevronDown`, `CornerDownRight`, `CornerUpRight`; remove `Check`, `ClipboardList`; keep `useNavigate`
-- **Click behavior**: Upcoming cards toggle expand/collapse; today/overdue navigate to contact
+**File 2: `src/pages/Today.tsx`**
+- Add state: `editTarget`, `cancelTarget`, `openMenuId`, `showCancelDialog`
+- Import `EditFollowupSheet`, `AlertDialog` components, `useMutation`
+- Add `cancelFollowUpMutation` that sets status='cancelled' and completed_at, then invalidates queries
+- Update `renderCard` to pass `menuOpen`, `onMenuOpenChange`, `onEdit`, `onCancel` props
+- Render `EditFollowupSheet` when `editTarget` is set
+- Render `AlertDialog` with three buttons per spec: "Cancel and log what happened" (TODO: routes to log flow, for now just cancels), "Yes, cancel" (immediate cancel), "Don't cancel" (dismiss)
 
-### 2. Today.tsx — Minimal Updates
-- Update `renderCard` signature to accept `"overdue" | "today" | "upcoming"` variant
-- Pass `reminderNote={item.reminder_note || null}` to `FollowupCard`
-- Pass `company={item.contacts?.company ?? null}` (already close, ensure `?? null`)
-- No other changes; all console.logs preserved
+### Technical details
 
-## Technical Notes
-- Card uses inline styles per the spec (no Tailwind for the card internals)
-- `useState` import added to FollowupCard for `expanded` state
-- The "Coming Up" section in Today.tsx remains unchanged (it's a summary link, not individual cards)
+The dropdown uses controlled `open`/`onOpenChange` via `openMenuId` state so only one menu is open at a time. All click handlers call `e.stopPropagation()` to prevent card navigation. The cancel mutation invalidates `follow-ups-today`, `follow-ups`, and `follow-ups-active` query keys. The "Cancel and log what happened" option will cancel immediately with a TODO comment for the log-then-cancel routing.
 
