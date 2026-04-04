@@ -670,7 +670,7 @@ const ContactHistory = () => {
                             <Check size={14} style={{ color: "#3d7a4a" }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "#71717a" }}>
+                             <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                               Follow-up completed{dateStr ? ` · ${dateStr}` : ""}
                             </span>
                           </div>
