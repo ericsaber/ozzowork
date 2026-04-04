@@ -189,7 +189,7 @@ const Today = () => {
         </span>
         <UserRound size={32} style={{ color: "#999" }} />
       </div>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "#71717a", marginBottom: "20px" }}>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
         {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
       </p>
