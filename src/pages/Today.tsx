@@ -197,7 +197,7 @@ const Today = () => {
       {isLoading ? (
         <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
       ) : (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           {isEmpty ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg font-heading italic">All clear for today</p>
@@ -205,24 +205,24 @@ const Today = () => {
             </div>
           ) : (
             <>
-              {dueToday.length > 0 && (
+              {overdue.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mt-2 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
-                  <div className="space-y-3 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
+                  <div className="space-y-5 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
 
-              {overdue.length > 0 && (
+              {dueToday.length > 0 && (
                 <section>
-                  <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
-                  <div className="space-y-3 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
+                  <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
+                  <div className="space-y-5 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
             </>
           )}
 
           <section>
-            <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
+            <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Coming Up</h2>
             {renderComingUp()}
           </section>
         </div>
