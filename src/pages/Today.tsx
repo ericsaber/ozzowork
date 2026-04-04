@@ -187,7 +187,7 @@ const Today = () => {
         <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
           ozzo
         </span>
-        <UserRound size={32} style={{ color: "#999" }} />
+        <UserRound size={24} style={{ color: "#999" }} />
       </div>
       <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
