@@ -106,6 +106,8 @@ const FollowupCard = ({
         overflow: "hidden",
         cursor: "pointer",
         width: "100%",
+        maxWidth: "326px",
+        margin: "0 auto",
       }}
     >
       {/* Top row */}
