@@ -93,6 +93,29 @@ const Today = () => {
   overdue.sort((a: any, b: any) => a.planned_date.localeCompare(b.planned_date));
   dueToday.sort((a: any, b: any) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
 
+  const cancelFollowUpMutation = useMutation({
+    mutationFn: async () => {
+      if (!cancelTarget) throw new Error("No target");
+      const { error } = await supabase
+        .from("follow_ups")
+        .update({
+          status: "cancelled",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", cancelTarget.id);
+      if (error) throw error;
+      console.log("[Today] follow_up cancelled:", cancelTarget.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+      setCancelTarget(null);
+      setShowCancelDialog(false);
+    },
+    onError: (e: any) => console.error("[Today] cancel error:", e),
+  });
+
   const isLoading = followUpsLoading;
   const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
