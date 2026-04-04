@@ -209,7 +209,7 @@ const Today = () => {
               {overdue.length > 0 && (
                 <section>
                   <h2 className="font-medium uppercase tracking-[0.1em] mt-10 mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '11px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
-                  <div className="space-y-3">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
+                  <div className="space-y-3 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
             </>
