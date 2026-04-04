@@ -165,8 +165,8 @@ const ContactFollowupCard = ({
                 >
                   {[0,1,2].map((i) => (
                     <div key={i} style={{
-                      width: "2px",
-                      height: "2px",
+                      width: "3px",
+                      height: "3px",
                       borderRadius: "50%",
                       background: "#bbb",
                     }} />
