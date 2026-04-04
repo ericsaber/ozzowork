@@ -26,6 +26,8 @@ interface ContactFollowupCardProps {
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
   rescheduleCount?: number;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 const ContactFollowupCard = ({
@@ -37,6 +39,8 @@ const ContactFollowupCard = ({
   menuOpen,
   onMenuOpenChange,
   rescheduleCount,
+  contactPhone,
+  contactEmail,
 }: ContactFollowupCardProps) => {
   const isOverdue = variant === "overdue";
 
