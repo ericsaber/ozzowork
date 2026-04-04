@@ -106,7 +106,7 @@ const FollowupCard = ({
         overflow: "hidden",
         cursor: "pointer",
         width: "100%",
-        maxWidth: "326px",
+        maxWidth: "390px",
         margin: "0 auto",
       }}
     >
@@ -205,7 +205,7 @@ const FollowupCard = ({
       }}>
         {/* Action subframe */}
         <div style={{
-          width: "302px",
+          width: "calc(100% - 24px)",
           borderRadius: "5px",
           overflow: "hidden",
           flexShrink: 0,
@@ -229,7 +229,7 @@ const FollowupCard = ({
                 justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <ActionIcon size={12} style={{ color: tokens.color }} />
+                <ActionIcon size={14} style={{ color: tokens.color }} />
               </div>
               <span style={{
                 fontWeight: 600,
