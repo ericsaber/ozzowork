@@ -26,6 +26,8 @@ interface ContactFollowupCardProps {
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
   rescheduleCount?: number;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 const ContactFollowupCard = ({
@@ -37,6 +39,8 @@ const ContactFollowupCard = ({
   menuOpen,
   onMenuOpenChange,
   rescheduleCount,
+  contactPhone,
+  contactEmail,
 }: ContactFollowupCardProps) => {
   const isOverdue = variant === "overdue";
 
@@ -55,6 +59,21 @@ const ContactFollowupCard = ({
         reminderBg: "rgba(253,240,232,0.5)",
         reminderBorderColor: "rgba(176,85,36,0.35)",
       };
+
+  const isActionable = taskRecord.planned_type === "call" || taskRecord.planned_type === "text" || taskRecord.planned_type === "email";
+
+  const handleActionTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (taskRecord.planned_type === "call" || taskRecord.planned_type === "text") {
+      if (contactPhone) {
+        window.location.href = taskRecord.planned_type === "call" ? `tel:${contactPhone}` : `sms:${contactPhone}`;
+      }
+    } else if (taskRecord.planned_type === "email") {
+      if (contactEmail) {
+        window.location.href = `mailto:${contactEmail}`;
+      }
+    }
+  };
 
   const ActionIcon = taskRecord.planned_type
     ? (typeIconMap[taskRecord.planned_type] || CalendarIcon)
@@ -101,29 +120,33 @@ const ContactFollowupCard = ({
           padding: "10px 8px",
           background: tokens.subframeBg,
         }}>
-          {/* Left: icon bubble + label */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <div style={{
-              width: "26px",
-              height: "26px",
-              borderRadius: "6px",
-              background: `${tokens.color}26`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "6px", cursor: isActionable ? "pointer" : "default" }}
+              onClick={isActionable ? handleActionTap : undefined}
+            >
+              <div style={{
+                width: "26px",
+                height: "26px",
+                borderRadius: "6px",
+                background: `${tokens.color}26`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+              </div>
+              <span style={{
+                fontWeight: 600,
+                fontSize: "16px",
+                color: tokens.color,
+                whiteSpace: "nowrap",
+                fontFamily: "var(--font-body)",
+              }}>
+                {actionLabel}
+              </span>
             </div>
-            <span style={{
-              fontWeight: 600,
-              fontSize: "16px",
-              color: tokens.color,
-              whiteSpace: "nowrap",
-              fontFamily: "var(--font-body)",
-            }}>
-              {actionLabel}
-            </span>
           </div>
 
           {/* Right: Done button + vertical dots */}

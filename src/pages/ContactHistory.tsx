@@ -486,6 +486,8 @@ const ContactHistory = () => {
             }}
             menuOpen={openMenuId === `followup-${activeFollowup.id}`}
             onMenuOpenChange={(o) => setOpenMenuId(o ? `followup-${activeFollowup.id}` : null)}
+            contactPhone={contact?.phone ?? null}
+            contactEmail={contact?.email ?? null}
           />
         </div>
       )}
