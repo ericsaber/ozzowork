@@ -119,7 +119,7 @@ const FollowupCard = ({
           {company && (
             <p style={{
               fontWeight: 400,
-              fontSize: "12px",
+              fontSize: "14px",
               color: "#777",
               lineHeight: "normal",
               fontFamily: "var(--font-body)",
@@ -187,7 +187,7 @@ const FollowupCard = ({
               <ActionIcon size={16} style={{ color: tokens.color, flexShrink: 0 }} />
               <span style={{
                 fontWeight: 600,
-                fontSize: "14px",
+                fontSize: "16px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -204,7 +204,7 @@ const FollowupCard = ({
                 borderRadius: "20px",
                 padding: "6px 14px",
                 fontWeight: 500,
-                fontSize: "12px",
+                fontSize: "16px",
                 color: tokens.color,
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -264,7 +264,7 @@ const FollowupCard = ({
               </svg>
               <span style={{
                 fontWeight: 400,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#717171",
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
@@ -276,7 +276,7 @@ const FollowupCard = ({
             {lastInteraction?.note && (
               <p style={{
                 fontWeight: 400,
-                fontSize: "13px",
+                fontSize: "14px",
                 color: "#717171",
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
