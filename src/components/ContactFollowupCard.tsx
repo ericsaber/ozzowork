@@ -117,7 +117,7 @@ const ContactFollowupCard = ({
             </div>
             <span style={{
               fontWeight: 600,
-              fontSize: "13px",
+              fontSize: "16px",
               color: tokens.color,
               whiteSpace: "nowrap",
               fontFamily: "var(--font-body)",
