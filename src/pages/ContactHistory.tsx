@@ -460,9 +460,14 @@ const ContactHistory = () => {
             {isOverdue ? "Overdue" : "Next follow-up"}
           </p>
           <ContactFollowupCard
-            taskRecord={activeFollowup}
+            taskRecord={{
+              id: activeFollowup.id,
+              planned_type: activeFollowup.planned_type,
+              planned_date: activeFollowup.planned_date,
+              reminder_note: activeFollowup.reminder_note ?? null,
+              contact_id: activeFollowup.contact_id,
+            }}
             variant={isOverdue ? "overdue" : "upcoming"}
-            hidePlannedFallback
             rescheduleCount={0}
             onComplete={() => {
               setCompleteTarget({
@@ -472,6 +477,15 @@ const ContactHistory = () => {
                 plannedType: activeFollowup.planned_type || null,
               });
             }}
+            onEdit={() => {
+              // TODO: open EditFollowupSheet for this follow-up
+            }}
+            onCancel={() => {
+              setCancelTarget(activeFollowup);
+              setShowCancelDialog(true);
+            }}
+            menuOpen={openMenuId === `followup-${activeFollowup.id}`}
+            onMenuOpenChange={(o) => setOpenMenuId(o ? `followup-${activeFollowup.id}` : null)}
           />
         </div>
       )}
