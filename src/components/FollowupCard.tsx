@@ -29,6 +29,8 @@ interface FollowupCardProps {
   onCancel?: () => void;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
 }
 
 const typeVerb: Record<string, string> = {
