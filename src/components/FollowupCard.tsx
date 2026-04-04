@@ -98,7 +98,14 @@ const FollowupCard = ({
 
   return (
     <div
-      onClick={() => isUpcoming ? setExpanded((e) => !e) : navigate(`/contact/${contactId}`)}
+      onClick={() => {
+        if (isUpcoming) {
+          if (hasLastInteraction) setExpanded((e) => !e);
+          else navigate(`/contact/${contactId}`);
+        } else {
+          navigate(`/contact/${contactId}`);
+        }
+      }}
       style={{
         background: "white",
         border: "1px solid #e8e4de",
