@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -28,6 +29,7 @@ const Upcoming = () => {
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["follow-ups-upcoming"],
@@ -183,7 +185,12 @@ const Upcoming = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              onClick={() => { if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id); }}
+              onClick={() => {
+                if (cancelTarget) {
+                  setCancelLogContactId(cancelTarget.contact_id);
+                  cancelFollowUpMutation.mutate(cancelTarget.id);
+                }
+              }}
               className="w-full"
               style={{ fontFamily: "var(--font-body)" }}
             >
@@ -206,6 +213,13 @@ const Upcoming = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <LogInteractionSheet
+        open={!!cancelLogContactId}
+        onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
+        preselectedContactId={cancelLogContactId}
+        startStep={1}
+        logOnly={false}
+      />
     </div>
   );
 };

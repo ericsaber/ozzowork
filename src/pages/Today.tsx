@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye, UserRound } from "lucide-react";
 import {
@@ -28,6 +29,7 @@ const Today = () => {
   const [cancelTarget, setCancelTarget] = useState<any | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -263,8 +265,10 @@ const Today = () => {
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             <AlertDialogAction
               onClick={() => {
-                // TODO: route to log flow then cancel on save
-                cancelFollowUpMutation.mutate();
+                if (cancelTarget) {
+                  setCancelLogContactId(cancelTarget.contact_id);
+                  cancelFollowUpMutation.mutate();
+                }
               }}
               className="w-full"
               style={{ fontFamily: "var(--font-body)" }}
@@ -288,6 +292,13 @@ const Today = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <LogInteractionSheet
+        open={!!cancelLogContactId}
+        onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
+        preselectedContactId={cancelLogContactId}
+        startStep={1}
+        logOnly={false}
+      />
     </div>
   );
 };
