@@ -51,6 +51,7 @@ const FollowupCard = ({
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 
   const isActionable = plannedType === "call" || plannedType === "text" || plannedType === "email";
 
