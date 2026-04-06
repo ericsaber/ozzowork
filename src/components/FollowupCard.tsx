@@ -132,7 +132,7 @@ const FollowupCard = ({
       }}
       style={{
         background: "white",
-        border: "1px solid #CBCBCB",
+        boxShadow: "0 1px 5px rgba(0,0,0,.06)",
         borderRadius: "16px",
         overflow: "hidden",
         cursor: "pointer",
