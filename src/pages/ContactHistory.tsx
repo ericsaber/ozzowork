@@ -227,7 +227,7 @@ const ContactHistory = () => {
   const initials = fullName ? fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) : "?";
 
   return (
-    <div className="min-h-screen pb-24 px-4 pt-4 max-w-lg mx-auto">
+    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
         <ArrowLeft size={18} /><span className="text-sm" style={{ fontFamily: "var(--font-body)" }}>Back</span>
       </button>

@@ -193,7 +193,7 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
               style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
             />
             <p className="text-right mt-1" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#bbb" }}>
-              {reminderNote.length}/55
+              {reminderNote.length}/44
             </p>
           </div>
 

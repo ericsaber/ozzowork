@@ -323,8 +323,6 @@ const FollowupCard = ({
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
                 flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
               }}>
                 {reminderNote}
               </span>
