@@ -1,21 +1,23 @@
 
 
-## Update reminder row styling in FollowupCard.tsx and ContactFollowupCard.tsx
+## Unify card border color to use `border-border` (the darker value)
 
-### 1. FollowupCard.tsx — reminder row (lines ~316–323)
+The "Coming Up" card uses Tailwind's `border-border` class (~`#ddd8cf`). The FollowupCard and ContactFollowupCard hardcode `#e8e4de` (lighter). You want the darker color everywhere.
 
-- **Line 317**: `CornerDownRight size={10}` → `size={16}`, `color: tokens.color` → `color: "#2e7a4d"`
-- **Line 319**: `fontWeight: 500` → `fontWeight: 400`
-- **Line 320**: `fontSize: "10px"` → `fontSize: "12px"`
-- **Line 321**: `color: tokens.color` → `color: "#2e7a4d"`
+### Changes
 
-### 2. ContactFollowupCard.tsx — reminder row (lines ~231–235)
+**1. FollowupCard.tsx (line 135)**
+- Change `border: "1px solid #e8e4de"` → `border: "1px solid hsl(36, 15%, 85%)"`
+- Using the exact HSL from the `--border` CSS variable ensures they match.
 
-- **Line 231**: `CornerDownRight size={10}` → `size={16}`, `color: tokens.color` → `color: "#2e7a4d"`
-- **Line 233**: `fontWeight: 500` → `fontWeight: 400`
-- **Line 235**: `color: tokens.color` → `color: "#2e7a4d"`
+**2. ContactFollowupCard.tsx (line 99)**
+- Same change: `border: "1px solid #e8e4de"` → `border: "1px solid hsl(36, 15%, 85%)"`
 
-Note: ContactFollowupCard.tsx already has `fontSize: "12px"` — no font-size change needed there.
+Alternatively, both could use `var(--border)` via the CSS variable to stay in sync with the theme. Since the inline style uses a full border shorthand, the value would be `border: "1px solid hsl(var(--border))"`.
 
-### No other files touched. All existing console.log statements preserved.
+### Files touched
+- `src/components/FollowupCard.tsx`
+- `src/components/ContactFollowupCard.tsx`
+
+All console.log statements preserved. No other files changed.
 
