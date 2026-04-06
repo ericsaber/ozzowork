@@ -217,7 +217,7 @@ const Today = () => {
               {dueToday.length > 0 && (
                 <section>
                   <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
-                  <div className="space-y-5 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
+                  <div className="space-y-6 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
             </>
