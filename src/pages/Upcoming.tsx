@@ -218,7 +218,7 @@ const Upcoming = () => {
         onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
         preselectedContactId={cancelLogContactId}
         startStep={1}
-        logOnly={false}
+        logOnly={true}
       />
     </div>
   );
