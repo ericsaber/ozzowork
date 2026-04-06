@@ -132,7 +132,7 @@ const FollowupCard = ({
       }}
       style={{
         background: "white",
-        border: "1px solid #CBCBCB",
+        boxShadow: "0 1px 5px rgba(0,0,0,.06)",
         borderRadius: "16px",
         overflow: "hidden",
         cursor: "pointer",
@@ -334,7 +334,7 @@ const FollowupCard = ({
         {showPreviously && (
           <div style={{
             background: "#f7f5f2",
-            borderTop: "1px solid #CBCBCB",
+            borderTop: "1px solid #EDE9E3",
             width: "100%",
             padding: lastInteraction?.note ? "10px 20px 16px" : "10px 20px",
             display: "flex",
