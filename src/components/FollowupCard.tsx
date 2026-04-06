@@ -374,10 +374,12 @@ const FollowupCard = ({
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
                 margin: 0,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
+                ...(isNoteExpanded ? {} : {
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as const,
+                  overflow: "hidden",
+                }),
               }}>
                 {lastInteraction.note}
               </p>
