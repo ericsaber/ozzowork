@@ -314,11 +314,11 @@ const FollowupCard = ({
               borderTop: `1px dashed ${tokens.reminderBorderColor}`,
               background: tokens.reminderBg,
             }}>
-              <CornerDownRight size={10} style={{ color: tokens.color, flexShrink: 0 }} />
+              <CornerDownRight size={16} style={{ color: "#2e7a4d", flexShrink: 0 }} />
               <span style={{
-                fontWeight: 500,
-                fontSize: "10px",
-                color: tokens.color,
+                fontWeight: 400,
+                fontSize: "12px",
+                color: "#2e7a4d",
                 whiteSpace: "nowrap",
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
