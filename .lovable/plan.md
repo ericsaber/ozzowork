@@ -1,36 +1,41 @@
 
 
-## Action Icon Tap Opens Native App
+## Wire onEdit in ContactHistory.tsx → EditFollowupSheet
 
-Three files modified: `FollowupCard.tsx`, `Today.tsx`, `Upcoming.tsx`.
+Only `ContactHistory.tsx` is modified. Four surgical edits:
 
-### 1. `FollowupCard.tsx`
+### 1. Add import (after line 22)
+```tsx
+import EditFollowupSheet from "@/components/EditFollowupSheet";
+```
 
-**Props** (lines 13-32): Add `contactPhone?: string | null` and `contactEmail?: string | null` to the interface.
+### 2. Add state (after line 50)
+```tsx
+const [editFollowupOpen, setEditFollowupOpen] = useState(false);
+```
 
-**Destructure** (line 44-48): Add `contactPhone`, `contactEmail` to destructured props.
+### 3. Replace onEdit stub (lines 480–482)
+```tsx
+onEdit={() => setEditFollowupOpen(true)}
+```
 
-**Handler** (after line 50): Add `handleActionTap` function and `isActionable` const:
-- `call`/`text` → `tel:`/`sms:` with `contactPhone`, fallback to navigate to contact record
-- `email` → `mailto:` with `contactEmail`, fallback to navigate to contact record
-- `meet`/`video` → no-op
+### 4. Render EditFollowupSheet (before closing `</div>` at line 800)
+```tsx
+{activeFollowup && (
+  <EditFollowupSheet
+    open={editFollowupOpen}
+    onOpenChange={(open) => { if (!open) setEditFollowupOpen(false); }}
+    followUp={{
+      id: activeFollowup.id,
+      planned_type: activeFollowup.planned_type,
+      planned_date: activeFollowup.planned_date,
+      reminder_note: activeFollowup.reminder_note ?? null,
+      created_at: activeFollowup.created_at,
+      contact_id: activeFollowup.contact_id,
+    }}
+  />
+)}
+```
 
-**Action row left side** (lines 236-259): Wrap icon bubble + action label in a clickable `<div>` with `onClick={isActionable ? handleActionTap : undefined}` and `cursor` set conditionally.
-
-### 2. `Today.tsx` — `renderCard` (line 123-148)
-
-Add two props to the `FollowupCard` call:
-- `contactPhone={item.contacts?.phone ?? null}`
-- `contactEmail={item.contacts?.email ?? null}`
-
-### 3. `Upcoming.tsx` — items.map (lines 114-139)
-
-Add same two props:
-- `contactPhone={item.contacts?.phone ?? null}`
-- `contactEmail={item.contacts?.email ?? null}`
-
-### Notes
-- All existing `console.log` statements preserved
-- No other files modified
-- The `contacts` join already fetches `phone` and `email` in both pages' queries
+No query invalidation needed — `EditFollowupSheet` already invalidates `follow-ups-active` and `interactions` on save. No other files touched. All existing `console.log` statements preserved.
 
