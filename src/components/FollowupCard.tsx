@@ -300,7 +300,7 @@ const FollowupCard = ({
                 fontFamily: "var(--font-body)",
               }}
             >
-              Done
+              Log it
             </button>
           </div>
 
