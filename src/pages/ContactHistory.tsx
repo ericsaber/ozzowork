@@ -49,6 +49,7 @@ const ContactHistory = () => {
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [editFollowupOpen, setEditFollowupOpen] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
