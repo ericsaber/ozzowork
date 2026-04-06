@@ -29,6 +29,7 @@ const Today = () => {
   const [cancelTarget, setCancelTarget] = useState<any | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
