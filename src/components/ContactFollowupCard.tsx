@@ -236,8 +236,6 @@ const ContactFollowupCard = ({
               whiteSpace: "nowrap",
               fontFamily: "var(--font-body)",
               flex: 1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
             }}>
               {taskRecord.reminder_note}
             </span>
