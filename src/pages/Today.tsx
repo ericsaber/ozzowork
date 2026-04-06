@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
+import LogInteractionSheet from "@/components/LogInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye, UserRound } from "lucide-react";
 import {
