@@ -51,6 +51,7 @@ const FollowupCard = ({
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  const [isNoteExpanded, setIsNoteExpanded] = useState(false);
 
   const isActionable = plannedType === "call" || plannedType === "text" || plannedType === "email";
 
@@ -332,7 +333,12 @@ const FollowupCard = ({
 
         {/* Previously section */}
         {showPreviously && (
-          <div style={{
+          <div
+            onClick={lastInteraction?.note ? (e: React.MouseEvent) => {
+              e.stopPropagation();
+              setIsNoteExpanded(prev => !prev);
+            } : undefined}
+            style={{
             background: "#f7f5f2",
             borderTop: "1px solid #EDE9E3",
             width: "100%",
@@ -340,6 +346,7 @@ const FollowupCard = ({
             display: "flex",
             flexDirection: "column",
             gap: "4px",
+            cursor: lastInteraction?.note ? "pointer" : "default",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               <svg width="13" height="11" viewBox="0 0 11 9" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -367,10 +374,12 @@ const FollowupCard = ({
                 lineHeight: "normal",
                 fontFamily: "var(--font-body)",
                 margin: 0,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
+                ...(isNoteExpanded ? {} : {
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as const,
+                  overflow: "hidden",
+                }),
               }}>
                 {lastInteraction.note}
               </p>
