@@ -166,7 +166,7 @@ const ContactFollowupCard = ({
                 fontFamily: "var(--font-body)",
               }}
             >
-              Done
+              Log it
             </button>
 
             {/* Vertical dots menu */}
