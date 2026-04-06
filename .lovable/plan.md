@@ -1,41 +1,65 @@
 
 
-## Wire onEdit in ContactHistory.tsx → EditFollowupSheet
+## Wire "Cancel and log" to open LogInteractionSheet after cancelling
 
-Only `ContactHistory.tsx` is modified. Four surgical edits:
+### Summary
+In all three cancel dialogs, the "Cancel and log what happened" button will cancel the follow-up **and then** open `LogInteractionSheet` with the contact pre-selected. The contact ID is captured **in the onClick handler** (while `cancelTarget` is still in state), not in the mutation's `onSuccess` callback.
 
-### 1. Add import (after line 22)
-```tsx
-import EditFollowupSheet from "@/components/EditFollowupSheet";
-```
+### 1. Today.tsx
 
-### 2. Add state (after line 50)
-```tsx
-const [editFollowupOpen, setEditFollowupOpen] = useState(false);
-```
-
-### 3. Replace onEdit stub (lines 480–482)
-```tsx
-onEdit={() => setEditFollowupOpen(true)}
-```
-
-### 4. Render EditFollowupSheet (before closing `</div>` at line 800)
-```tsx
-{activeFollowup && (
-  <EditFollowupSheet
-    open={editFollowupOpen}
-    onOpenChange={(open) => { if (!open) setEditFollowupOpen(false); }}
-    followUp={{
-      id: activeFollowup.id,
-      planned_type: activeFollowup.planned_type,
-      planned_date: activeFollowup.planned_date,
-      reminder_note: activeFollowup.reminder_note ?? null,
-      created_at: activeFollowup.created_at,
-      contact_id: activeFollowup.contact_id,
-    }}
+- **Add import**: `LogInteractionSheet` (not currently imported).
+- **Add state**: `const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);`
+- **Update "Cancel and log" onClick** (line 265–268): Capture contact ID first, then mutate:
+  ```tsx
+  onClick={() => {
+    if (cancelTarget) {
+      setCancelLogContactId(cancelTarget.contact_id);
+      cancelFollowUpMutation.mutate();
+    }
+  }}
+  ```
+- **Render LogInteractionSheet** after the AlertDialog:
+  ```tsx
+  <LogInteractionSheet
+    open={!!cancelLogContactId}
+    onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
+    preselectedContactId={cancelLogContactId}
+    startStep={1}
+    logOnly={false}
   />
-)}
-```
+  ```
 
-No query invalidation needed — `EditFollowupSheet` already invalidates `follow-ups-active` and `interactions` on save. No other files touched. All existing `console.log` statements preserved.
+### 2. Upcoming.tsx
+
+- **Add import**: `LogInteractionSheet` (not currently imported).
+- **Add state**: `const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);`
+- **Update "Cancel and log" onClick** (line 186): Capture contact ID first, then mutate:
+  ```tsx
+  onClick={() => {
+    if (cancelTarget) {
+      setCancelLogContactId(cancelTarget.contact_id);
+      cancelFollowUpMutation.mutate(cancelTarget.id);
+    }
+  }}
+  ```
+  "Yes, cancel" button (line 193) stays unchanged — no `setCancelLogContactId`.
+- **Render LogInteractionSheet** after the AlertDialog, same pattern as Today.tsx.
+
+### 3. ContactHistory.tsx
+
+- LogInteractionSheet is **already imported and rendered** with existing `logSheetMode` state.
+- **Update "Cancel and log" onClick** (line 780–783): Add `setLogSheetMode` call:
+  ```tsx
+  onClick={() => {
+    if (cancelTarget) {
+      cancelFollowUpMutation.mutate(cancelTarget.id);
+      setLogSheetMode({ startStep: 1, logOnly: false });
+    }
+  }}
+  ```
+  The existing `LogInteractionSheet` already has `preselectedContactId={id}` (route param), so no additional wiring needed.
+
+### 4. No other files touched.
+
+All existing `console.log` statements preserved. No query invalidation additions needed — `LogInteractionSheet` already invalidates follow-up queries on save.
 
