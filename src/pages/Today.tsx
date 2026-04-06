@@ -265,8 +265,10 @@ const Today = () => {
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             <AlertDialogAction
               onClick={() => {
-                // TODO: route to log flow then cancel on save
-                cancelFollowUpMutation.mutate();
+                if (cancelTarget) {
+                  setCancelLogContactId(cancelTarget.contact_id);
+                  cancelFollowUpMutation.mutate();
+                }
               }}
               className="w-full"
               style={{ fontFamily: "var(--font-body)" }}
