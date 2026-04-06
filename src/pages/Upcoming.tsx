@@ -106,9 +106,9 @@ const Upcoming = () => {
       </button>
       <h1 className="text-2xl font-heading text-foreground mb-6">Upcoming</h1>
       {isLoading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-lg bg-secondary animate-pulse" />)}</div>
+        <div className="space-y-6">{[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-lg bg-secondary animate-pulse" />)}</div>
       ) : items && items.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {items.map((item: any) => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
             const lastInteraction = lastInteractionByContact[item.contact_id] || null;

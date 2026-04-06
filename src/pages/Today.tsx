@@ -197,7 +197,7 @@ const Today = () => {
       </p>
 
       {isLoading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
+        <div className="space-y-6">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           {isEmpty ? (
@@ -210,14 +210,14 @@ const Today = () => {
               {overdue.length > 0 && (
                 <section>
                   <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Overdue</h2>
-                  <div className="space-y-5 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
+                  <div className="space-y-6 w-full">{overdue.map((item: any) => renderCard(item, "overdue"))}</div>
                 </section>
               )}
 
               {dueToday.length > 0 && (
                 <section>
                   <h2 className="font-medium uppercase tracking-[0.1em] mb-3" style={{ fontFamily: 'var(--font-body)', fontSize: '12px', lineHeight: '16px', color: '#999' }}>Due Today</h2>
-                  <div className="space-y-5 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
+                  <div className="space-y-6 w-full">{dueToday.map((item: any) => renderCard(item, "today"))}</div>
                 </section>
               )}
             </>
