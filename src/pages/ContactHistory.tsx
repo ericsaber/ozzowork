@@ -780,7 +780,7 @@ const ContactHistory = () => {
               onClick={() => {
                 if (cancelTarget) {
                   cancelFollowUpMutation.mutate(cancelTarget.id);
-                  setLogSheetMode({ startStep: 1, logOnly: false });
+                  setLogSheetMode({ startStep: 1, logOnly: true });
                 }
               }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
