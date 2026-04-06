@@ -1,29 +1,21 @@
 
 
-## Remove borders, add drop shadow to all cards; update Previously border color
-
-All follow-up cards (FollowupCard, ContactFollowupCard) and the "Coming Up" summary card will use the same shadow-only style. The "Previously" section keeps its top border but changes color.
+## Set card gap to 24px everywhere
 
 ### Changes
 
-**1. FollowupCard.tsx (line 135)**
-- Remove `border: "1px solid #CBCBCB"`
-- Add `boxShadow: "0 1px 5px rgba(0,0,0,.06)"`
+**1. `src/pages/Today.tsx`**
+- Line 200: loading skeleton `space-y-3` → `space-y-6`
+- Line 213: Overdue section `space-y-5` → `space-y-6`
+- Line 220: Due Today section `space-y-5` → `space-y-6`
 
-**2. FollowupCard.tsx (line 337)**
-- Change `borderTop: "1px solid #CBCBCB"` → `borderTop: "1px solid #EDE9E3"`
+**2. `src/pages/Upcoming.tsx`**
+- Line 109: loading skeleton `space-y-3` → `space-y-6`
+- Line 111: cards list `space-y-3` → `space-y-6`
 
-**3. Today.tsx — empty "Coming Up" card (line 157)**
-- Remove `border border-border` classes
-- Add inline style `boxShadow: "0 1px 5px rgba(0,0,0,.06)"`
-
-**4. Today.tsx — populated "Coming Up" button (line 175)**
-- Remove `border border-border` classes
-- Add inline style `boxShadow: "0 1px 5px rgba(0,0,0,.06)"`
-
-**5. ContactFollowupCard.tsx** — already shadow-only, no changes needed.
+`space-y-6` = 24px. Section spacing stays as-is.
 
 ### Files touched
-- `src/components/FollowupCard.tsx`
 - `src/pages/Today.tsx`
+- `src/pages/Upcoming.tsx`
 
