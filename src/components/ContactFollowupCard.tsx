@@ -96,7 +96,7 @@ const ContactFollowupCard = ({
     <div
       style={{
         background: "white",
-        border: "1px solid hsl(var(--border))",
+        boxShadow: "0 1px 5px rgba(0,0,0,.06)",
         borderRadius: "16px",
         overflow: "hidden",
         width: "100%",

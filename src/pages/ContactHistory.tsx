@@ -546,7 +546,7 @@ const ContactHistory = () => {
           <div>
             {timelineItems.map((item, idx) => {
               const isLast = idx === timelineItems.length - 1;
-              const dividerStyle = !isLast ? { borderBottom: "1px solid #e8e4de" } : {};
+              const dividerStyle = !isLast ? { borderBottom: "1px solid #CBCBCB" } : {};
 
               // Follow-up scheduled row
               if (item.kind === "follow_up_scheduled") {

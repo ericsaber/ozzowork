@@ -334,7 +334,7 @@ const FollowupCard = ({
         {showPreviously && (
           <div style={{
             background: "#f7f5f2",
-            borderTop: "1px solid #ede9e3",
+            borderTop: "1px solid #CBCBCB",
             width: "100%",
             padding: lastInteraction?.note ? "10px 20px 16px" : "10px 20px",
             display: "flex",
