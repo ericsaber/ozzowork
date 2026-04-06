@@ -778,8 +778,10 @@ const ContactHistory = () => {
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction
               onClick={() => {
-                // TODO: route to log flow before cancelling
-                if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id);
+                if (cancelTarget) {
+                  cancelFollowUpMutation.mutate(cancelTarget.id);
+                  setLogSheetMode({ startStep: 1, logOnly: false });
+                }
               }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >

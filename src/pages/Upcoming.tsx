@@ -213,6 +213,13 @@ const Upcoming = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <LogInteractionSheet
+        open={!!cancelLogContactId}
+        onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
+        preselectedContactId={cancelLogContactId}
+        startStep={1}
+        logOnly={false}
+      />
     </div>
   );
 };
