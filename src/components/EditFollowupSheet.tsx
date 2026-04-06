@@ -185,9 +185,9 @@ const EditFollowupSheet = ({ open, onOpenChange, followUp }: EditFollowupSheetPr
               type="text"
               value={reminderNote}
               onChange={(e) => {
-                if (e.target.value.length <= 55) setReminderNote(e.target.value);
+                if (e.target.value.length <= 44) setReminderNote(e.target.value);
               }}
-              maxLength={55}
+              maxLength={44}
               placeholder="Optional short note…"
               className="w-full rounded-[12px] border-[1.5px] border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground outline-none focus:border-[#f0c4a8] transition-colors"
               style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}
