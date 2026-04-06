@@ -90,7 +90,7 @@ const ContactFollowupCard = ({
     if (isOverdue) return `Due ${format(followUpDate, "MMM d")}`;
     return format(followUpDate, "MMM d");
   })();
-  const actionLabel = `${typeStr} · ${datePart}`;
+  const actionLabel = isToday(followUpDate) ? `${typeStr} Today` : `${typeStr} · ${datePart}`;
 
   return (
     <div
