@@ -185,7 +185,12 @@ const Upcoming = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              onClick={() => { if (cancelTarget) cancelFollowUpMutation.mutate(cancelTarget.id); }}
+              onClick={() => {
+                if (cancelTarget) {
+                  setCancelLogContactId(cancelTarget.contact_id);
+                  cancelFollowUpMutation.mutate(cancelTarget.id);
+                }
+              }}
               className="w-full"
               style={{ fontFamily: "var(--font-body)" }}
             >
