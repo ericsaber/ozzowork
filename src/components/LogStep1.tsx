@@ -701,16 +701,6 @@ const LogStep1 = ({
           : (submitLabel || "Next →")}
       </button>
 
-      {/* Skip link */}
-      {onSkipToFollowup && (
-        <button
-          onClick={onSkipToFollowup}
-          className="w-full text-center text-[13px] text-muted-foreground underline py-1"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          Set a follow-up without logging
-        </button>
-      )}
     </div>
   );
 };
