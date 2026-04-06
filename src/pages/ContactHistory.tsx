@@ -20,6 +20,7 @@ import {
 import ContactFollowupCard from "@/components/ContactFollowupCard";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
+import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { toast } from "sonner";
 import { format, parseISO, startOfToday } from "date-fns";
 
