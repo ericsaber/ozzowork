@@ -506,7 +506,7 @@ const ContactHistory = () => {
             </p>
             <div
               className="w-full flex gap-3 bg-white rounded-xl p-3 text-left items-center"
-              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}
+              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)" }}
             >
               <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0"
                 style={{ background: "#f5ede7" }}>
