@@ -107,7 +107,7 @@ const FollowupCard = ({
     const typeStr = plannedType ? typeVerb[plannedType] || plannedType : "Follow-up";
     if (isToday) return `${typeStr} Today`;
     if (isOverdue) return `${typeStr} · Due ${format(parseISO(dueDate), "M/d")}`;
-    return `${typeStr} · Planned ${format(parseISO(dueDate), "M/d")}`;
+    return `${typeStr} · ${format(parseISO(dueDate), "MMM d")}`;
   })();
 
   const hasLastInteraction = !!lastInteraction?.connect_type || !!lastInteraction?.note;
