@@ -197,7 +197,7 @@ const Today = () => {
       </p>
 
       {isLoading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
+        <div className="space-y-6">{[1, 2, 3].map((i) => <div key={i} className="h-20 rounded-lg bg-secondary animate-pulse" />)}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
           {isEmpty ? (
