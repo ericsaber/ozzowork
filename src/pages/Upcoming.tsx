@@ -29,6 +29,7 @@ const Upcoming = () => {
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["follow-ups-upcoming"],
