@@ -1,65 +1,16 @@
 
 
-## Wire "Cancel and log" to open LogInteractionSheet after cancelling
+## Remove cross-mode links in LogInteractionSheet
 
-### Summary
-In all three cancel dialogs, the "Cancel and log what happened" button will cancel the follow-up **and then** open `LogInteractionSheet` with the contact pre-selected. The contact ID is captured **in the onClick handler** (while `cancelTarget` is still in state), not in the mutation's `onSuccess` callback.
+Two surgical deletions — no other files touched.
 
-### 1. Today.tsx
+### 1. LogStep1.tsx — Remove "Set a follow-up without logging" link
 
-- **Add import**: `LogInteractionSheet` (not currently imported).
-- **Add state**: `const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);`
-- **Update "Cancel and log" onClick** (line 265–268): Capture contact ID first, then mutate:
-  ```tsx
-  onClick={() => {
-    if (cancelTarget) {
-      setCancelLogContactId(cancelTarget.contact_id);
-      cancelFollowUpMutation.mutate();
-    }
-  }}
-  ```
-- **Render LogInteractionSheet** after the AlertDialog:
-  ```tsx
-  <LogInteractionSheet
-    open={!!cancelLogContactId}
-    onOpenChange={(o) => { if (!o) setCancelLogContactId(null); }}
-    preselectedContactId={cancelLogContactId}
-    startStep={1}
-    logOnly={false}
-  />
-  ```
+Delete lines 704–713 (the `{onSkipToFollowup && ...}` block). The `onSkipToFollowup` prop can stay in the interface for now — it simply won't render anything.
 
-### 2. Upcoming.tsx
+### 2. LogStep2.tsx — Remove "Want to add one?" nudge
 
-- **Add import**: `LogInteractionSheet` (not currently imported).
-- **Add state**: `const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);`
-- **Update "Cancel and log" onClick** (line 186): Capture contact ID first, then mutate:
-  ```tsx
-  onClick={() => {
-    if (cancelTarget) {
-      setCancelLogContactId(cancelTarget.contact_id);
-      cancelFollowUpMutation.mutate(cancelTarget.id);
-    }
-  }}
-  ```
-  "Yes, cancel" button (line 193) stays unchanged — no `setCancelLogContactId`.
-- **Render LogInteractionSheet** after the AlertDialog, same pattern as Today.tsx.
+Delete lines 89–111 (the entire `{skippedInteraction && !isEditing && ...}` block that renders the orange nudge card with "No interaction logged. Want to add one?").
 
-### 3. ContactHistory.tsx
-
-- LogInteractionSheet is **already imported and rendered** with existing `logSheetMode` state.
-- **Update "Cancel and log" onClick** (line 780–783): Add `setLogSheetMode` call:
-  ```tsx
-  onClick={() => {
-    if (cancelTarget) {
-      cancelFollowUpMutation.mutate(cancelTarget.id);
-      setLogSheetMode({ startStep: 1, logOnly: false });
-    }
-  }}
-  ```
-  The existing `LogInteractionSheet` already has `preselectedContactId={id}` (route param), so no additional wiring needed.
-
-### 4. No other files touched.
-
-All existing `console.log` statements preserved. No query invalidation additions needed — `LogInteractionSheet` already invalidates follow-up queries on save.
+The `onAddInteraction` prop and the `handleAddInteraction` callback in `LogInteractionSheet.tsx` become dead code but are left untouched to keep the change minimal. All existing `console.log` statements preserved.
 
