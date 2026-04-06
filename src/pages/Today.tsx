@@ -172,7 +172,7 @@ const Today = () => {
     const dayLabel = isTomorrow ? "tomorrow" : format(nextDate, "EEEE");
 
     return (
-      <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg border border-border p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors">
+      <button onClick={() => navigate("/upcoming")} className="w-full bg-card rounded-lg p-4 flex items-center gap-3 hover:bg-secondary/50 transition-colors" style={{ boxShadow: "0 1px 5px rgba(0,0,0,.06)" }}>
         <div className="flex-1 min-w-0 text-left">
           <p className="font-medium text-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '16px', lineHeight: '20px' }}>{comingUp.length} follow-up{comingUp.length !== 1 ? "s" : ""}</p>
           <p className="text-muted-foreground" style={{ fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: '16px' }}>Next: {nextName} {isTomorrow ? "tomorrow" : `on ${dayLabel}`}</p>
