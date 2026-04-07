@@ -18,6 +18,7 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ContactFollowupCard from "@/components/ContactFollowupCard";
+import InlineInteractionEdit from "@/components/InlineInteractionEdit";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
