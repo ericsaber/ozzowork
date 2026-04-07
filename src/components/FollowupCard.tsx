@@ -312,7 +312,12 @@ const FollowupCard = ({
               maxLength={44}
               placeholder="Add a reminder note..."
               onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              onFocus={(e) => {
+                const target = e.target;
+                setTimeout(() => {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              }}
               style={{
                 flex: 1,
                 border: "none",
