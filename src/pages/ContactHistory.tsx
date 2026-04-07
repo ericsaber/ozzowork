@@ -26,6 +26,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfToday } from "date-fns";
 
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
+};
+
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
 const typeIcons: Record<string, typeof Phone> = { call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video };
 const typeLabels: Record<string, string> = { call: "Call", email: "Email", text: "Text", meet: "Meeting", video: "Video" };
