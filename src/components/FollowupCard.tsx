@@ -313,10 +313,20 @@ const FollowupCard = ({
               placeholder="Add a reminder note..."
               onClick={(e) => e.stopPropagation()}
               onFocus={(e) => {
-                const target = e.target;
+                const input = e.target;
                 setTimeout(() => {
-                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
+                  const vv = window.visualViewport;
+                  if (!vv) {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                  }
+                  const rect = input.getBoundingClientRect();
+                  const visibleBottom = vv.offsetTop + vv.height;
+                  if (rect.bottom > visibleBottom) {
+                    const offset = rect.bottom - visibleBottom + 24;
+                    window.scrollBy({ top: offset, behavior: 'smooth' });
+                  }
+                }, 350);
               }}
               style={{
                 flex: 1,
