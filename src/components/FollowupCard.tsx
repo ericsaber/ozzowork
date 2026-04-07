@@ -131,8 +131,11 @@ const FollowupCard = ({
     queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
     queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
     queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
-    setIsEditing(false);
+    onEditEnd?.();
+    if (!onEditStart) setIsEditing(false);
   };
+
+  const showEditPanel = isEditingExternal ?? isEditing;
 
   const isOverdue = variant === "overdue";
   const isToday = variant === "today";
