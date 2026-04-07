@@ -33,6 +33,9 @@ interface FollowupCardProps {
   contactEmail?: string | null;
   hasInteractions?: boolean;
   onHistoryTap?: () => void;
+  isEditingExternal?: boolean;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
 
 const typeVerb: Record<string, string> = {
