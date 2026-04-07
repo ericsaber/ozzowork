@@ -1,20 +1,14 @@
 
 
-## Add console.log to Calendar onSelect
+## Fix two bugs in InlineInteractionEdit.tsx
 
 ### File: `src/components/InlineInteractionEdit.tsx`
 
-**Line 131**: Insert `console.log('[InlineInteractionEdit] date selected:', d);` immediately after the `if (d) {` check, before `setEditDate`.
+**Bug 1 — Timezone date shift (line ~129)**:
+Replace `setEditDate(format(d, "yyyy-MM-dd"))` with `setEditDate(format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "yyyy-MM-dd"))`.
 
-```ts
-onSelect={(d) => {
-  if (d) {
-    console.log('[InlineInteractionEdit] date selected:', d);
-    setEditDate(format(d, "yyyy-MM-dd"));
-    setShowDatePicker(false);
-  }
-}}
-```
+**Bug 2 — Calendar selection swallowed (line ~125)**:
+On the `PopoverContent`, change `onClick={(e) => e.stopPropagation()}` to `onPointerDown={(e) => e.stopPropagation()}`.
 
 No other changes.
 
