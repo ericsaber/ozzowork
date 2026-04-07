@@ -316,16 +316,17 @@ const FollowupCard = ({
               onFocus={(e) => {
                 const input = e.target;
                 setTimeout(() => {
-                  const vv = window.visualViewport;
-                  if (!vv) {
+                  const container = scrollContainerRef?.current;
+                  if (!container) {
                     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                   }
-                  const rect = input.getBoundingClientRect();
-                  const visibleBottom = vv.offsetTop + vv.height;
-                  if (rect.bottom > visibleBottom) {
-                    const offset = rect.bottom - visibleBottom + 24;
-                    window.scrollBy({ top: offset, behavior: 'smooth' });
+                  const inputRect = input.getBoundingClientRect();
+                  const containerRect = container.getBoundingClientRect();
+                  const vv = window.visualViewport;
+                  const visibleBottom = vv ? vv.offsetTop + vv.height : containerRect.bottom;
+                  if (inputRect.bottom > visibleBottom) {
+                    container.scrollTop += inputRect.bottom - visibleBottom + 24;
                   }
                 }, 350);
               }}
