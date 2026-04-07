@@ -155,7 +155,7 @@ const FollowupCard = ({
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginTop: "2px" }}>
           {hasInteractions && (
             <History
               size={15}
