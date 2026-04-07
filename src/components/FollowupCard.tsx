@@ -51,7 +51,7 @@ const FollowupCard = ({
   plannedType, reminderNote, onComplete,
   onEdit, onCancel, menuOpen, onMenuOpenChange,
   contactPhone, contactEmail, hasInteractions, onHistoryTap,
-  isEditingExternal, onEditStart, onEditEnd,
+  isEditingExternal, onEditStart, onEditEnd, scrollContainerRef,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
