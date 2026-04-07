@@ -155,11 +155,11 @@ const FollowupCard = ({
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginTop: "2px" }}>
           {hasInteractions && (
             <History
               size={15}
-              style={{ opacity: 0.4, cursor: "pointer" }}
+              style={{ color: "#777", cursor: "pointer" }}
               onClick={(e) => { e.stopPropagation(); onHistoryTap?.(); }}
             />
           )}
@@ -171,7 +171,7 @@ const FollowupCard = ({
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  padding: "2px 0 0 0",
+                  padding: "0",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "flex-start",
