@@ -1,35 +1,33 @@
 
 
-## Inline Interaction Edit — New Component + ContactHistory Wiring
+## Two small tweaks — Pencil color + useEffect reset
 
 ### Files changed: 2
 
 ---
 
-### 1. New file: `src/components/InlineInteractionEdit.tsx`
+### 1. `src/pages/ContactHistory.tsx`
 
-Exactly as described in the previous plan — no changes to the component spec itself. Self-contained edit card with DATE (calendar, today-or-past only), TYPE (pill buttons), NOTE (textarea), Trash2 delete with AlertDialog, Cancel/Save buttons. Save updates `interactions`, invalidates `["interactions", contact_id]`, calls `onClose()`. Delete likewise.
+**Line 545** (featured card Pencil): change `color: "#c8622a"` → `color: "#999"`.
 
----
+**Line 770** (timeline row Pencil): change `color: "#c8622a"` → `color: "#999"`.
 
-### 2. `src/pages/ContactHistory.tsx`
-
-**New state**: `editingInteractionId: string | null` (default `null`).
-
-**New import**: `InlineInteractionEdit`, `Pencil` from lucide-react, `useState`.
-
-**Featured "Last Interaction" card** (lines 507–534):
-
-The outer wrapper (`<div className="w-full flex gap-3 bg-white rounded-xl p-3 ..." style={{ boxShadow }}>`) and the section label above it **stay in place**. Only the inner content changes:
-
-- When **not editing**: replace the TODO comment (line 533) with a `Pencil` icon (size 14, `color: "#c8622a"`, `cursor: pointer`, `flexShrink: 0`). `onClick`: `(e) => { e.stopPropagation(); setEditingInteractionId(record.id); }`.
-- When `editingInteractionId === record.id`: replace the children inside the outer `rounded-xl` div (the icon box, text div, and pencil — lines 511–533) with `<InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />`. The outer div keeps its `bg-white rounded-xl` and `boxShadow` but drops the `flex gap-3 p-3 items-center` classes (swap to just `p-0` or remove padding so InlineInteractionEdit controls its own spacing).
-
-**Interaction timeline rows** (line 747 TODO): same pattern — Pencil icon when not editing, `InlineInteractionEdit` replacing inner content when editing. The outer timeline row wrapper stays.
-
-**Only one interaction editable at a time** — single `editingInteractionId` string handles this.
+No other changes.
 
 ---
 
-### 3. No other files touched. All existing console.log statements preserved.
+### 2. `src/components/InlineInteractionEdit.tsx`
+
+**Line 1**: add `useEffect` to the React import.
+
+**After state declarations**: add:
+```ts
+useEffect(() => {
+  setEditDate(interaction.connect_date);
+  setEditType(interaction.connect_type);
+  setEditNote(interaction.note ?? '');
+}, [interaction.id]);
+```
+
+No other changes. All existing console.log statements preserved.
 
