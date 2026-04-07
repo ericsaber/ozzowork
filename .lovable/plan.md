@@ -1,14 +1,32 @@
 
 
-## Fix two bugs in InlineInteractionEdit.tsx
+## Fix timezone-safe connect_date parsing in ContactHistory.tsx
 
-### File: `src/components/InlineInteractionEdit.tsx`
+### File: `src/pages/ContactHistory.tsx` — 3 locations
 
-**Bug 1 — Timezone date shift (line ~129)**:
-Replace `setEditDate(format(d, "yyyy-MM-dd"))` with `setEditDate(format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "yyyy-MM-dd"))`.
+**Line 533** (featured card):
+```ts
+// From:
+{format(parseISO(record.connect_date || record.created_at), "MMM d")}
+// To:
+{format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
+```
 
-**Bug 2 — Calendar selection swallowed (line ~125)**:
-On the `PopoverContent`, change `onClick={(e) => e.stopPropagation()}` to `onPointerDown={(e) => e.stopPropagation()}`.
+**Line 641** (completed follow-up row):
+```ts
+// From:
+format(parseISO(fu.connect_date), "MMM d")
+// To:
+format(new Date(fu.connect_date + 'T00:00:00'), "MMM d")
+```
 
-No other changes.
+**Line 758** (interaction timeline row):
+```ts
+// From:
+{format(parseISO(record.connect_date || record.created_at), "MMM d")}
+// To:
+{format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
+```
+
+Lines 533 and 758 need a ternary because of the `created_at` fallback (which stays as `parseISO`). Line 641 is straightforward since it's already inside a `fu.connect_date` truthiness check. No other changes.
 
