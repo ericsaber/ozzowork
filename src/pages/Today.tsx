@@ -198,7 +198,7 @@ const Today = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
+    <div ref={scrollContainerRef} className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
         <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
