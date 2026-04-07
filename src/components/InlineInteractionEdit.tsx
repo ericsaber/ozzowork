@@ -40,7 +40,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     setEditDate(interaction.connect_date);
     setEditType(interaction.connect_type);
     setEditNote(interaction.note ?? '');
-  }, [interaction.id]);
+  }, [interaction.id, interaction.connect_date, interaction.connect_type, interaction.note]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -61,7 +61,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     console.log("[InlineInteractionEdit] saved:", { id: interaction.id, editDate, editType, editNote });
     queryClient.invalidateQueries({ queryKey: ["interactions", interaction.contact_id] });
     setIsSaving(false);
-    setTimeout(() => onClose(), 100);
+    onClose();
   };
 
   const handleDelete = async () => {
