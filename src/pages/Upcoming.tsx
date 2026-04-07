@@ -119,6 +119,7 @@ const Upcoming = () => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
             return (
               <FollowupCard
+                scrollContainerRef={scrollContainerRef}
                 key={item.id}
                 taskRecordId={item.id}
                 contactId={item.contact_id}
