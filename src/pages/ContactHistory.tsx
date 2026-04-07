@@ -26,6 +26,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfToday } from "date-fns";
 
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
+};
+
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
 const typeIcons: Record<string, typeof Phone> = { call: Phone, email: Mail, text: MessageSquare, meet: Users, video: Video };
 const typeLabels: Record<string, string> = { call: "Call", email: "Email", text: "Text", meet: "Meeting", video: "Video" };
@@ -530,7 +535,7 @@ const ContactHistory = () => {
                       </span>
                       <span className="text-muted-foreground"
                         style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                        {format(record.connect_date ? (record.connect_date.length === 10 ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.connect_date)) : parseISO(record.created_at), "MMM d")}
+                        {format(parseDate(record.connect_date || record.created_at), "MMM d")}
                       </span>
                     </div>
                     {record.note && record.note.trim() && (
@@ -568,7 +573,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_scheduled") {
                 const fu = item.followUp;
                 const plannedDate = fu.planned_date
-                  ? format(new Date(fu.planned_date + 'T00:00:00'), "MMM d")
+                  ? format(parseDate(fu.planned_date), "MMM d")
                   : "—";
                 const setDate = format(parseISO(fu.created_at), "MMM d");
                 return (
@@ -592,7 +597,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_edit") {
                 const edit = item.edit;
                 const newDate = edit.previous_due_date
-                  ? format(new Date(edit.previous_due_date + 'T00:00:00'), "MMM d")
+                  ? format(parseDate(edit.previous_due_date), "MMM d")
                   : "—";
                 return (
                   <div key={`edit-${edit.id}`} style={dividerStyle}>
@@ -638,7 +643,7 @@ const ContactHistory = () => {
                   const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
                   const verb = type ? (typeVerbs[type] || type) : null;
                   const dateStr = fu.connect_date
-                    ? format(fu.connect_date.length === 10 ? new Date(fu.connect_date + 'T00:00:00') : parseISO(fu.connect_date), "MMM d")
+                    ? format(parseDate(fu.connect_date), "MMM d")
                     : fu.completed_at
                     ? format(parseISO(fu.completed_at), "MMM d")
                     : "";
@@ -757,7 +762,7 @@ const ContactHistory = () => {
                               style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
                               {(() => {
                                 console.log('[ContactHistory] raw connect_date:', record.connect_date);
-                                return format(record.connect_date ? (record.connect_date.length === 10 ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.connect_date)) : parseISO(record.created_at), "MMM d");
+                                return format(parseDate(record.connect_date || record.created_at), "MMM d");
                               })()}
                             </span>
                           </div>
