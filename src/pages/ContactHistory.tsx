@@ -568,7 +568,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_scheduled") {
                 const fu = item.followUp;
                 const plannedDate = fu.planned_date
-                  ? format(parseISO(fu.planned_date), "MMM d")
+                  ? format(new Date(fu.planned_date + 'T00:00:00'), "MMM d")
                   : "—";
                 const setDate = format(parseISO(fu.created_at), "MMM d");
                 return (
@@ -592,7 +592,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_edit") {
                 const edit = item.edit;
                 const newDate = edit.previous_due_date
-                  ? format(parseISO(edit.previous_due_date), "MMM d")
+                  ? format(new Date(edit.previous_due_date + 'T00:00:00'), "MMM d")
                   : "—";
                 return (
                   <div key={`edit-${edit.id}`} style={dividerStyle}>
