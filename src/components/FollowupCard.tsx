@@ -166,7 +166,6 @@ const FollowupCard = ({
 
   const renderEditPanel = () => {
     const typeKeys = Object.keys(typeVerb) as string[];
-    const todayStr = format(new Date(), "yyyy-MM-dd");
 
     return (
       <div style={{
@@ -196,36 +195,47 @@ const FollowupCard = ({
               display: "block",
               marginBottom: "6px",
             }}>DATE</span>
-            <div style={{ position: "relative", display: "inline-block" }}>
-              <div
-                style={{
-                  background: "white",
-                  border: tokens.doneBorder,
-                  borderRadius: "20px",
-                  padding: "6px 14px",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  color: tokens.color,
-                  whiteSpace: "nowrap",
-                  lineHeight: "normal",
-                  fontFamily: "var(--font-body)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <CalendarIcon size={14} />
-                {format(parseISO(editDate), "MMM d, yyyy")}
-              </div>
-              <input
-                type="date"
-                value={editDate}
-                min={todayStr}
-                onChange={(e) => { if (e.target.value) setEditDate(e.target.value); }}
-                onClick={(e) => e.stopPropagation()}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", zIndex: 1 }}
-              />
-            </div>
+            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    background: "white",
+                    border: tokens.doneBorder,
+                    borderRadius: "20px",
+                    padding: "6px 14px",
+                    fontWeight: 500,
+                    fontSize: "14px",
+                    color: tokens.color,
+                    whiteSpace: "nowrap",
+                    lineHeight: "normal",
+                    fontFamily: "var(--font-body)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <CalendarIcon size={14} />
+                  {format(parseISO(editDate), "MMM d, yyyy")}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={new Date(editDate + "T00:00:00")}
+                  onSelect={(date) => {
+                    if (date) {
+                      setEditDate(format(date, "yyyy-MM-dd"));
+                      setShowDatePicker(false);
+                    }
+                  }}
+                  disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* TYPE */}
