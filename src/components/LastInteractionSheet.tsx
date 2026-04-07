@@ -81,7 +81,7 @@ const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: La
           </div>
           <button
             onClick={() => onOpenChange(false)}
-            style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}
+            style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, outline: "none" }}
           >
             <X size={18} style={{ color: "#777" }} />
           </button>
