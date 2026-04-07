@@ -49,6 +49,7 @@ const ContactFollowupCard = ({
   contactEmail,
 }: ContactFollowupCardProps) => {
   const isOverdue = variant === "overdue";
+  const isTodayDate = isToday(parseISO(taskRecord.planned_date));
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -64,6 +65,14 @@ const ContactFollowupCard = ({
         doneBorder: "1px solid rgba(192,57,43,0.35)",
         reminderBg: "#fff0ef",
         reminderBorderColor: "rgba(192,57,43,0.35)",
+      }
+    : isTodayDate
+    ? {
+        subframeBg: "rgba(231,242,235,0.5)",
+        color: "#2e7a4d",
+        doneBorder: "1px solid rgba(46,122,77,0.35)",
+        reminderBg: "rgba(231,242,235,0.5)",
+        reminderBorderColor: "rgba(46,122,77,0.35)",
       }
     : {
         subframeBg: "rgba(253,240,232,0.5)",
