@@ -1,58 +1,69 @@
 
 
-## Inline Follow-up Edit in FollowupCard.tsx
+## Replace `<input type="date">` with Popover + Calendar in FollowupCard.tsx
 
-### Overview
-Replace the external edit sheet with an inline edit panel inside the card. When "Edit follow-up" is tapped, the action subframe transforms into date/type/reminder fields with Cancel/Save.
+### Single file: `src/components/FollowupCard.tsx`
 
-### Save handler — exact code block
+**Imports to add (line 1 area):**
+- `Calendar` from `@/components/ui/calendar`
+- `Popover, PopoverContent, PopoverTrigger` from `@/components/ui/popover`
+- `cn` from `@/lib/utils`
 
+**New state (after line 55):**
+- `const [showDatePicker, setShowDatePicker] = useState(false)`
+
+**Replace date picker block (lines 195-224):**
+
+Remove the `<div style={{ position: "relative", display: "inline-block" }}>` wrapper containing the pill div and hidden `<input type="date">`.
+
+Replace with:
 ```tsx
-const handleSave = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { error } = await supabase
-    .from("follow_ups")
-    .update({
-      planned_date: editDate,
-      planned_type: editType,
-      reminder_note: editReminder.trim() || null,
-    })
-    .eq("id", taskRecordId);
-
-  if (error) {
-    console.log("[FollowupCard] inline edit error:", error);
-    return;
-  }
-
-  if (editDate !== dueDate) {
-    await supabase.from("follow_up_edits").insert({
-      follow_up_id: taskRecordId,
-      user_id: user.id,
-      previous_due_date: dueDate,
-      previous_type: plannedType,
-      changed_at: new Date().toISOString(),
-    });
-  }
-
-  console.log("[FollowupCard] inline edit saved:", {
-    taskRecordId, editDate, editType, editReminder,
-  });
-
-  queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
-  queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
-  queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
-  setIsEditing(false);
-};
+<Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+  <PopoverTrigger asChild>
+    <button
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: "white",
+        border: tokens.doneBorder,
+        borderRadius: "20px",
+        padding: "6px 14px",
+        fontWeight: 500,
+        fontSize: "14px",
+        color: tokens.color,
+        whiteSpace: "nowrap",
+        lineHeight: "normal",
+        fontFamily: "var(--font-body)",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        cursor: "pointer",
+      }}
+    >
+      <CalendarIcon size={14} />
+      {format(parseISO(editDate), "MMM d, yyyy")}
+    </button>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <Calendar
+      mode="single"
+      selected={new Date(editDate + "T00:00:00")}
+      onSelect={(date) => {
+        if (date) {
+          setEditDate(format(date, "yyyy-MM-dd"));
+          setShowDatePicker(false);
+        }
+      }}
+      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+      initialFocus
+      className={cn("p-3 pointer-events-auto")}
+    />
+  </PopoverContent>
+</Popover>
 ```
 
-Key points:
-- `supabase.auth.getUser()` is awaited and destructured before any DB write
-- `user.id` is used only after the null guard (`if (!user) return`)
-- The `follow_up_edits` insert only fires when the date actually changed, per the data model (date changes only)
-- `previous_type` captures the original type at time of edit, matching the schema
-
-### All other plan details
-Unchanged from the previously approved plan — state management, edit panel UI (date pill, type pills, reminder input), cancel handler, and render logic remain as specified.
+**Cleanup:**
+- `useRef` is not imported, so no removal needed
+- `todayStr` variable (line 165) can be removed since it's no longer used by the date input
+- All existing `console.log` statements preserved
+- No other files touched
 
