@@ -507,32 +507,45 @@ const ContactHistory = () => {
               Last interaction
             </p>
             <div
-              className="w-full flex gap-3 bg-white rounded-xl p-3 text-left items-center"
+              className={cn(
+                "w-full bg-white rounded-xl text-left",
+                editingInteractionId === record.id ? "p-0" : "flex gap-3 p-3 items-center"
+              )}
               style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)" }}
             >
-              <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0"
-                style={{ background: "#f5ede7" }}>
-                <TypeIcon size={14} style={{ color: "#c8622a" }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground"
-                    style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
-                    {verb}
-                  </span>
-                  <span className="text-muted-foreground"
-                    style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                    {format(parseISO(record.connect_date || record.created_at), "MMM d")}
-                  </span>
-                </div>
-                {record.note && record.note.trim() && (
-                  <p className="line-clamp-2 mt-0.5"
-                    style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
-                    {record.note}
-                  </p>
-                )}
-              </div>
-              {/* TODO Step 8: add pencil icon for inline interaction edit */}
+              {editingInteractionId === record.id ? (
+                <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
+              ) : (
+                <>
+                  <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0"
+                    style={{ background: "#f5ede7" }}>
+                    <TypeIcon size={14} style={{ color: "#c8622a" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground"
+                        style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
+                        {verb}
+                      </span>
+                      <span className="text-muted-foreground"
+                        style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+                        {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                      </span>
+                    </div>
+                    {record.note && record.note.trim() && (
+                      <p className="line-clamp-2 mt-0.5"
+                        style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                        {record.note}
+                      </p>
+                    )}
+                  </div>
+                  <Pencil
+                    size={14}
+                    style={{ color: "#c8622a", cursor: "pointer", flexShrink: 0 }}
+                    onClick={(e) => { e.stopPropagation(); setEditingInteractionId(record.id); }}
+                  />
+                </>
+              )}
             </div>
           </div>
         );
