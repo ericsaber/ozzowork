@@ -56,6 +56,7 @@ const FollowupCard = ({
   const [editDate, setEditDate] = useState("");
   const [editType, setEditType] = useState<string | null>(null);
   const [editReminder, setEditReminder] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const isActionable = plannedType === "call" || plannedType === "text" || plannedType === "email";
 
