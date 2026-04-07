@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,7 @@ const Upcoming = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [completeTarget, setCompleteTarget] = useState<{
     followUpId: string;
@@ -106,7 +107,7 @@ const Upcoming = () => {
   });
 
   return (
-    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
+    <div ref={scrollContainerRef} className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
         <ArrowLeft size={18} /><span className="text-sm">Back</span>
       </button>
@@ -119,6 +120,7 @@ const Upcoming = () => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
             return (
               <FollowupCard
+                scrollContainerRef={scrollContainerRef}
                 key={item.id}
                 taskRecordId={item.id}
                 contactId={item.contact_id}
