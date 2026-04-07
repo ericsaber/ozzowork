@@ -1,18 +1,58 @@
 
 
-## Show note & reminder_note on completed follow-up history rows
+## Inline Follow-up Edit in FollowupCard.tsx
 
-### File: `src/pages/ContactHistory.tsx`
+### Overview
+Replace the external edit sheet with an inline edit panel inside the card. When "Edit follow-up" is tapped, the action subframe transforms into date/type/reminder fields with Cancel/Save.
 
-**Change 1 — "Completed WITHOUT connect_type" branch (lines 666-681)**
+### Save handler — exact code block
 
-- Change `items-center` → `items-start` on the flex container (line 669)
-- Add `fu.note` rendering below the label span, using the same pattern as interaction notes (lines 710-714): `<p className="line-clamp-2 mt-0.5" style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>` with null/trim check
-- Add `fu.reminder_note` rendering after `fu.note`, same pattern, same null/trim check
+```tsx
+const handleSave = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-**Change 2 — "Completed WITH connect_type" branch (lines 650-655)**
+  const { error } = await supabase
+    .from("follow_ups")
+    .update({
+      planned_date: editDate,
+      planned_type: editType,
+      reminder_note: editReminder.trim() || null,
+    })
+    .eq("id", taskRecordId);
 
-- After the existing `fu.note` block (line 655), add `fu.reminder_note` rendering using the identical note pattern, with null/trim check
+  if (error) {
+    console.log("[FollowupCard] inline edit error:", error);
+    return;
+  }
 
-No new styles, no emoji, no other files changed. All `console.log` statements preserved.
+  if (editDate !== dueDate) {
+    await supabase.from("follow_up_edits").insert({
+      follow_up_id: taskRecordId,
+      user_id: user.id,
+      previous_due_date: dueDate,
+      previous_type: plannedType,
+      changed_at: new Date().toISOString(),
+    });
+  }
+
+  console.log("[FollowupCard] inline edit saved:", {
+    taskRecordId, editDate, editType, editReminder,
+  });
+
+  queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+  queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
+  queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+  setIsEditing(false);
+};
+```
+
+Key points:
+- `supabase.auth.getUser()` is awaited and destructured before any DB write
+- `user.id` is used only after the null guard (`if (!user) return`)
+- The `follow_up_edits` insert only fires when the date actually changed, per the data model (date changes only)
+- `previous_type` captures the original type at time of edit, matching the schema
+
+### All other plan details
+Unchanged from the previously approved plan — state management, edit panel UI (date pill, type pills, reminder input), cancel handler, and render logic remain as specified.
 
