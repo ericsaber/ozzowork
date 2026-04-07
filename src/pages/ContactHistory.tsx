@@ -672,7 +672,7 @@ const ContactHistory = () => {
                     // Completed without connect_type
                     return (
                       <div key={`fu-${fu.id}`} style={dividerStyle}>
-                        <div className="flex gap-3 py-3 px-2 -mx-2 items-center" style={{ opacity: 0.6 }}>
+                        <div className="flex gap-3 py-3 px-2 -mx-2 items-start" style={{ opacity: 0.6 }}>
                           <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
                             style={{ background: "#e9f2eb" }}>
                             <Check size={14} style={{ color: "#3d7a4a" }} />
@@ -681,6 +681,18 @@ const ContactHistory = () => {
                              <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
                               Follow-up completed{dateStr ? ` · ${dateStr}` : ""}
                             </span>
+                            {fu.note && fu.note.trim() && (
+                              <p className="line-clamp-2 mt-0.5"
+                                style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                                {fu.note}
+                              </p>
+                            )}
+                            {fu.reminder_note && fu.reminder_note.trim() && (
+                              <p className="line-clamp-2 mt-0.5"
+                                style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                                {fu.reminder_note}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
