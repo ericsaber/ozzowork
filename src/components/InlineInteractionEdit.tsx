@@ -61,7 +61,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     console.log("[InlineInteractionEdit] saved:", { id: interaction.id, editDate, editType, editNote });
     queryClient.invalidateQueries({ queryKey: ["interactions", interaction.contact_id] });
     setIsSaving(false);
-    onClose();
+    setTimeout(() => onClose(), 100);
   };
 
   const handleDelete = async () => {
