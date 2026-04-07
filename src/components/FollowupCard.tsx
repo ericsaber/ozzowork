@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, CornerDownRight, MoreVertical, Pencil, X, History } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -8,6 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface FollowupCardProps {
   taskRecordId: string;
@@ -43,6 +46,13 @@ const FollowupCard = ({
   contactPhone, contactEmail, hasInteractions, onHistoryTap,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editType, setEditType] = useState<string | null>(null);
+  const [editReminder, setEditReminder] = useState("");
 
   const isActionable = plannedType === "call" || plannedType === "text" || plannedType === "email";
 
@@ -63,6 +73,55 @@ const FollowupCard = ({
         navigate(`/contact/${contactId}`);
       }
     }
+  };
+
+  const handleStartEdit = () => {
+    setEditDate(dueDate);
+    setEditType(plannedType);
+    setEditReminder(reminderNote ?? "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("follow_ups")
+      .update({
+        planned_date: editDate,
+        planned_type: editType,
+        reminder_note: editReminder.trim() || null,
+      })
+      .eq("id", taskRecordId);
+
+    if (error) {
+      console.log("[FollowupCard] inline edit error:", error);
+      return;
+    }
+
+    if (editDate !== dueDate) {
+      await supabase.from("follow_up_edits").insert({
+        follow_up_id: taskRecordId,
+        user_id: user.id,
+        previous_due_date: dueDate,
+        previous_type: plannedType,
+        changed_at: new Date().toISOString(),
+      });
+    }
+
+    console.log("[FollowupCard] inline edit saved:", {
+      taskRecordId, editDate, editType, editReminder,
+    });
+
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
+    queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
+    setIsEditing(false);
   };
 
   const isOverdue = variant === "overdue";
@@ -100,6 +159,197 @@ const FollowupCard = ({
     if (isOverdue) return `${typeStr} · Due ${format(parseISO(dueDate), "M/d")}`;
     return `${typeStr} · ${format(parseISO(dueDate), "MMM d")}`;
   })();
+
+  const renderEditPanel = () => {
+    const typeKeys = Object.keys(typeVerb) as string[];
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+
+    return (
+      <div style={{
+        width: "calc(100% - 24px)",
+        borderRadius: "5px",
+        overflow: "hidden",
+        flexShrink: 0,
+      }}>
+        {/* Top section */}
+        <div style={{
+          background: tokens.subframeBg,
+          borderRadius: "5px 5px 0 0",
+          padding: "10px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}>
+          {/* DATE */}
+          <div>
+            <span style={{
+              fontWeight: 600,
+              fontSize: "12px",
+              color: tokens.color,
+              fontFamily: "var(--font-body)",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              display: "block",
+              marginBottom: "6px",
+            }}>DATE</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); dateInputRef.current?.showPicker(); }}
+              style={{
+                background: "white",
+                border: tokens.doneBorder,
+                borderRadius: "20px",
+                padding: "6px 14px",
+                fontWeight: 500,
+                fontSize: "14px",
+                color: tokens.color,
+                whiteSpace: "nowrap",
+                lineHeight: "normal",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <CalendarIcon size={14} />
+              {format(parseISO(editDate), "MMM d, yyyy")}
+            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={editDate}
+              min={todayStr}
+              onChange={(e) => { if (e.target.value) setEditDate(e.target.value); }}
+              style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
+            />
+          </div>
+
+          {/* TYPE */}
+          <div>
+            <span style={{
+              fontWeight: 600,
+              fontSize: "12px",
+              color: tokens.color,
+              fontFamily: "var(--font-body)",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              display: "block",
+              marginBottom: "6px",
+            }}>TYPE</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {typeKeys.map((key) => {
+                const Icon = typeIcon[key];
+                const selected = editType === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditType(selected ? null : key);
+                    }}
+                    style={{
+                      background: selected ? `${tokens.color}26` : "white",
+                      border: selected ? `1px solid ${tokens.color}` : tokens.doneBorder,
+                      borderRadius: "20px",
+                      padding: "6px 14px",
+                      fontWeight: 500,
+                      fontSize: "14px",
+                      color: tokens.color,
+                      whiteSpace: "nowrap",
+                      lineHeight: "normal",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-body)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <Icon size={14} />
+                    {typeVerb[key]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom section */}
+        <div style={{
+          background: tokens.reminderBg,
+          borderTop: `1px dashed ${tokens.reminderBorderColor}`,
+          borderRadius: "0 0 5px 5px",
+          padding: "10px 18px",
+        }}>
+          {/* Reminder row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+            <CornerDownRight size={16} style={{ color: tokens.color, flexShrink: 0 }} />
+            <input
+              value={editReminder}
+              onChange={(e) => setEditReminder(e.target.value)}
+              maxLength={44}
+              placeholder="Add a reminder note..."
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                flex: 1,
+                border: "none",
+                background: "transparent",
+                fontSize: "12px",
+                fontWeight: 400,
+                color: tokens.color,
+                fontFamily: "var(--font-body)",
+                outline: "none",
+                lineHeight: "normal",
+              }}
+            />
+            <span style={{
+              fontSize: "12px",
+              color: tokens.color,
+              opacity: 0.6,
+              fontFamily: "var(--font-body)",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}>
+              {editReminder.length}/44
+            </span>
+          </div>
+
+          {/* Button row */}
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCancelEdit(); }}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: tokens.color,
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSave(); }}
+              style={{
+                background: tokens.color,
+                border: "none",
+                borderRadius: "20px",
+                padding: "6px 14px",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "white",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -182,7 +432,7 @@ const FollowupCard = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[160px]">
               {onEdit && (
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
                   <Pencil size={14} className="mr-2" /> Edit follow-up
                 </DropdownMenuItem>
               )}
@@ -202,99 +452,101 @@ const FollowupCard = ({
         </div>
       </div>
 
-      {/* Action subframe + reminder */}
+      {/* Action subframe + reminder OR edit panel */}
       <div style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         paddingBottom: "16px",
       }}>
-        <div style={{
-          width: "calc(100% - 24px)",
-          borderRadius: "5px",
-          overflow: "hidden",
-          flexShrink: 0,
-        }}>
-          {/* Main action row */}
+        {isEditing ? renderEditPanel() : (
           <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 8px",
-            background: tokens.subframeBg,
+            width: "calc(100% - 24px)",
+            borderRadius: "5px",
+            overflow: "hidden",
+            flexShrink: 0,
           }}>
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "6px", cursor: isActionable ? "pointer" : "default" }}
-              onClick={isActionable ? handleActionTap : undefined}
-            >
-              <div style={{
-                width: "26px",
-                height: "26px",
-                borderRadius: "6px",
-                background: `${tokens.color}26`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
-              </div>
-              <span style={{
-                fontWeight: 600,
-                fontSize: "16px",
-                color: tokens.color,
-                whiteSpace: "nowrap",
-                lineHeight: "normal",
-                fontFamily: "var(--font-body)",
-              }}>
-                {actionLabel}
-              </span>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onComplete(); }}
-              style={{
-                background: "white",
-                border: tokens.doneBorder,
-                borderRadius: "20px",
-                padding: "6px 14px",
-                fontWeight: 500,
-                fontSize: "14px",
-                color: tokens.color,
-                whiteSpace: "nowrap",
-                lineHeight: "normal",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              Log it
-            </button>
-          </div>
-
-          {/* Reminder row */}
-          {reminderNote && (
+            {/* Main action row */}
             <div style={{
               display: "flex",
               alignItems: "center",
-              padding: "10px 18px",
-              gap: "7px",
-              borderTop: `1px dashed ${tokens.reminderBorderColor}`,
-              background: tokens.reminderBg,
+              justifyContent: "space-between",
+              padding: "10px 8px",
+              background: tokens.subframeBg,
             }}>
-              <CornerDownRight size={16} style={{ color: tokens.color, flexShrink: 0 }} />
-              <span style={{
-                fontWeight: 400,
-                fontSize: "12px",
-                color: tokens.color,
-                whiteSpace: "nowrap",
-                lineHeight: "normal",
-                fontFamily: "var(--font-body)",
-                flex: 1,
-              }}>
-                {reminderNote}
-              </span>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px", cursor: isActionable ? "pointer" : "default" }}
+                onClick={isActionable ? handleActionTap : undefined}
+              >
+                <div style={{
+                  width: "26px",
+                  height: "26px",
+                  borderRadius: "6px",
+                  background: `${tokens.color}26`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <ActionIcon size={16} strokeWidth={2} style={{ color: tokens.color }} />
+                </div>
+                <span style={{
+                  fontWeight: 600,
+                  fontSize: "16px",
+                  color: tokens.color,
+                  whiteSpace: "nowrap",
+                  lineHeight: "normal",
+                  fontFamily: "var(--font-body)",
+                }}>
+                  {actionLabel}
+                </span>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onComplete(); }}
+                style={{
+                  background: "white",
+                  border: tokens.doneBorder,
+                  borderRadius: "20px",
+                  padding: "6px 14px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: tokens.color,
+                  whiteSpace: "nowrap",
+                  lineHeight: "normal",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Log it
+              </button>
             </div>
-          )}
-        </div>
+
+            {/* Reminder row */}
+            {reminderNote && (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "10px 18px",
+                gap: "7px",
+                borderTop: `1px dashed ${tokens.reminderBorderColor}`,
+                background: tokens.reminderBg,
+              }}>
+                <CornerDownRight size={16} style={{ color: tokens.color, flexShrink: 0 }} />
+                <span style={{
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: tokens.color,
+                  whiteSpace: "nowrap",
+                  lineHeight: "normal",
+                  fontFamily: "var(--font-body)",
+                  flex: 1,
+                }}>
+                  {reminderNote}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
