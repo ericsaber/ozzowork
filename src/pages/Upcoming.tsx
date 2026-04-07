@@ -32,6 +32,19 @@ const Upcoming = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
   const [historyTarget, setHistoryTarget] = useState<{ contactId: string; contactName: string } | null>(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const kb = window.innerHeight - vv.height;
+      setKeyboardHeight(kb > 0 ? kb : 0);
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["follow-ups-upcoming"],
