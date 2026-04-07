@@ -530,7 +530,7 @@ const ContactHistory = () => {
                       </span>
                       <span className="text-muted-foreground"
                         style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                        {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                        {format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
                       </span>
                     </div>
                     {record.note && record.note.trim() && (
