@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +35,12 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setEditDate(interaction.connect_date);
+    setEditType(interaction.connect_type);
+    setEditNote(interaction.note ?? '');
+  }, [interaction.id]);
 
   const handleSave = async () => {
     setIsSaving(true);
