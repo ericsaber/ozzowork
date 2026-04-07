@@ -136,6 +136,9 @@ const Today = () => {
         onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
         hasInteractions={hasInteractionsSet.has(item.contact_id)}
         onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName })}
+        isEditingExternal={editingCardId === item.id}
+        onEditStart={() => setEditingCardId(item.id)}
+        onEditEnd={() => setEditingCardId(null)}
         onComplete={() => {
           setCompleteTarget({
             followUpId: item.id,
