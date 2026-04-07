@@ -1,32 +1,31 @@
 
 
-## Fix keyboard covering reminder input in FollowupCard.tsx
+## Scroll container ref for keyboard fix
 
-### What
-Replace the `onFocus` handler on the reminder note `<input>` in the inline edit panel with a smarter scroll approach that uses `visualViewport` to calculate the exact visible area above the keyboard.
+### Files changed: 3
 
-### File: `src/components/FollowupCard.tsx`
+---
 
-Replace the current `onFocus` handler (which does a simple `scrollIntoView` with 300ms delay) with:
+### 1. Today.tsx
 
-```tsx
-onFocus={(e) => {
-  const input = e.target;
-  setTimeout(() => {
-    const vv = window.visualViewport;
-    if (!vv) {
-      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    const rect = input.getBoundingClientRect();
-    const visibleBottom = vv.offsetTop + vv.height;
-    if (rect.bottom > visibleBottom) {
-      const offset = rect.bottom - visibleBottom + 24;
-      window.scrollBy({ top: offset, behavior: 'smooth' });
-    }
-  }, 350);
-}}
-```
+- Add `useRef` to the import from React.
+- Create `const scrollContainerRef = useRef<HTMLDivElement>(null);`
+- Attach `ref={scrollContainerRef}` to the outermost `<div>` (line 199, the `min-h-screen pb-24 px-8 pt-6` div).
+- Pass `scrollContainerRef={scrollContainerRef}` to each `<FollowupCard>` in `renderCard`.
 
-No other changes. All `console.log` statements preserved. No other files touched.
+### 2. Upcoming.tsx
+
+- Add `useRef` to the import from React.
+- Create `const scrollContainerRef = useRef<HTMLDivElement>(null);`
+- Attach `ref={scrollContainerRef}` to the outermost `<div>` (line 108).
+- Pass `scrollContainerRef={scrollContainerRef}` to each `<FollowupCard>`.
+
+### 3. FollowupCard.tsx
+
+- Add `React.RefObject` import (already has React in scope).
+- Add to `FollowupCardProps`: `scrollContainerRef?: React.RefObject<HTMLDivElement>;`
+- Destructure `scrollContainerRef` in the component params.
+- Replace the `onFocus` handler on the reminder input (lines 315–330) with the provided handler that uses `scrollContainerRef?.current` for container-relative scroll calculation with 24px breathing room and 350ms delay.
+
+### No other files touched. All console.log statements preserved.
 
