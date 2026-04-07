@@ -87,11 +87,13 @@ const FollowupCard = ({
     setEditDate(dueDate);
     setEditType(plannedType);
     setEditReminder(reminderNote ?? "");
-    setIsEditing(true);
+    if (!onEditStart) setIsEditing(true);
+    onEditStart?.();
   };
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
+    if (!onEditStart) setIsEditing(false);
+    onEditEnd?.();
   };
 
   const handleSave = async () => {
