@@ -1,33 +1,20 @@
 
 
-## Two small tweaks — Pencil color + useEffect reset
+## Add console.log to Calendar onSelect
 
-### Files changed: 2
+### File: `src/components/InlineInteractionEdit.tsx`
 
----
+**Line 131**: Insert `console.log('[InlineInteractionEdit] date selected:', d);` immediately after the `if (d) {` check, before `setEditDate`.
 
-### 1. `src/pages/ContactHistory.tsx`
-
-**Line 545** (featured card Pencil): change `color: "#c8622a"` → `color: "#999"`.
-
-**Line 770** (timeline row Pencil): change `color: "#c8622a"` → `color: "#999"`.
-
-No other changes.
-
----
-
-### 2. `src/components/InlineInteractionEdit.tsx`
-
-**Line 1**: add `useEffect` to the React import.
-
-**After state declarations**: add:
 ```ts
-useEffect(() => {
-  setEditDate(interaction.connect_date);
-  setEditType(interaction.connect_type);
-  setEditNote(interaction.note ?? '');
-}, [interaction.id]);
+onSelect={(d) => {
+  if (d) {
+    console.log('[InlineInteractionEdit] date selected:', d);
+    setEditDate(format(d, "yyyy-MM-dd"));
+    setShowDatePicker(false);
+  }
+}}
 ```
 
-No other changes. All existing console.log statements preserved.
+No other changes.
 
