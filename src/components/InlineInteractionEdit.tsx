@@ -29,7 +29,7 @@ const typeIconMap: Record<string, typeof Phone> = { call: Phone, email: Mail, te
 
 const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditProps) => {
   const queryClient = useQueryClient();
-  const [editDate, setEditDate] = useState(interaction.connect_date);
+  const [editDate, setEditDate] = useState(interaction.connect_date.slice(0, 10));
   const [editType, setEditType] = useState<string | null>(interaction.connect_type);
   const [editNote, setEditNote] = useState(interaction.note ?? "");
   const [showDatePicker, setShowDatePicker] = useState(false);
