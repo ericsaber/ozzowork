@@ -597,7 +597,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_edit") {
                 const edit = item.edit;
                 const newDate = edit.previous_due_date
-                  ? format(new Date(edit.previous_due_date + 'T00:00:00'), "MMM d")
+                  ? format(parseDate(edit.previous_due_date), "MMM d")
                   : "—";
                 return (
                   <div key={`edit-${edit.id}`} style={dividerStyle}>
