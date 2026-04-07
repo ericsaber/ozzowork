@@ -1,11 +1,21 @@
 
 
-## Fix date pill in InlineInteractionEdit.tsx
+## Remove debug console.log from ContactHistory.tsx
 
-Two one-line changes to slice `connect_date` to 10 characters (`yyyy-MM-dd`) before storing in `editDate` state:
+### Change
 
-1. **Line ~36 (useState initializer):** `useState(interaction.connect_date)` → `useState(interaction.connect_date.slice(0, 10))`
-2. **Line ~41 (useEffect setter):** `setEditDate(interaction.connect_date)` → `setEditDate(interaction.connect_date.slice(0, 10))`
+**`src/pages/ContactHistory.tsx` lines 763-766** — Remove the IIFE wrapper and console.log, replacing with the plain `format()` call:
+
+```tsx
+// From:
+{(() => {
+  console.log('[ContactHistory] raw connect_date:', record.connect_date);
+  return format(parseDate(record.connect_date || record.created_at), "MMM d");
+})()}
+
+// To:
+{format(parseDate(record.connect_date || record.created_at), "MMM d")}
+```
 
 No other changes.
 
