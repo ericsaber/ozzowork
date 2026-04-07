@@ -19,6 +19,7 @@ const Upcoming = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [completeTarget, setCompleteTarget] = useState<{
     followUpId: string;
