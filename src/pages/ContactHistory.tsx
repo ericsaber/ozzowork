@@ -648,16 +648,22 @@ const ContactHistory = () => {
                               </span>
                             </div>
                             {fu.note && fu.note.trim() && (
-                              <p className="line-clamp-2 mt-0.5"
-                                style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
-                                {fu.note}
-                              </p>
+                              <div className="flex items-start gap-1 mt-0.5">
+                                <CornerDownRight size={12} className="shrink-0 mt-0.5" style={{ color: "#777" }} />
+                                <p className="line-clamp-2"
+                                  style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                                  {fu.note}
+                                </p>
+                              </div>
                             )}
                             {fu.reminder_note && fu.reminder_note.trim() && (
-                              <p className="line-clamp-2 mt-0.5"
-                                style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
-                                {fu.reminder_note}
-                              </p>
+                              <div className="flex items-start gap-1 mt-0.5">
+                                <CornerDownRight size={12} className="shrink-0 mt-0.5" style={{ color: "#777" }} />
+                                <p className="line-clamp-2"
+                                  style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                                  {fu.reminder_note}
+                                </p>
+                              </div>
                             )}
                             <p className="mt-0.5"
                               style={{ fontFamily: "var(--font-body)", fontSize: "12px", color: "#9e9e99" }}>
