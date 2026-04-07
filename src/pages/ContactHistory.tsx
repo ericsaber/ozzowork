@@ -643,7 +643,7 @@ const ContactHistory = () => {
                   const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
                   const verb = type ? (typeVerbs[type] || type) : null;
                   const dateStr = fu.connect_date
-                    ? format(fu.connect_date.length === 10 ? new Date(fu.connect_date + 'T00:00:00') : parseISO(fu.connect_date), "MMM d")
+                    ? format(parseDate(fu.connect_date), "MMM d")
                     : fu.completed_at
                     ? format(parseISO(fu.completed_at), "MMM d")
                     : "";
