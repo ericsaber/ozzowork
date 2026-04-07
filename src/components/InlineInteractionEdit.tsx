@@ -123,14 +123,14 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
                   {format(parseISO(editDate), "MMM d, yyyy")}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+              <PopoverContent className="w-auto p-0" align="start" onPointerDown={(e) => e.stopPropagation()}>
                 <Calendar
                   mode="single"
                   selected={parseISO(editDate)}
                   onSelect={(d) => {
                     if (d) {
                       console.log('[InlineInteractionEdit] date selected:', d);
-                      setEditDate(format(d, "yyyy-MM-dd"));
+                      setEditDate(format(new Date(d.getFullYear(), d.getMonth(), d.getDate()), "yyyy-MM-dd"));
                       setShowDatePicker(false);
                     }
                   }}
