@@ -573,7 +573,7 @@ const ContactHistory = () => {
               if (item.kind === "follow_up_scheduled") {
                 const fu = item.followUp;
                 const plannedDate = fu.planned_date
-                  ? format(new Date(fu.planned_date + 'T00:00:00'), "MMM d")
+                  ? format(parseDate(fu.planned_date), "MMM d")
                   : "—";
                 const setDate = format(parseISO(fu.created_at), "MMM d");
                 return (
