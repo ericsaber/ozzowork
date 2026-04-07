@@ -179,7 +179,7 @@ const ContactHistory = () => {
   const interactionCount = (interactions || []).length;
 
   const allInteractionDates = (interactions || []).map(
-    (r: any) => new Date(r.connect_date || r.created_at).getTime()
+    (r: any) => parseDate(r.connect_date || r.created_at).getTime()
   );
   const firstContactDate = allInteractionDates.length > 0
     ? format(new Date(Math.min(...allInteractionDates)), "MMM d")
