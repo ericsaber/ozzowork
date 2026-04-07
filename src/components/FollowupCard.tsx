@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Phone, Mail, MessageSquare, Users, Video, Calendar as CalendarIcon, CornerDownRight, MoreVertical, Pencil, X, History } from "lucide-react";
 import { format, parseISO } from "date-fns";
