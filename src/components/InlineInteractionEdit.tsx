@@ -129,6 +129,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
                   selected={parseISO(editDate)}
                   onSelect={(d) => {
                     if (d) {
+                      console.log('[InlineInteractionEdit] date selected:', d);
                       setEditDate(format(d, "yyyy-MM-dd"));
                       setShowDatePicker(false);
                     }
