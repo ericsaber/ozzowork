@@ -1,53 +1,96 @@
 
 
-## Add expandable note in FollowupCard "Previously" section
+## Today Card + Upcoming Card Redesign (revised v2)
 
-### What changes
+### Key correction from previous plan
 
-**`src/components/FollowupCard.tsx`** (only file touched)
+The `variant="upcoming"` no longer drives any structural differences. All cards — today, overdue, upcoming — render identically: name row with history icon + three-dot menu, action subframe with "Log it" button, reminder row. The variant prop only determines which color tokens to apply.
 
-1. **New state**: Add `const [isNoteExpanded, setIsNoteExpanded] = useState(false);` alongside the existing `expanded` state.
+### Files touched
 
-2. **Make the Previously section tappable** (lines 334-378): Wrap the outer `<div>` with an `onClick` handler and `cursor: pointer` — but only when `lastInteraction?.note` exists. When there is no note, no click handler and default cursor.
+1. **`src/components/FollowupCard.tsx`** — restructure
+2. **`src/components/LastInteractionSheet.tsx`** — new file
+3. **`src/pages/Today.tsx`** — new batched query + history sheet state
+4. **`src/pages/Upcoming.tsx`** — add batched interactions query + history sheet (mirrors Today.tsx pattern)
 
-   - The `onClick` calls `e.stopPropagation()` then toggles `isNoteExpanded`.
+### 1. FollowupCard.tsx
 
-3. **Conditionally clamp the note** (lines 362-376): When `isNoteExpanded` is false, keep the existing 2-line clamp styles (`display: "-webkit-box"`, `WebkitLineClamp: 2`, `WebkitBoxOrient: "vertical"`, `overflow: "hidden"`). When `isNoteExpanded` is true, remove those four properties so the full note renders.
+**Remove**: the `expanded` state, `isNoteExpanded` state, the entire Previously section (lines 334-388), the `ChevronDown` import, and all `isUpcoming` branching logic for the chevron vs dots menu.
 
-4. No chevron, no new colors, no new design values. All existing `console.log` statements preserved.
+**Remove**: the `lastInteraction` prop entirely — the card no longer renders last interaction data inline.
 
-### Technical detail
+**Add new props**:
+- `hasInteractions?: boolean`
+- `onHistoryTap?: () => void`
 
-```tsx
-// New state (next to existing `expanded`)
-const [isNoteExpanded, setIsNoteExpanded] = useState(false);
+**Name row right side** (same for all variants):
+- Lucide `History` icon: size 15, `opacity: 0.4`, bare (no bg/border). Only renders when `hasInteractions` is true. `onClick` calls `onHistoryTap`.
+- Three-dot menu (`MoreVertical`): always renders, with Edit and Cancel items. Gap between history icon and dots: `10px`.
 
-// Previously section wrapper gets conditional tap:
-<div
-  onClick={lastInteraction?.note ? (e) => {
-    e.stopPropagation();
-    setIsNoteExpanded(prev => !prev);
-  } : undefined}
-  style={{
-    ...existingStyles,
-    cursor: lastInteraction?.note ? "pointer" : "default",
-  }}
->
+**Card onClick**: always navigates to contact record (remove the upcoming expand/collapse branch).
 
-// Note paragraph — conditional clamp:
-<p style={{
-  fontWeight: 400,
-  fontSize: "14px",
-  color: "#717171",
-  lineHeight: "normal",
-  fontFamily: "var(--font-body)",
-  margin: 0,
-  ...(isNoteExpanded ? {} : {
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical" as const,
-    overflow: "hidden",
-  }),
-}}>
+**Variant prop**: kept, but only drives `tokens` color selection. No structural branching.
+
+**Action button**: "Log it" label (already in place). `onComplete` opens `CompleteFollowupSheet` (already wired).
+
+**Bottom padding**: always `16px` (no Previously section to adjust for).
+
+### 2. LastInteractionSheet.tsx (new)
+
+Bottom sheet using existing `Sheet` component (`side="bottom"`).
+
+Props: `open`, `onOpenChange`, `contactId`, `contactName`.
+
+Queries `interactions` table for most recent published row for the contact (`order by connect_date desc limit 1`). Fallback: `follow_ups` where `status = 'completed'` and `connect_type IS NOT NULL`, ordered by `completed_at desc limit 1`.
+
+Layout:
+- Drag handle (centered, 40px wide, 4px tall, rounded, `#ddd`)
+- Header: "Last interaction" (16px, weight 600) + X button top-right
+- Subtitle: contact name, `#777`, 14px
+- Body: type icon in 32px rounded-lg `bg-secondary` + verb + date (`MMM d, yyyy`) + italic note if present
+- Footer: "View full history →" in `#c8622a`, navigates to `/contact/${contactId}`
+
+### 3. Today.tsx
+
+Add a batched query for interaction existence:
+
+```ts
+const { data: contactsWithInteractions } = useQuery({
+  queryKey: ["contacts-with-interactions", contactIds],
+  queryFn: async () => {
+    if (contactIds.length === 0) return [];
+    const { data, error } = await supabase
+      .from("interactions")
+      .select("contact_id")
+      .in("contact_id", contactIds)
+      .eq("status", "published")
+      .limit(1000);
+    if (error) throw error;
+    return [...new Set(data.map((r: any) => r.contact_id))];
+  },
+  enabled: contactIds.length > 0,
+});
+const hasInteractionsSet = new Set(contactsWithInteractions || []);
 ```
+
+Add `historyTarget` state (`{ contactId, contactName } | null`). Pass `hasInteractions` and `onHistoryTap` to each `FollowupCard`. Render `<LastInteractionSheet>` controlled by `historyTarget`.
+
+Remove `lastInteraction` prop from card calls (no longer needed).
+
+### 4. Upcoming.tsx
+
+Mirror Today.tsx exactly:
+- Add the same batched `contacts-with-interactions` query
+- Add `historyTarget` state
+- Pass `hasInteractions` and `onHistoryTap` to each `FollowupCard`
+- Render `<LastInteractionSheet>` at page bottom
+- Remove `lastInteraction` prop from card calls
+- Cards use `variant="upcoming"` for color only — structure is identical to today/overdue
+
+### What does NOT change
+
+- `ContactFollowupCard.tsx` — untouched
+- `CompleteFollowupSheet` / `EditFollowupSheet` / log flows — untouched
+- Section labels (OVERDUE, DUE TODAY, COMING UP) — untouched
+- All existing `console.log` statements preserved
 
