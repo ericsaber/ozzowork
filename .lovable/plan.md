@@ -1,12 +1,19 @@
 
 
-## InlineInteractionEdit.tsx — two targeted fixes
+## Add debug log for connect_date in interaction timeline row
 
-### 1. Expand useEffect dependency array (line ~43)
-Change `[interaction.id]` → `[interaction.id, interaction.connect_date, interaction.connect_type, interaction.note]` so local edit state resets whenever the parent data changes after a refetch.
+### Change in `src/pages/ContactHistory.tsx`
 
-### 2. Revert setTimeout in handleSave (line ~63)
-Replace `setTimeout(() => onClose(), 100)` with `onClose()`.
+**Line 758** — Insert `console.log` immediately before the `format()` call. Since the format call is inline in JSX, wrap both the log and the format in a comma expression or an IIFE.
 
-No other changes. All `console.log` statements preserved.
+Add before line 758 (inside the `<span>`), replacing the current format expression with:
+
+```tsx
+{(() => {
+  console.log('[ContactHistory] raw connect_date:', record.connect_date);
+  return format(record.connect_date ? (record.connect_date.length === 10 ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.connect_date)) : parseISO(record.created_at), "MMM d");
+})()}
+```
+
+No other changes.
 
