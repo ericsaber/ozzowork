@@ -736,31 +736,41 @@ const ContactHistory = () => {
                 const verb = type ? (typeVerbs[type] || type) : "Connected";
                 return (
                   <div key={`interaction-${record.id}`} style={dividerStyle}>
-                    <div className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}>
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: "#f0ede8" }}>
-                        <TypeIcon size={14} className="text-muted-foreground" />
+                    {editingInteractionId === record.id ? (
+                      <div className="py-3 px-2 -mx-2">
+                        <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground"
-                            style={{ fontFamily: "var(--font-body)", fontSize: "16px" }}>
-                            {verb}
-                          </span>
-                          <span className="text-muted-foreground"
-                            style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                            {format(parseISO(record.connect_date || record.created_at), "MMM d")}
-                          </span>
+                    ) : (
+                      <div className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}>
+                        <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
+                          style={{ background: "#f0ede8" }}>
+                          <TypeIcon size={14} className="text-muted-foreground" />
                         </div>
-                        {record.note && record.note.trim() && (
-                          <p className="line-clamp-2 mt-0.5"
-                            style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
-                            {record.note}
-                          </p>
-                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground"
+                              style={{ fontFamily: "var(--font-body)", fontSize: "16px" }}>
+                              {verb}
+                            </span>
+                            <span className="text-muted-foreground"
+                              style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
+                              {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                            </span>
+                          </div>
+                          {record.note && record.note.trim() && (
+                            <p className="line-clamp-2 mt-0.5"
+                              style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
+                              {record.note}
+                            </p>
+                          )}
+                        </div>
+                        <Pencil
+                          size={14}
+                          style={{ color: "#c8622a", cursor: "pointer", flexShrink: 0 }}
+                          onClick={(e) => { e.stopPropagation(); setEditingInteractionId(record.id); }}
+                        />
                       </div>
-                      {/* TODO Step 8: add pencil icon for inline interaction edit */}
-                    </div>
+                    )}
                   </div>
                 );
               }
