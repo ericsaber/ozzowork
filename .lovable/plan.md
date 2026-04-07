@@ -1,32 +1,17 @@
 
 
-## Fix timezone-safe connect_date parsing in ContactHistory.tsx
+## Fix date display + UI update after save
 
-### File: `src/pages/ContactHistory.tsx` — 3 locations
+### 1. `src/pages/ContactHistory.tsx` — two date-only parsing fixes
 
-**Line 533** (featured card):
-```ts
-// From:
-{format(parseISO(record.connect_date || record.created_at), "MMM d")}
-// To:
-{format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
-```
+- **Line ~571** (`planned_date`): `parseISO(fu.planned_date)` → `new Date(fu.planned_date + 'T00:00:00')`
+- **Line ~595** (`previous_due_date`): `parseISO(edit.previous_due_date)` → `new Date(edit.previous_due_date + 'T00:00:00')`
 
-**Line 641** (completed follow-up row):
-```ts
-// From:
-format(parseISO(fu.connect_date), "MMM d")
-// To:
-format(new Date(fu.connect_date + 'T00:00:00'), "MMM d")
-```
+No other changes. `created_at`/`completed_at` stay as `parseISO`.
 
-**Line 758** (interaction timeline row):
-```ts
-// From:
-{format(parseISO(record.connect_date || record.created_at), "MMM d")}
-// To:
-{format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
-```
+### 2. `src/components/InlineInteractionEdit.tsx` — delay onClose after save
 
-Lines 533 and 758 need a ternary because of the `created_at` fallback (which stays as `parseISO`). Line 641 is straightforward since it's already inside a `fu.connect_date` truthiness check. No other changes.
+In `handleSave`, replace the immediate `onClose()` call with `setTimeout(() => onClose(), 100)` so the invalidated query has time to refetch before the inline editor closes.
+
+### 3. No other files touched
 
