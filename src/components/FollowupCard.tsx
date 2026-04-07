@@ -171,7 +171,7 @@ const FollowupCard = ({
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  padding: "2px 0 0 0",
+                  padding: "0",
                   flexShrink: 0,
                   display: "flex",
                   alignItems: "flex-start",
