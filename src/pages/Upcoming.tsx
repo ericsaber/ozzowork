@@ -93,7 +93,7 @@ const Upcoming = () => {
   });
 
   return (
-    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto">
+    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
         <ArrowLeft size={18} /><span className="text-sm">Back</span>
       </button>
