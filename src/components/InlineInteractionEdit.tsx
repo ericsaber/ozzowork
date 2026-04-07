@@ -36,6 +36,12 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    setEditDate(interaction.connect_date);
+    setEditType(interaction.connect_type);
+    setEditNote(interaction.note ?? '');
+  }, [interaction.id]);
+
   const handleSave = async () => {
     setIsSaving(true);
     const { error } = await supabase
