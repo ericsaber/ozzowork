@@ -46,6 +46,8 @@ const Today = () => {
     return () => vv.removeEventListener("resize", onResize);
   }, []);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
     queryFn: async () => {
