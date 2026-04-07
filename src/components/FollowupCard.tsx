@@ -159,7 +159,7 @@ const FollowupCard = ({
           {hasInteractions && (
             <History
               size={15}
-              style={{ opacity: 0.4, cursor: "pointer" }}
+              style={{ color: "#777", cursor: "pointer" }}
               onClick={(e) => { e.stopPropagation(); onHistoryTap?.(); }}
             />
           )}
