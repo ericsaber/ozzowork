@@ -192,36 +192,36 @@ const FollowupCard = ({
               display: "block",
               marginBottom: "6px",
             }}>DATE</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); dateInputRef.current?.showPicker(); }}
-              style={{
-                background: "white",
-                border: tokens.doneBorder,
-                borderRadius: "20px",
-                padding: "6px 14px",
-                fontWeight: 500,
-                fontSize: "14px",
-                color: tokens.color,
-                whiteSpace: "nowrap",
-                lineHeight: "normal",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
-            >
-              <CalendarIcon size={14} />
-              {format(parseISO(editDate), "MMM d, yyyy")}
-            </button>
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={editDate}
-              min={todayStr}
-              onChange={(e) => { if (e.target.value) setEditDate(e.target.value); }}
-              style={{ position: "absolute", opacity: 0, pointerEvents: "none", width: 0, height: 0 }}
-            />
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <div
+                style={{
+                  background: "white",
+                  border: tokens.doneBorder,
+                  borderRadius: "20px",
+                  padding: "6px 14px",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  color: tokens.color,
+                  whiteSpace: "nowrap",
+                  lineHeight: "normal",
+                  fontFamily: "var(--font-body)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <CalendarIcon size={14} />
+                {format(parseISO(editDate), "MMM d, yyyy")}
+              </div>
+              <input
+                type="date"
+                value={editDate}
+                min={todayStr}
+                onChange={(e) => { if (e.target.value) setEditDate(e.target.value); }}
+                onClick={(e) => e.stopPropagation()}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", zIndex: 1 }}
+              />
+            </div>
           </div>
 
           {/* TYPE */}
