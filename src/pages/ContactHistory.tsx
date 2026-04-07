@@ -530,7 +530,7 @@ const ContactHistory = () => {
                       </span>
                       <span className="text-muted-foreground"
                         style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                        {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                        {format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
                       </span>
                     </div>
                     {record.note && record.note.trim() && (
@@ -638,7 +638,7 @@ const ContactHistory = () => {
                   const TypeIcon = type ? (typeIcons[type] || ClipboardList) : ClipboardList;
                   const verb = type ? (typeVerbs[type] || type) : null;
                   const dateStr = fu.connect_date
-                    ? format(parseISO(fu.connect_date), "MMM d")
+                    ? format(new Date(fu.connect_date + 'T00:00:00'), "MMM d")
                     : fu.completed_at
                     ? format(parseISO(fu.completed_at), "MMM d")
                     : "";
@@ -755,7 +755,7 @@ const ContactHistory = () => {
                             </span>
                             <span className="text-muted-foreground"
                               style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                              {format(parseISO(record.connect_date || record.created_at), "MMM d")}
+                              {format(record.connect_date ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.created_at), "MMM d")}
                             </span>
                           </div>
                           {record.note && record.note.trim() && (
