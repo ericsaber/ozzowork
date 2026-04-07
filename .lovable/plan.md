@@ -1,14 +1,14 @@
 
 
-## Fix: Remove duplicate close button in LastInteractionSheet
+## Fix: Remove focus border on X button in LastInteractionSheet
 
-The `SheetContent` component in `src/components/ui/sheet.tsx` renders a default `SheetPrimitive.Close` X button (small, top-right). `LastInteractionSheet.tsx` also renders its own larger X button in the header. Need to remove the small default one.
+**File:** `src/components/LastInteractionSheet.tsx`
 
-### Change
+Add `outline: "none"` to the X button's inline style (line 84) to remove the browser default focus ring.
 
-**`src/components/ui/sheet.tsx`** — The default close button is baked into `SheetContent`. To avoid affecting other sheets, add support for hiding it via a prop:
+```tsx
+style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, outline: "none" }}
+```
 
-Add an optional `hideClose?: boolean` prop to `SheetContentProps`. When true, skip rendering the `SheetPrimitive.Close` element.
-
-**`src/components/LastInteractionSheet.tsx`** — Pass `hideClose` to `SheetContent`.
+One-line change, no other files affected.
 
