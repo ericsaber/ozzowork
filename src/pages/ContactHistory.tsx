@@ -23,6 +23,7 @@ import LogInteractionSheet from "@/components/LogInteractionSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { format, parseISO, startOfToday } from "date-fns";
 
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
