@@ -347,7 +347,6 @@ const ContactFollowupCard = ({
         borderRadius: "16px",
         overflow: "hidden",
         width: "100%",
-        maxWidth: "390px",
         margin: "0 auto",
         padding: "16px 0",
       }}
