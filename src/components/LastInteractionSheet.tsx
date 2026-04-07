@@ -63,7 +63,7 @@ const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: La
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl p-0" style={{ maxHeight: "70vh" }}>
+      <SheetContent side="bottom" className="rounded-t-2xl p-0" hideClose style={{ maxHeight: "70vh" }}>
         {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 6px" }}>
           <div style={{ width: 40, height: 4, borderRadius: 2, background: "#ddd" }} />
