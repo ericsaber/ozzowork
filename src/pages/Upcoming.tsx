@@ -8,6 +8,7 @@ import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
+import LastInteractionSheet from "@/components/LastInteractionSheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -30,6 +31,7 @@ const Upcoming = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<{ contactId: string; contactName: string } | null>(null);
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["follow-ups-upcoming"],
@@ -53,32 +55,23 @@ const Upcoming = () => {
 
   const contactIds = (items || []).map((f: any) => f.contact_id);
 
-  const { data: interactionsData } = useQuery({
-    queryKey: ["interactions-upcoming", contactIds],
+  const { data: contactsWithInteractions } = useQuery({
+    queryKey: ["contacts-with-interactions-upcoming", contactIds],
     queryFn: async () => {
       if (contactIds.length === 0) return [];
       const { data, error } = await supabase
         .from("interactions")
-        .select("*")
+        .select("contact_id")
         .in("contact_id", contactIds)
         .eq("status", "published")
-        .order("connect_date", { ascending: false });
+        .limit(1000);
       if (error) throw error;
-      console.log("[Upcoming] interactions fetched:", data?.length);
-      return data as any[];
+      console.log("[Upcoming] contacts-with-interactions fetched:", data?.length);
+      return [...new Set(data.map((r: any) => r.contact_id))];
     },
     enabled: contactIds.length > 0,
   });
-
-  const lastInteractionByContact = (interactionsData || []).reduce(
-    (acc: Record<string, any>, interaction: any) => {
-      if (!acc[interaction.contact_id]) {
-        acc[interaction.contact_id] = interaction;
-      }
-      return acc;
-    },
-    {}
-  );
+  const hasInteractionsSet = new Set(contactsWithInteractions || []);
 
   const cancelFollowUpMutation = useMutation({
     mutationFn: async (followUpId: string) => {
@@ -111,7 +104,6 @@ const Upcoming = () => {
         <div className="space-y-6">
           {items.map((item: any) => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
-            const lastInteraction = lastInteractionByContact[item.contact_id] || null;
             return (
               <FollowupCard
                 key={item.id}
@@ -122,16 +114,13 @@ const Upcoming = () => {
                 dueDate={item.planned_date}
                 plannedType={item.planned_type || null}
                 reminderNote={item.reminder_note || null}
-                lastInteraction={lastInteraction ? {
-                  connect_type: lastInteraction.connect_type,
-                  connect_date: lastInteraction.connect_date,
-                  note: lastInteraction.note,
-                } : null}
                 variant="upcoming"
                 contactPhone={item.contacts?.phone ?? null}
                 contactEmail={item.contacts?.email ?? null}
                 menuOpen={openMenuId === item.id}
                 onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
+                hasInteractions={hasInteractionsSet.has(item.contact_id)}
+                onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName: name })}
                 onComplete={() => setCompleteTarget({
                   followUpId: item.id,
                   contactId: item.contact_id,
@@ -220,6 +209,14 @@ const Upcoming = () => {
         startStep={1}
         logOnly={true}
       />
+      {historyTarget && (
+        <LastInteractionSheet
+          open={!!historyTarget}
+          onOpenChange={(o) => { if (!o) setHistoryTarget(null); }}
+          contactId={historyTarget.contactId}
+          contactName={historyTarget.contactName}
+        />
+      )}
     </div>
   );
 };

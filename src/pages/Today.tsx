@@ -6,6 +6,7 @@ import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import EditFollowupSheet from "@/components/EditFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
+import LastInteractionSheet from "@/components/LastInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
 import { Calendar, Eye, UserRound } from "lucide-react";
 import {
@@ -30,6 +31,7 @@ const Today = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<{ contactId: string; contactName: string } | null>(null);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -48,32 +50,23 @@ const Today = () => {
 
   const contactIds = (followUpsData || []).map((f: any) => f.contact_id);
 
-  const { data: interactionsData } = useQuery({
-    queryKey: ["interactions-today", contactIds],
+  const { data: contactsWithInteractions } = useQuery({
+    queryKey: ["contacts-with-interactions", contactIds],
     queryFn: async () => {
       if (contactIds.length === 0) return [];
       const { data, error } = await supabase
         .from("interactions")
-        .select("*")
+        .select("contact_id")
         .in("contact_id", contactIds)
         .eq("status", "published")
-        .order("connect_date", { ascending: false });
+        .limit(1000);
       if (error) throw error;
-      console.log("[Today] interactions fetched:", data?.length);
-      return data as any[];
+      console.log("[Today] contacts-with-interactions fetched:", data?.length);
+      return [...new Set(data.map((r: any) => r.contact_id))];
     },
     enabled: contactIds.length > 0,
   });
-
-  const lastInteractionByContact = (interactionsData || []).reduce(
-    (acc: Record<string, any>, interaction: any) => {
-      if (!acc[interaction.contact_id]) {
-        acc[interaction.contact_id] = interaction;
-      }
-      return acc;
-    },
-    {}
-  );
+  const hasInteractionsSet = new Set(contactsWithInteractions || []);
 
   const records = followUpsData || [];
   
@@ -122,34 +115,38 @@ const Today = () => {
   const isEmpty = overdue.length === 0 && dueToday.length === 0;
   const attentionCount = overdue.length + dueToday.length;
 
-  const renderCard = (item: any, variant: "overdue" | "today" | "upcoming") => (
-    <FollowupCard
-      key={item.id}
-      taskRecordId={item.id}
-      contactId={item.contact_id}
-      name={item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown"}
-      company={item.contacts?.company ?? null}
-      dueDate={item.planned_date}
-      plannedType={item.planned_type || null}
-      reminderNote={item.reminder_note || null}
-      lastInteraction={lastInteractionByContact[item.contact_id] || null}
-      variant={variant}
-      contactPhone={item.contacts?.phone ?? null}
-      contactEmail={item.contacts?.email ?? null}
-      menuOpen={openMenuId === item.id}
-      onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
-      onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
-      onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
-      onComplete={() => {
-        setCompleteTarget({
-          followUpId: item.id,
-          contactId: item.contact_id,
-          contactName: item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown",
-          plannedType: item.planned_type || null,
-        });
-      }}
-    />
-  );
+  const renderCard = (item: any, variant: "overdue" | "today" | "upcoming") => {
+    const contactName = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
+    return (
+      <FollowupCard
+        key={item.id}
+        taskRecordId={item.id}
+        contactId={item.contact_id}
+        name={contactName}
+        company={item.contacts?.company ?? null}
+        dueDate={item.planned_date}
+        plannedType={item.planned_type || null}
+        reminderNote={item.reminder_note || null}
+        variant={variant}
+        contactPhone={item.contacts?.phone ?? null}
+        contactEmail={item.contacts?.email ?? null}
+        menuOpen={openMenuId === item.id}
+        onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
+        onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+        onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
+        hasInteractions={hasInteractionsSet.has(item.contact_id)}
+        onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName })}
+        onComplete={() => {
+          setCompleteTarget({
+            followUpId: item.id,
+            contactId: item.contact_id,
+            contactName,
+            plannedType: item.planned_type || null,
+          });
+        }}
+      />
+    );
+  };
 
   const renderComingUp = () => {
     if (comingUp.length === 0) {
@@ -299,6 +296,14 @@ const Today = () => {
         startStep={1}
         logOnly={true}
       />
+      {historyTarget && (
+        <LastInteractionSheet
+          open={!!historyTarget}
+          onOpenChange={(o) => { if (!o) setHistoryTarget(null); }}
+          contactId={historyTarget.contactId}
+          contactName={historyTarget.contactName}
+        />
+      )}
     </div>
   );
 };
