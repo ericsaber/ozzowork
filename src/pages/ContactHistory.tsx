@@ -755,7 +755,10 @@ const ContactHistory = () => {
                             </span>
                             <span className="text-muted-foreground"
                               style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                              {format(record.connect_date ? (record.connect_date.length === 10 ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.connect_date)) : parseISO(record.created_at), "MMM d")}
+                              {(() => {
+                                console.log('[ContactHistory] raw connect_date:', record.connect_date);
+                                return format(record.connect_date ? (record.connect_date.length === 10 ? new Date(record.connect_date + 'T00:00:00') : parseISO(record.connect_date)) : parseISO(record.created_at), "MMM d");
+                              })()}
                             </span>
                           </div>
                           {record.note && record.note.trim() && (
