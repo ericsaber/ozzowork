@@ -36,6 +36,7 @@ interface FollowupCardProps {
   isEditingExternal?: boolean;
   onEditStart?: () => void;
   onEditEnd?: () => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
 const typeVerb: Record<string, string> = {
