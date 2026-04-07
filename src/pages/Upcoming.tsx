@@ -121,6 +121,9 @@ const Upcoming = () => {
                 onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
                 hasInteractions={hasInteractionsSet.has(item.contact_id)}
                 onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName: name })}
+                isEditingExternal={editingCardId === item.id}
+                onEditStart={() => setEditingCardId(item.id)}
+                onEditEnd={() => setEditingCardId(null)}
                 onComplete={() => setCompleteTarget({
                   followUpId: item.id,
                   contactId: item.contact_id,

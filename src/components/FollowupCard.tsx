@@ -488,7 +488,7 @@ const FollowupCard = ({
         alignItems: "center",
         paddingBottom: "16px",
       }}>
-        {isEditing ? renderEditPanel() : (
+        {showEditPanel ? renderEditPanel() : (
           <div style={{
             width: "calc(100% - 24px)",
             borderRadius: "5px",
