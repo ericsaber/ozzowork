@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,19 @@ const Today = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
   const [historyTarget, setHistoryTarget] = useState<{ contactId: string; contactName: string } | null>(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const kb = window.innerHeight - vv.height;
+      setKeyboardHeight(kb > 0 ? kb : 0);
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -136,6 +149,9 @@ const Today = () => {
         onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
         hasInteractions={hasInteractionsSet.has(item.contact_id)}
         onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName })}
+        isEditingExternal={editingCardId === item.id}
+        onEditStart={() => setEditingCardId(item.id)}
+        onEditEnd={() => setEditingCardId(null)}
         onComplete={() => {
           setCompleteTarget({
             followUpId: item.id,
@@ -180,7 +196,7 @@ const Today = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto">
+    <div className="min-h-screen pb-24 px-8 pt-6 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
         <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>

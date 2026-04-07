@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,19 @@ const Upcoming = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [cancelLogContactId, setCancelLogContactId] = useState<string | null>(null);
   const [historyTarget, setHistoryTarget] = useState<{ contactId: string; contactName: string } | null>(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const kb = window.innerHeight - vv.height;
+      setKeyboardHeight(kb > 0 ? kb : 0);
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["follow-ups-upcoming"],
@@ -93,7 +106,7 @@ const Upcoming = () => {
   });
 
   return (
-    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto">
+    <div className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
         <ArrowLeft size={18} /><span className="text-sm">Back</span>
       </button>
@@ -121,6 +134,9 @@ const Upcoming = () => {
                 onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
                 hasInteractions={hasInteractionsSet.has(item.contact_id)}
                 onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName: name })}
+                isEditingExternal={editingCardId === item.id}
+                onEditStart={() => setEditingCardId(item.id)}
+                onEditEnd={() => setEditingCardId(null)}
                 onComplete={() => setCompleteTarget({
                   followUpId: item.id,
                   contactId: item.contact_id,

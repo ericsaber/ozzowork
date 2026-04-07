@@ -33,6 +33,9 @@ interface FollowupCardProps {
   contactEmail?: string | null;
   hasInteractions?: boolean;
   onHistoryTap?: () => void;
+  isEditingExternal?: boolean;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
 
 const typeVerb: Record<string, string> = {
@@ -47,6 +50,7 @@ const FollowupCard = ({
   plannedType, reminderNote, onComplete,
   onEdit, onCancel, menuOpen, onMenuOpenChange,
   contactPhone, contactEmail, hasInteractions, onHistoryTap,
+  isEditingExternal, onEditStart, onEditEnd,
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -83,11 +87,13 @@ const FollowupCard = ({
     setEditDate(dueDate);
     setEditType(plannedType);
     setEditReminder(reminderNote ?? "");
-    setIsEditing(true);
+    if (!onEditStart) setIsEditing(true);
+    onEditStart?.();
   };
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
+    if (!onEditStart) setIsEditing(false);
+    onEditEnd?.();
   };
 
   const handleSave = async () => {
@@ -125,8 +131,11 @@ const FollowupCard = ({
     queryClient.invalidateQueries({ queryKey: ["follow-ups-today"] });
     queryClient.invalidateQueries({ queryKey: ["follow-ups-upcoming"] });
     queryClient.invalidateQueries({ queryKey: ["follow-ups-active"] });
-    setIsEditing(false);
+    onEditEnd?.();
+    if (!onEditStart) setIsEditing(false);
   };
+
+  const showEditPanel = isEditingExternal ?? isEditing;
 
   const isOverdue = variant === "overdue";
   const isToday = variant === "today";
@@ -303,7 +312,12 @@ const FollowupCard = ({
               maxLength={44}
               placeholder="Add a reminder note..."
               onClick={(e) => e.stopPropagation()}
-              onFocus={(e) => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              onFocus={(e) => {
+                const target = e.target;
+                setTimeout(() => {
+                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              }}
               style={{
                 flex: 1,
                 border: "none",
@@ -474,7 +488,7 @@ const FollowupCard = ({
         alignItems: "center",
         paddingBottom: "16px",
       }}>
-        {isEditing ? renderEditPanel() : (
+        {showEditPanel ? renderEditPanel() : (
           <div style={{
             width: "calc(100% - 24px)",
             borderRadius: "5px",
