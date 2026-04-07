@@ -40,7 +40,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     setEditDate(interaction.connect_date);
     setEditType(interaction.connect_type);
     setEditNote(interaction.note ?? '');
-  }, [interaction.id]);
+  }, [interaction.id, interaction.connect_date, interaction.connect_type, interaction.note]);
 
   const handleSave = async () => {
     setIsSaving(true);
