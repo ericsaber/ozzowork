@@ -542,7 +542,7 @@ const ContactHistory = () => {
                   </div>
                   <Pencil
                     size={14}
-                    style={{ color: "#c8622a", cursor: "pointer", flexShrink: 0 }}
+                    style={{ color: "#999", cursor: "pointer", flexShrink: 0 }}
                     onClick={(e) => { e.stopPropagation(); setEditingInteractionId(record.id); }}
                   />
                 </>
