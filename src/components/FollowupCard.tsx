@@ -220,7 +220,7 @@ const FollowupCard = ({
                   {format(parseISO(editDate), "MMM d, yyyy")}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
                 <Calendar
                   mode="single"
                   selected={new Date(editDate + "T00:00:00")}
