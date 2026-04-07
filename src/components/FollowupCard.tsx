@@ -47,7 +47,7 @@ const FollowupCard = ({
 }: FollowupCardProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  
 
   const [isEditing, setIsEditing] = useState(false);
   const [editDate, setEditDate] = useState("");
