@@ -226,6 +226,7 @@ const LogInteractionSheet = ({
             invalidateAll();
             toast.success("Log saved.");
             clearAndClose();
+            navigate(`/contact/${contactId}`);
           });
         return;
       }
