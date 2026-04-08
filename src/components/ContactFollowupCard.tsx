@@ -27,7 +27,7 @@ interface ContactFollowupCardProps {
   };
   variant: "upcoming" | "overdue";
   onComplete?: () => void;
-  onEdit?: () => void;
+  
   onCancel?: () => void;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
