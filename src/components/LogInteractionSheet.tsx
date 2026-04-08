@@ -174,10 +174,7 @@ const LogInteractionSheet = ({
       if (!contactId) throw new Error("Select a contact");
 
 
-      const computedConnectDate =
-        connectDate === format(new Date(), "yyyy-MM-dd")
-          ? new Date().toISOString()
-          : new Date(connectDate + "T12:00:00").toISOString();
+      const computedConnectDate = new Date(connectDate + "T12:00:00").toISOString();
 
       // Update existing draft
       if (draftId) {

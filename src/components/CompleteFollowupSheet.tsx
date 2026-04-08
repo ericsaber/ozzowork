@@ -51,7 +51,7 @@ const CompleteFollowupSheet = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const connectDate = new Date().toISOString();
+      const connectDate = new Date(format(new Date(), "yyyy-MM-dd") + "T12:00:00").toISOString();
 
       const { data, error } = await supabase
         .from("interactions")
