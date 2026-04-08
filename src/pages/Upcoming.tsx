@@ -145,7 +145,7 @@ const Upcoming = () => {
                   contactName: name,
                   plannedType: item.planned_type || null,
                 })}
-                onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+                
                 onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
               />
             );
