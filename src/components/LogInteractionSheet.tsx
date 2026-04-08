@@ -339,6 +339,7 @@ const LogInteractionSheet = ({
         toast.success("Done. Log saved.");
       }
       clearAndClose();
+      navigate(`/contact/${contactId}`);
     },
     onError: (e: any) => toast.error(e.message),
   });
