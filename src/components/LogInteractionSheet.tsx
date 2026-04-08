@@ -394,6 +394,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Outstanding follow-up: Complete chosen → go to step 3 ──
