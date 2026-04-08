@@ -750,7 +750,11 @@ const ContactHistory = () => {
                         <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
                       </div>
                     ) : (
-                      <div className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}>
+                      <div
+                        className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}
+                        style={{ cursor: record.note?.trim() ? "pointer" : undefined }}
+                        onClick={() => { if (record.note?.trim()) setExpandedInteractionId(prev => prev === record.id ? null : record.id); }}
+                      >
                         <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
                           style={{ background: "#f0ede8" }}>
                           <TypeIcon size={14} className="text-muted-foreground" />
