@@ -106,6 +106,15 @@ const Upcoming = () => {
     onError: (e: any) => console.error("[Upcoming] cancel error:", e),
   });
 
+  const sortedItems = [...(items || [])].sort((a, b) => {
+    const dateA = a.planned_date.slice(0, 10);
+    const dateB = b.planned_date.slice(0, 10);
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    const nameA = a.contacts?.first_name || '';
+    const nameB = b.contacts?.first_name || '';
+    return nameA.localeCompare(nameB);
+  });
+
   return (
     <div ref={scrollContainerRef} className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
@@ -114,9 +123,9 @@ const Upcoming = () => {
       <h1 className="text-2xl font-heading text-foreground mb-6">Upcoming</h1>
       {isLoading ? (
         <div className="space-y-6">{[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-lg bg-secondary animate-pulse" />)}</div>
-      ) : items && items.length > 0 ? (
+      ) : sortedItems.length > 0 ? (
         <div className="space-y-6">
-          {items.map((item: any) => {
+          {sortedItems.map((item: any) => {
             const name = item.contacts ? `${item.contacts.first_name} ${item.contacts.last_name}`.trim() : "Unknown";
             return (
               <FollowupCard
