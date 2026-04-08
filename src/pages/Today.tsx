@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
