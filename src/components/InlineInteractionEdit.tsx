@@ -73,6 +73,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     }
     console.log("[InlineInteractionEdit] deleted:", interaction.id);
     queryClient.invalidateQueries({ queryKey: ["interactions", interaction.contact_id] });
+    queryClient.invalidateQueries({ queryKey: ["last-interaction", interaction.contact_id] });
     onClose();
   };
 

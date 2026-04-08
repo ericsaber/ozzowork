@@ -771,7 +771,7 @@ const ContactHistory = () => {
                             </span>
                           </div>
                           {record.note && record.note.trim() && (
-                            <p className="line-clamp-2 mt-0.5"
+                            <p className={`${expandedInteractionId === record.id ? "" : "line-clamp-2"} mt-0.5`}
                               style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
                               {record.note}
                             </p>

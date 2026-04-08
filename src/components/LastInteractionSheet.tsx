@@ -64,7 +64,7 @@ const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: La
 
   const Icon = interaction?.type ? (typeIcons[interaction.type] || MessageSquare) : MessageSquare;
   const verb = interaction?.type ? (typeVerbs[interaction.type] || "Connected") : "Connected";
-  const dateStr = interaction?.date ? format(parseISO(interaction.date), "MMM d, yyyy") : "";
+  const dateStr = interaction?.date ? format(parseDate(interaction.date), "MMM d, yyyy") : "";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
