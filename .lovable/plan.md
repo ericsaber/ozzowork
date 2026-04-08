@@ -1,18 +1,24 @@
 
 
-## Plan: Change featured card row alignment
+## Plan: Always show "Edit follow-up" menu item
 
-**File:** `src/pages/ContactHistory.tsx`, line 520
+**File:** `src/components/FollowupCard.tsx`, lines 475-479
 
-**Change:** Replace `items-center` with `items-start` in the className string inside the `cn()` call.
+**Change:** Remove the `{onEdit && (...)}` conditional wrapper so the `DropdownMenuItem` always renders. The `onClick` already calls `handleStartEdit()`, so no change needed there.
 
-```ts
-// Before
-editingInteractionId === record.id ? "p-0" : "flex gap-3 p-3 items-center"
+```tsx
+// Before (lines 475-479)
+{onEdit && (
+  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
+    <Pencil size={14} className="mr-2" /> Edit follow-up
+  </DropdownMenuItem>
+)}
 
 // After
-editingInteractionId === record.id ? "p-0" : "flex gap-3 p-3 items-start"
+<DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
+  <Pencil size={14} className="mr-2" /> Edit follow-up
+</DropdownMenuItem>
 ```
 
-Single word change. No other modifications.
+No other changes.
 
