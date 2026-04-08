@@ -126,6 +126,7 @@ const CompleteFollowupSheet = ({
       invalidateAll();
       toast.success(note || connectType ? "Nice work. Follow-up marked complete." : "Done. Follow-up marked complete.");
       handleClose();
+      navigate(`/contact/${contactId}`);
     },
     onError: (e: any) => toast.error(e.message),
   });
