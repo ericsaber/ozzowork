@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Phone, Mail, MessageSquare, Users, Video, X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
