@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ const LogInteractionSheet = ({
   open, onOpenChange, preselectedContactId, startStep = 1, logOnly = false,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
 
@@ -224,6 +226,7 @@ const LogInteractionSheet = ({
             invalidateAll();
             toast.success("Log saved.");
             clearAndClose();
+            navigate(`/contact/${contactId}`);
           });
         return;
       }
@@ -336,6 +339,7 @@ const LogInteractionSheet = ({
         toast.success("Done. Log saved.");
       }
       clearAndClose();
+      navigate(`/contact/${contactId}`);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -373,6 +377,7 @@ const LogInteractionSheet = ({
       invalidateAll();
       toast.success("Nice work. Log saved.");
       clearAndClose();
+      navigate(`/contact/${contactId}`);
       return;
     }
 
@@ -389,6 +394,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Outstanding follow-up: Complete chosen → go to step 3 ──
@@ -452,6 +458,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
@@ -489,6 +496,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved. Follow-up cancelled.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Contact & UI helpers ──

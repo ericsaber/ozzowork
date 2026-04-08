@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ const CompleteFollowupSheet = ({
   showToast = true,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [connectType, setConnectType] = useState(plannedType || "");
   const [note, setNote] = useState("");
@@ -124,6 +126,7 @@ const CompleteFollowupSheet = ({
       invalidateAll();
       toast.success(note || connectType ? "Nice work. Follow-up marked complete." : "Done. Follow-up marked complete.");
       handleClose();
+      navigate(`/contact/${contactId}`);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -161,6 +164,7 @@ const CompleteFollowupSheet = ({
       invalidateAll();
       toast.success("Follow-up marked complete.");
       handleClose();
+      navigate(`/contact/${contactId}`);
     } catch (error: any) {
       toast.error(error.message);
     }
