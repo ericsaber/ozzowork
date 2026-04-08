@@ -57,7 +57,18 @@ camera on any iPhone model.
 
 ## Data model
 
-Three tables. No foreign keys between `interactions` and `follow_ups`.
+Four tables. RLS on all.
+
+### `contacts`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK → auth.users |
+| first_name | varchar(50) | Required |
+| last_name | varchar(50) | Required |
+| company | varchar(100) | Optional |
+| phone | varchar(15) | Optional |
+| email | varchar(254) | Optional |
 
 ### `interactions`
 Standalone logs. One row per logged connection.
@@ -68,7 +79,7 @@ Standalone logs. One row per logged connection.
 | contact_id | uuid | FK → contacts |
 | user_id | uuid | FK → auth.users |
 | connect_type | text | call/email/text/meet/video. Null = "Connected" |
-| connect_date | timestamptz | Today or past only. Never future. |
+| connect_date | timestamptz | Today or past only. Never future. Supabase returns full ISO timestamp — always slice to 10 chars before display. |
 | note | text | Optional |
 | status | text | draft / published |
 | created_at | timestamptz | |
@@ -76,7 +87,7 @@ Standalone logs. One row per logged connection.
 ### `follow_ups`
 One active follow-up per contact at a time. On completion, status is set to
 'completed' and completed_at is set. Interaction details are stored in a
-separate `interactions` row — not written onto the follow_up row.
+separate `interactions` row — never written onto the follow_up row.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -87,7 +98,7 @@ separate `interactions` row — not written onto the follow_up row.
 | planned_date | date | Today or future only. Never past. |
 | status | text | active / completed / cancelled |
 | completed_at | timestamptz | Set on completion or cancellation |
-| reminder_note | varchar(55) | Optional. Always fully visible. No truncation. |
+| reminder_note | varchar(44) | Optional. Always fully visible. No truncation. Hard limit 44 chars. |
 | created_at | timestamptz | |
 
 ### `follow_up_edits`
@@ -103,15 +114,6 @@ a row here.
 | previous_due_date | date | |
 | changed_at | timestamptz | |
 
-### `contacts`
-Schema unchanged. Client-side validation only:
-- `first_name` varchar(50) — required
-- `last_name` varchar(50) — required
-- `company` varchar(100) — optional
-- `phone` varchar(15) — optional, digits only, display formatted
-- `email` varchar(254) — optional, RFC 5321 format
-
-
 ---
 
 ## RLS — non-negotiable
@@ -119,6 +121,25 @@ Schema unchanged. Client-side validation only:
 Every table must have Row Level Security enabled. All policies must scope
 to `auth.uid() = user_id`. The Supabase service role key must never appear
 in client-side code. Use the Lovable secrets manager for environment variables.
+
+---
+
+## Date parsing — critical
+
+Supabase returns `connect_date` as a full ISO timestamp (`2026-03-16T00:00:00+00:00`),
+not a plain `yyyy-MM-dd` string. Parsing with `parseISO` or `new Date()` directly
+will shift the date back one day in negative UTC offset timezones (e.g. EDT).
+
+**Always use this helper for date-only fields:**
+```ts
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
+};
+```
+
+Apply `parseDate` to: `connect_date`, `planned_date`, `previous_due_date`.
+Leave `created_at` and `completed_at` as `parseISO` — these are true timestamps.
 
 ---
 
@@ -152,7 +173,7 @@ in client-side code. Use the Lovable secrets manager for environment variables.
 |-----------|-------------|------|
 | interaction with connect_type = null | "Connected" | Rounded chat bubble |
 | interaction with connect_type set | "Called" / "Texted" / "Met" / etc. | Type-specific icon |
-| follow-up (active, or completed with no connect_type) | "Follow-up" | Rounded chat bubble (distinct from message icon) |
+| follow-up (active, or completed with no connect_type) | "Follow-up" | Rounded chat bubble |
 | follow-up completed with connect_type | "Called" / "Texted" / etc. | Type-specific icon |
 | follow-up cancelled | "Follow-up cancelled" | X icon |
 | follow_up_edits row | "Follow-up rescheduled to [date]" | Clock icon |
@@ -168,11 +189,45 @@ in client-side code. Use the Lovable secrets manager for environment variables.
 
 ## Character limits
 
-- `reminder_note`: 55 characters hard limit. Enforce at DB (varchar(55)) and
-  UI (character counter). Always fully visible — no truncation, no ellipsis.
-- Interaction note in history rows: 2 lines max (`-webkit-line-clamp: 2`),
-  expand inline on tap.
-- Today card last connect note: 2 lines max, no expand (glanceable only).
+- `reminder_note`: 44 characters hard limit. Enforce at UI (character counter, maxLength={44}). Always fully visible — no truncation, no ellipsis.
+- Interaction note in history rows: 2 lines max (`-webkit-line-clamp: 2`), expand inline on tap.
+
+---
+
+## FollowupCard — inline edit behavior
+
+Tapping "Edit follow-up" in the three-dot menu opens an inline edit panel
+inside the card — it does not open a sheet. The panel shows DATE, TYPE, and
+REMINDER fields with Cancel/Save. Edit state is lifted to the parent page
+(`editingCardId`) so only one card can be in edit mode at a time.
+
+On Save:
+- UPDATE `follow_ups` with new date, type, reminder
+- If date changed: INSERT into `follow_up_edits` with `previous_due_date`
+- Invalidate: `follow-ups-today`, `follow-ups-upcoming`, `follow-ups-active`
+
+---
+
+## ContactFollowupCard — inline edit behavior
+
+Same inline edit pattern as `FollowupCard`. No sheet. Edit state is internal
+(only one card per contact record). Today variant uses green tokens identical
+to `FollowupCard` today variant.
+
+---
+
+## InlineInteractionEdit — inline interaction edit
+
+Editing a published interaction row opens `InlineInteractionEdit.tsx` inline
+in place of the row content. Fields: DATE (today or past), TYPE, NOTE, with
+delete (confirm dialog) and Cancel/Save.
+
+On Save:
+- UPDATE `interactions` with new connect_type, connect_date, note
+- Invalidate: `["interactions", contact_id]`
+
+Date state must be initialized with `.slice(0, 10)` to strip the full
+ISO timestamp Supabase returns.
 
 ---
 
@@ -198,7 +253,7 @@ in the save flow.
 ## Cancel follow-up dialog
 
 Three options, always in this order:
-1. "Cancel and log what happened" → routes to log Step 1, cancels follow-up on save
+1. "Cancel and log what happened" → opens LogInteractionSheet with startStep: 1, logOnly: true
 2. "Yes, cancel" → immediate UPDATE status = cancelled, no log
 3. "Don't cancel" → dismiss
 
@@ -209,6 +264,19 @@ Three options, always in this order:
 If `follow_up_edits` count for a follow-up ≥ 3: show "Rescheduled X times"
 with Clock icon, color `#999`. Informational only — no judgment, no
 moralizing copy, no suggestion.
+
+---
+
+## New ▾ dropdown on contact record
+
+Three options:
+1. **Log + Set Follow-up** (primary, burnt sienna) — `startStep: 1, logOnly: false`
+   Descriptor: "What happened · What's next"
+2. **Log only** — `startStep: 1, logOnly: true`
+   Descriptor: "Document a call, meeting, and more"
+3. **Follow-up only** — `startStep: 2, logOnly: false`
+   Descriptor: "Set your next reminder"
+   Disabled with sienna helper text when active follow-up exists: "Resolve your active follow-up first"
 
 ---
 
@@ -230,9 +298,9 @@ moralizing copy, no suggestion.
 - `CompleteFollowupSheet.tsx`
 - `ContactCombobox.tsx`
 - `ContactFollowupCard.tsx`
-- `EditFollowupSheet.tsx`
 - `EditInteractionSheet.tsx`
 - `FollowupCard.tsx`
+- `InlineInteractionEdit.tsx`
 - `InteractionItem.tsx`
 - `LogInteractionSheet.tsx` — primary log flow handler
 - `LogStep1.tsx` — presentational only
@@ -253,3 +321,4 @@ moralizing copy, no suggestion.
 4. **No undo flows** — completed and deleted records are permanent.
 5. **Lucide icons only** — no other icon library.
 6. **WCAG AA contrast** on all color usage.
+7. **Date-only fields from Supabase** — always slice to 10 chars and append `T00:00:00` before constructing a Date object. Use the `parseDate` helper.
