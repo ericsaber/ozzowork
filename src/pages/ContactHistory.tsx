@@ -58,6 +58,8 @@ const ContactHistory = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [expandedInteractionId, setExpandedInteractionId] = useState<string | null>(null);
+  const [featuredExpanded, setFeaturedExpanded] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
