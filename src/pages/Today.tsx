@@ -179,7 +179,14 @@ const Today = () => {
       );
     }
 
-    const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
+    const sorted = [...comingUp].sort((a, b) => {
+      const dateA = a.planned_date.slice(0, 10);
+      const dateB = b.planned_date.slice(0, 10);
+      if (dateA !== dateB) return dateA.localeCompare(dateB);
+      const nameA = a.contacts?.first_name || '';
+      const nameB = b.contacts?.first_name || '';
+      return nameA.localeCompare(nameB);
+    });
     const next = sorted[0];
     const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
     const nextDate = parseISO(next.planned_date);
