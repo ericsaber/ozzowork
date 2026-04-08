@@ -19,6 +19,11 @@ const typeVerbs: Record<string, string> = {
   call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called",
 };
 
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
+};
+
 const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: LastInteractionSheetProps) => {
   const navigate = useNavigate();
 
