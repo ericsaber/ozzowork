@@ -32,6 +32,7 @@ const CompleteFollowupSheet = ({
   showToast = true,
 }: CompleteFollowupSheetProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [connectType, setConnectType] = useState(plannedType || "");
   const [note, setNote] = useState("");
