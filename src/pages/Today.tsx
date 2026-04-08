@@ -256,20 +256,6 @@ const Today = () => {
           userId=""
         />
       )}
-      {editTarget && (
-        <EditFollowupSheet
-          open={!!editTarget}
-          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
-          followUp={{
-            id: editTarget.id,
-            planned_type: editTarget.planned_type || null,
-            planned_date: editTarget.planned_date,
-            reminder_note: editTarget.reminder_note || null,
-            created_at: editTarget.created_at,
-            contact_id: editTarget.contact_id,
-          }}
-        />
-      )}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

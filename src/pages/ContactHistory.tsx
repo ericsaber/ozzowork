@@ -860,20 +860,6 @@ const ContactHistory = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {activeFollowup && (
-        <EditFollowupSheet
-          open={editFollowupOpen}
-          onOpenChange={(open) => { if (!open) setEditFollowupOpen(false); }}
-          followUp={{
-            id: activeFollowup.id,
-            planned_type: activeFollowup.planned_type,
-            planned_date: activeFollowup.planned_date,
-            reminder_note: activeFollowup.reminder_note ?? null,
-            created_at: activeFollowup.created_at,
-            contact_id: activeFollowup.contact_id,
-          }}
-        />
-      )}
     </div>
   );
 };
