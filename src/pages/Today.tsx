@@ -26,7 +26,7 @@ const Today = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
-  const [editTarget, setEditTarget] = useState<any | null>(null);
+  
   const [cancelTarget, setCancelTarget] = useState<any | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
