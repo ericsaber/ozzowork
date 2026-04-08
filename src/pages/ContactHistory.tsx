@@ -21,7 +21,7 @@ import ContactFollowupCard from "@/components/ContactFollowupCard";
 import InlineInteractionEdit from "@/components/InlineInteractionEdit";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfToday } from "date-fns";
