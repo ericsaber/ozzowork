@@ -1,17 +1,13 @@
 
 
-## Plan: Stable secondary sort in renderComingUp
+## Plan: Add stable sort to Upcoming.tsx
 
-**File:** `src/pages/Today.tsx`, line 182
+**File:** `src/pages/Upcoming.tsx`
 
-**Change:** Replace the single-key sort with a two-key sort (date then first name):
+**Change 1** (around line 108, before the JSX return): Add the `sortedItems` const:
 
 ```tsx
-// Before (line 182)
-const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
-
-// After
-const sorted = [...comingUp].sort((a, b) => {
+const sortedItems = [...(items || [])].sort((a, b) => {
   const dateA = a.planned_date.slice(0, 10);
   const dateB = b.planned_date.slice(0, 10);
   if (dateA !== dateB) return dateA.localeCompare(dateB);
@@ -21,5 +17,7 @@ const sorted = [...comingUp].sort((a, b) => {
 });
 ```
 
-No other changes. The debug log line was already removed previously.
+**Change 2** (in render): Replace `items.map((item: any) => {` with `sortedItems.map((item: any) => {` and update the length check from `items.length > 0` to `sortedItems.length > 0`.
+
+No other changes.
 
