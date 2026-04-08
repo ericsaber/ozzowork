@@ -472,11 +472,9 @@ const FollowupCard = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[160px]">
-              {onEdit && (
-                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
-                  <Pencil size={14} className="mr-2" /> Edit follow-up
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
+                <Pencil size={14} className="mr-2" /> Edit follow-up
+              </DropdownMenuItem>
               {onCancel && (
                 <>
                   <DropdownMenuSeparator />
