@@ -496,6 +496,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved. Follow-up cancelled.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Contact & UI helpers ──

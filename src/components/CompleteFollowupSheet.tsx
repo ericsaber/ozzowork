@@ -164,6 +164,7 @@ const CompleteFollowupSheet = ({
       invalidateAll();
       toast.success("Follow-up marked complete.");
       handleClose();
+      navigate(`/contact/${contactId}`);
     } catch (error: any) {
       toast.error(error.message);
     }
