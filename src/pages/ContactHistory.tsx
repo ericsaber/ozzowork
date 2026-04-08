@@ -487,7 +487,7 @@ const ContactHistory = () => {
                 plannedType: activeFollowup.planned_type || null,
               });
             }}
-            onEdit={() => setEditFollowupOpen(true)}
+            
             onCancel={() => {
               setCancelTarget(activeFollowup);
               setShowCancelDialog(true);
