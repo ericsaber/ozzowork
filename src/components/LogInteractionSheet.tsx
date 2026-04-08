@@ -34,6 +34,7 @@ const LogInteractionSheet = ({
   open, onOpenChange, preselectedContactId, startStep = 1, logOnly = false,
 }: LogInteractionSheetProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
 
