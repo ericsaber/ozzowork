@@ -1,24 +1,19 @@
 
 
-## Plan: Always show "Edit follow-up" menu item
+## Plan: Add debug log in renderComingUp
 
-**File:** `src/components/FollowupCard.tsx`, lines 475-479
+**File:** `src/pages/Today.tsx`, line 182
 
-**Change:** Remove the `{onEdit && (...)}` conditional wrapper so the `DropdownMenuItem` always renders. The `onClick` already calls `handleStartEdit()`, so no change needed there.
+**Change:** Insert `console.log` immediately before the `const sorted` line.
 
 ```tsx
-// Before (lines 475-479)
-{onEdit && (
-  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
-    <Pencil size={14} className="mr-2" /> Edit follow-up
-  </DropdownMenuItem>
-)}
+// Before (line 182)
+    const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
 
 // After
-<DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleStartEdit(); }}>
-  <Pencil size={14} className="mr-2" /> Edit follow-up
-</DropdownMenuItem>
+    console.log('[Today] comingUp raw:', comingUp.map(i => ({ name: i.contacts?.first_name, date: i.planned_date })));
+    const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
 ```
 
-No other changes.
+Single line addition. No other changes.
 
