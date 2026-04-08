@@ -148,7 +148,7 @@ const Today = () => {
         contactEmail={item.contacts?.email ?? null}
         menuOpen={openMenuId === item.id}
         onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
-        onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+        
         onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
         hasInteractions={hasInteractionsSet.has(item.contact_id)}
         onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName })}
