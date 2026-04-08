@@ -27,7 +27,7 @@ const Upcoming = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
-  const [editTarget, setEditTarget] = useState<any>(null);
+  
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
