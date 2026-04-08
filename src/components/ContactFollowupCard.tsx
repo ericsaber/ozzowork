@@ -40,7 +40,7 @@ const ContactFollowupCard = ({
   taskRecord,
   variant,
   onComplete,
-  onEdit,
+  
   onCancel,
   menuOpen,
   onMenuOpenChange,
