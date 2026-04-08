@@ -6,7 +6,7 @@ import { format, parseISO, addDays } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import {
