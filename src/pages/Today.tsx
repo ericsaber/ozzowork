@@ -179,6 +179,7 @@ const Today = () => {
       );
     }
 
+    console.log('[Today] comingUp raw:', comingUp.map(i => ({ name: i.contacts?.first_name, date: i.planned_date })));
     const sorted = [...comingUp].sort((a, b) => a.planned_date.localeCompare(b.planned_date));
     const next = sorted[0];
     const nextName = next.contacts ? `${next.contacts.first_name} ${next.contacts.last_name}`.trim() : "Unknown";
