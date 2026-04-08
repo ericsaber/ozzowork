@@ -106,6 +106,15 @@ const Upcoming = () => {
     onError: (e: any) => console.error("[Upcoming] cancel error:", e),
   });
 
+  const sortedItems = [...(items || [])].sort((a, b) => {
+    const dateA = a.planned_date.slice(0, 10);
+    const dateB = b.planned_date.slice(0, 10);
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    const nameA = a.contacts?.first_name || '';
+    const nameB = b.contacts?.first_name || '';
+    return nameA.localeCompare(nameB);
+  });
+
   return (
     <div ref={scrollContainerRef} className="min-h-screen pb-24 px-8 pt-4 max-w-lg mx-auto" style={{ paddingBottom: Math.max(96, keyboardHeight) }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-muted-foreground mb-4">
