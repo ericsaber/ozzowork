@@ -6,7 +6,7 @@ import { format, parseISO, addDays } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import {
@@ -27,7 +27,7 @@ const Upcoming = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
-  const [editTarget, setEditTarget] = useState<any>(null);
+  
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -145,7 +145,7 @@ const Upcoming = () => {
                   contactName: name,
                   plannedType: item.planned_type || null,
                 })}
-                onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+                
                 onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
               />
             );
@@ -167,20 +167,6 @@ const Upcoming = () => {
         />
       )}
 
-      {editTarget && (
-        <EditFollowupSheet
-          open={!!editTarget}
-          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
-          followUp={{
-            id: editTarget.id,
-            planned_type: editTarget.planned_type || null,
-            planned_date: editTarget.planned_date,
-            reminder_note: editTarget.reminder_note || null,
-            created_at: editTarget.created_at,
-            contact_id: editTarget.contact_id,
-          }}
-        />
-      )}
 
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>

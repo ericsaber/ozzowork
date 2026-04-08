@@ -21,7 +21,7 @@ import ContactFollowupCard from "@/components/ContactFollowupCard";
 import InlineInteractionEdit from "@/components/InlineInteractionEdit";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfToday } from "date-fns";
@@ -56,7 +56,7 @@ const ContactHistory = () => {
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<any>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [editFollowupOpen, setEditFollowupOpen] = useState(false);
+  
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
 
   const { data: contact } = useQuery({
@@ -487,7 +487,7 @@ const ContactHistory = () => {
                 plannedType: activeFollowup.planned_type || null,
               });
             }}
-            onEdit={() => setEditFollowupOpen(true)}
+            
             onCancel={() => {
               setCancelTarget(activeFollowup);
               setShowCancelDialog(true);
@@ -860,20 +860,6 @@ const ContactHistory = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {activeFollowup && (
-        <EditFollowupSheet
-          open={editFollowupOpen}
-          onOpenChange={(open) => { if (!open) setEditFollowupOpen(false); }}
-          followUp={{
-            id: activeFollowup.id,
-            planned_type: activeFollowup.planned_type,
-            planned_date: activeFollowup.planned_date,
-            reminder_note: activeFollowup.reminder_note ?? null,
-            created_at: activeFollowup.created_at,
-            contact_id: activeFollowup.contact_id,
-          }}
-        />
-      )}
     </div>
   );
 };

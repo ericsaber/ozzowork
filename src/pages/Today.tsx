@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FollowupCard from "@/components/FollowupCard";
 import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
-import EditFollowupSheet from "@/components/EditFollowupSheet";
+
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
@@ -26,7 +26,7 @@ const Today = () => {
     contactName: string;
     plannedType: string | null;
   } | null>(null);
-  const [editTarget, setEditTarget] = useState<any | null>(null);
+  
   const [cancelTarget, setCancelTarget] = useState<any | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -148,7 +148,7 @@ const Today = () => {
         contactEmail={item.contacts?.email ?? null}
         menuOpen={openMenuId === item.id}
         onMenuOpenChange={(o) => setOpenMenuId(o ? item.id : null)}
-        onEdit={() => { setOpenMenuId(null); setEditTarget(item); }}
+        
         onCancel={() => { setOpenMenuId(null); setCancelTarget(item); setShowCancelDialog(true); }}
         hasInteractions={hasInteractionsSet.has(item.contact_id)}
         onHistoryTap={() => setHistoryTarget({ contactId: item.contact_id, contactName })}
@@ -254,20 +254,6 @@ const Today = () => {
           contactName={completeTarget.contactName}
           plannedType={completeTarget.plannedType}
           userId=""
-        />
-      )}
-      {editTarget && (
-        <EditFollowupSheet
-          open={!!editTarget}
-          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
-          followUp={{
-            id: editTarget.id,
-            planned_type: editTarget.planned_type || null,
-            planned_date: editTarget.planned_date,
-            reminder_note: editTarget.reminder_note || null,
-            created_at: editTarget.created_at,
-            contact_id: editTarget.contact_id,
-          }}
         />
       )}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>

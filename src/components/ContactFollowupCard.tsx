@@ -27,7 +27,7 @@ interface ContactFollowupCardProps {
   };
   variant: "upcoming" | "overdue";
   onComplete?: () => void;
-  onEdit?: () => void;
+  
   onCancel?: () => void;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
@@ -40,7 +40,7 @@ const ContactFollowupCard = ({
   taskRecord,
   variant,
   onComplete,
-  onEdit,
+  
   onCancel,
   menuOpen,
   onMenuOpenChange,
@@ -454,17 +454,15 @@ const ContactFollowupCard = ({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="min-w-[160px]">
-                    {onEdit && (
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        setEditDate(taskRecord.planned_date);
-                        setEditType(taskRecord.planned_type);
-                        setEditReminder(taskRecord.reminder_note ?? "");
-                        setIsEditing(true);
-                      }}>
-                        <Pencil size={14} className="mr-2" /> Edit follow-up
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setEditDate(taskRecord.planned_date);
+                      setEditType(taskRecord.planned_type);
+                      setEditReminder(taskRecord.reminder_note ?? "");
+                      setIsEditing(true);
+                    }}>
+                      <Pencil size={14} className="mr-2" /> Edit follow-up
+                    </DropdownMenuItem>
                     {onCancel && (
                       <>
                         <DropdownMenuSeparator />
