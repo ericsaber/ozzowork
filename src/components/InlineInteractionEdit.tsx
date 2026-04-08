@@ -60,6 +60,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     }
     console.log("[InlineInteractionEdit] saved:", { id: interaction.id, editDate, editType, editNote });
     queryClient.invalidateQueries({ queryKey: ["interactions", interaction.contact_id] });
+    queryClient.invalidateQueries({ queryKey: ["last-interaction", interaction.contact_id] });
     setIsSaving(false);
     onClose();
   };
@@ -72,6 +73,7 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
     }
     console.log("[InlineInteractionEdit] deleted:", interaction.id);
     queryClient.invalidateQueries({ queryKey: ["interactions", interaction.contact_id] });
+    queryClient.invalidateQueries({ queryKey: ["last-interaction", interaction.contact_id] });
     onClose();
   };
 

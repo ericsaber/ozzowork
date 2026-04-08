@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Phone, Mail, MessageSquare, Users, Video, X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -17,6 +17,11 @@ const typeIcons: Record<string, React.ElementType> = {
 };
 const typeVerbs: Record<string, string> = {
   call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called",
+};
+
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
 };
 
 const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: LastInteractionSheetProps) => {
@@ -59,7 +64,7 @@ const LastInteractionSheet = ({ open, onOpenChange, contactId, contactName }: La
 
   const Icon = interaction?.type ? (typeIcons[interaction.type] || MessageSquare) : MessageSquare;
   const verb = interaction?.type ? (typeVerbs[interaction.type] || "Connected") : "Connected";
-  const dateStr = interaction?.date ? format(parseISO(interaction.date), "MMM d, yyyy") : "";
+  const dateStr = interaction?.date ? format(parseDate(interaction.date), "MMM d, yyyy") : "";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

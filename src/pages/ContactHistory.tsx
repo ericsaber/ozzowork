@@ -58,6 +58,8 @@ const ContactHistory = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   
   const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [expandedInteractionId, setExpandedInteractionId] = useState<string | null>(null);
+  const [featuredExpanded, setFeaturedExpanded] = useState(false);
 
   const { data: contact } = useQuery({
     queryKey: ["contact", id],
@@ -517,7 +519,8 @@ const ContactHistory = () => {
                 "w-full bg-white rounded-xl text-left",
                 editingInteractionId === record.id ? "p-0" : "flex gap-3 p-3 items-center"
               )}
-              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)" }}
+              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)", cursor: (record.note?.trim() && editingInteractionId !== record.id) ? "pointer" : undefined }}
+              onClick={() => { if (record.note?.trim() && editingInteractionId !== record.id) setFeaturedExpanded(prev => !prev); }}
             >
               {editingInteractionId === record.id ? (
                 <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
@@ -539,7 +542,7 @@ const ContactHistory = () => {
                       </span>
                     </div>
                     {record.note && record.note.trim() && (
-                      <p className="line-clamp-2 mt-0.5"
+                      <p className={`${featuredExpanded ? "" : "line-clamp-2"} mt-0.5`}
                         style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
                         {record.note}
                       </p>
@@ -747,7 +750,11 @@ const ContactHistory = () => {
                         <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
                       </div>
                     ) : (
-                      <div className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}>
+                      <div
+                        className={`flex gap-3 py-3 px-2 -mx-2 ${record.note && record.note.trim() ? "items-start" : "items-center"}`}
+                        style={{ cursor: record.note?.trim() ? "pointer" : undefined }}
+                        onClick={() => { if (record.note?.trim()) setExpandedInteractionId(prev => prev === record.id ? null : record.id); }}
+                      >
                         <div className="w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 mt-0.5"
                           style={{ background: "#f0ede8" }}>
                           <TypeIcon size={14} className="text-muted-foreground" />
@@ -764,7 +771,7 @@ const ContactHistory = () => {
                             </span>
                           </div>
                           {record.note && record.note.trim() && (
-                            <p className="line-clamp-2 mt-0.5"
+                            <p className={`${expandedInteractionId === record.id ? "" : "line-clamp-2"} mt-0.5`}
                               style={{ color: "#777", fontFamily: "var(--font-heading)", fontSize: "13px", fontStyle: "italic" }}>
                               {record.note}
                             </p>
