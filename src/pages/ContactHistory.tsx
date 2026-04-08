@@ -519,7 +519,8 @@ const ContactHistory = () => {
                 "w-full bg-white rounded-xl text-left",
                 editingInteractionId === record.id ? "p-0" : "flex gap-3 p-3 items-center"
               )}
-              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)" }}
+              style={{ boxShadow: "0 1px 5px rgba(0,0,0,.08)", cursor: (record.note?.trim() && editingInteractionId !== record.id) ? "pointer" : undefined }}
+              onClick={() => { if (record.note?.trim() && editingInteractionId !== record.id) setFeaturedExpanded(prev => !prev); }}
             >
               {editingInteractionId === record.id ? (
                 <InlineInteractionEdit interaction={record} onClose={() => setEditingInteractionId(null)} />
