@@ -377,6 +377,7 @@ const LogInteractionSheet = ({
       invalidateAll();
       toast.success("Nice work. Log saved.");
       clearAndClose();
+      navigate(`/contact/${contactId}`);
       return;
     }
 
