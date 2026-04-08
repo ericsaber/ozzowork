@@ -195,6 +195,7 @@ const LogInteractionSheet = ({
       }
 
       // Create new draft
+      console.log('[LogInteractionSheet] draft connect_date:', connectDate);
       const { data, error } = await supabase
         .from("interactions")
         .insert({
