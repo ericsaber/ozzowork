@@ -538,7 +538,7 @@ const ContactHistory = () => {
                       </span>
                       <span className="text-muted-foreground"
                         style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>
-                        {format(parseDate(record.connect_date || record.created_at), "MMM d")}
+                        {(() => { console.log('[ContactHistory] featured card raw:', record.connect_date, record.created_at); return format(parseDate(record.connect_date || record.created_at), "MMM d"); })()}
                       </span>
                     </div>
                     {record.note && record.note.trim() && (
