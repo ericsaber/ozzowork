@@ -458,6 +458,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
