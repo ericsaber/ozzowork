@@ -176,7 +176,11 @@ const ContactHistory = () => {
   });
 
   // Sort all items by date descending
-  timelineItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  timelineItems.sort((a, b) => {
+    const dateA = a.date?.includes('T') ? new Date(a.date).getTime() : new Date(a.date.slice(0, 10) + 'T00:00:00').getTime();
+    const dateB = b.date?.includes('T') ? new Date(b.date).getTime() : new Date(b.date.slice(0, 10) + 'T00:00:00').getTime();
+    return dateB - dateA;
+  });
 
   const interactionCount = (interactions || []).length;
 
