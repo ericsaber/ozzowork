@@ -1,12 +1,13 @@
 
 
-## Plan: Switch PasswordGate from sessionStorage to localStorage
+## Plan: Add AuthCallback page and route
 
-**File:** `src/components/PasswordGate.tsx`
+### 1. Create `src/pages/AuthCallback.tsx`
+New file with the component that checks for a session on mount and redirects to `/` (if authenticated) or `/auth` (if not). Shows "ozzo" loading text while resolving.
 
-Two changes:
-1. Line 14: `sessionStorage.getItem` → `localStorage.getItem`
-2. Line 33: `sessionStorage.setItem` → `localStorage.setItem`
+### 2. Update `src/App.tsx`
+- Add `import AuthCallback from "./pages/AuthCallback";`
+- Add `<Route path="/auth/callback" element={<AuthCallback />} />` inside the `<Routes>` block (before the catch-all)
 
-No other changes.
+No other files touched. All existing `console.log` statements preserved.
 
