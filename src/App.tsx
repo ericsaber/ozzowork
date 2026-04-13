@@ -48,7 +48,10 @@ const AppContent = () => {
     cleanup();
   }, [session]);
 
-  if (loading) {
+  const hasAuthToken = window.location.hash.includes('access_token') || 
+                     window.location.search.includes('code=');
+
+  if (loading || hasAuthToken) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-muted-foreground font-heading text-xl italic">ozzo</div>
