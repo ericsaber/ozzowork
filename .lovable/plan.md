@@ -1,22 +1,10 @@
 
 
-## Plan: Extract `getConnectDateISO` helper in LogInteractionSheet
-
-### What changes
+## Plan: Add debug log before draft insert/update
 
 **File:** `src/components/LogInteractionSheet.tsx`
 
-1. **Add helper** after line 52 (the `connectDate` state declaration):
-```ts
-const getConnectDateISO = () =>
-  connectDate === format(new Date(), "yyyy-MM-dd")
-    ? new Date().toISOString()
-    : new Date(connectDate + "T12:00:00").toISOString();
-```
+Add `console.log("[debug] getConnectDateISO:", getConnectDateISO(), "connectDate:", connectDate);` in the `logMutation` `mutationFn`, immediately before the draft insert call and immediately before the draft update call — two insertions total.
 
-2. **Remove lines 179-181** (the `computedConnectDate` variable inside `logMutation`'s `mutationFn`) and replace all references to it (lines 190, 194, 206) with `getConnectDateISO()`.
-
-3. **Lines 260 and 356 are NOT touched** — those are `completed_at` timestamps using `new Date().toISOString()`, unrelated to `connectDate`. They happen to share the variable name but serve a different purpose.
-
-### No other files touched. All `console.log` statements preserved.
+No other files touched. All existing `console.log` statements preserved.
 
