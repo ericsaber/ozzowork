@@ -1,13 +1,10 @@
 
 
-## Plan: Add AuthCallback page and route
+## Plan: Update Google OAuth redirect URL
 
-### 1. Create `src/pages/AuthCallback.tsx`
-New file with the component that checks for a session on mount and redirects to `/` (if authenticated) or `/auth` (if not). Shows "ozzo" loading text while resolving.
+**File:** `src/pages/Auth.tsx`
 
-### 2. Update `src/App.tsx`
-- Add `import AuthCallback from "./pages/AuthCallback";`
-- Add `<Route path="/auth/callback" element={<AuthCallback />} />` inside the `<Routes>` block (before the catch-all)
+Single change: update `redirectTo` in `handleGoogleSignIn` from `window.location.origin` to `` `${window.location.origin}/auth/callback` ``.
 
-No other files touched. All existing `console.log` statements preserved.
+No other changes.
 
