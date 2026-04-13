@@ -1,18 +1,14 @@
 
 
-## Plan: Show loading state during OAuth token exchange
+## Plan: Replace AuthCallback useEffect with explicit token extraction
 
-**File:** `src/App.tsx`
+**File:** `src/pages/AuthCallback.tsx`
 
-In the `AppContent` component, add a `hasAuthToken` check before the loading guard so the app continues showing the loading spinner while Supabase processes the OAuth hash/code parameters — preventing a flash of the Auth page.
+Replace the entire `useEffect` with a new implementation that:
+1. Extracts `access_token` and `refresh_token` from the URL hash
+2. Calls `supabase.auth.setSession()` with those tokens
+3. On success: `window.location.replace('/')`
+4. On error or missing tokens: `window.location.replace('/auth')`
 
-**Change:** Replace `if (loading) {` with:
-```ts
-const hasAuthToken = window.location.hash.includes('access_token') || 
-                     window.location.search.includes('code=');
-
-if (loading || hasAuthToken) {
-```
-
-No other files touched. All `console.log` statements preserved.
+Remove the `useNavigate` import if still present. Keep `useEffect` from React and `supabase` import. Preserve all existing `console.log` statements and add the new ones specified.
 
