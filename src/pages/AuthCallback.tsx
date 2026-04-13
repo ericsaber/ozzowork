@@ -12,7 +12,7 @@ const AuthCallback = () => {
       supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
         if (error) {
           console.error('[AuthCallback] setSession error:', error);
-          window.location.replace('/auth');
+        window.location.replace('/');
         } else {
           console.log('[AuthCallback] session set successfully');
           window.location.replace('/');
@@ -20,7 +20,7 @@ const AuthCallback = () => {
       });
     } else {
       console.log('[AuthCallback] no tokens in URL, redirecting to auth');
-      window.location.replace('/auth');
+      window.location.replace('/');
     }
   }, []);
 
