@@ -60,6 +60,7 @@ const AppContent = () => {
     return (
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="*" element={<Auth />} />
       </Routes>
     );
