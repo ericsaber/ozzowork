@@ -1,13 +1,18 @@
 
 
-## Plan: Use window.location.replace in AuthCallback
+## Plan: Show loading state during OAuth token exchange
 
-**File:** `src/pages/AuthCallback.tsx`
+**File:** `src/App.tsx`
 
-1. Remove `useNavigate` import from `react-router-dom` and the `const navigate = useNavigate()` line
-2. Replace both `navigate("/", { replace: true })` → `window.location.replace("/")`
-3. Replace `navigate("/auth", { replace: true })` → `window.location.replace("/auth")`
-4. Remove unused `useNavigate` import from `react-router-dom` (keep `useEffect` from `react`)
+In the `AppContent` component, add a `hasAuthToken` check before the loading guard so the app continues showing the loading spinner while Supabase processes the OAuth hash/code parameters — preventing a flash of the Auth page.
+
+**Change:** Replace `if (loading) {` with:
+```ts
+const hasAuthToken = window.location.hash.includes('access_token') || 
+                     window.location.search.includes('code=');
+
+if (loading || hasAuthToken) {
+```
 
 No other files touched. All `console.log` statements preserved.
 
