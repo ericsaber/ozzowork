@@ -1,10 +1,12 @@
 
 
-## Plan: Revert hasAuthToken check in App.tsx
+## Plan: Update AuthCallback redirects and add /auth route
 
-**File:** `src/App.tsx`
+### File 1: `src/pages/AuthCallback.tsx`
+- Change both `window.location.replace('/auth')` → `window.location.replace('/')`
 
-Remove the `hasAuthToken` constant and revert the loading guard back to just `if (loading) {`. The two lines defining `hasAuthToken` and the modified condition will be replaced with the original simple check.
+### File 2: `src/App.tsx`
+- In the unauthenticated `<Routes>` block, add `<Route path="/auth" element={<Auth />} />` before the existing `<Route path="*"` catch-all
 
 No other files touched. All `console.log` statements preserved.
 
