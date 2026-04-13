@@ -1,12 +1,5 @@
 {
   "rewrites": [
-    { 
-      "source": "/~oauth/:path*", 
-      "destination": "https://ozthojqaphifltilbbmx.supabase.co/~oauth/:path*" 
-    },
-    { 
-      "source": "/(.*)", 
-      "destination": "/index.html" 
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
