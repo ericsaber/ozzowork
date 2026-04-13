@@ -10,7 +10,7 @@ interface PasswordGateProps {
 
 const PasswordGate = ({ children }: PasswordGateProps) => {
   const [unlocked, setUnlocked] = useState(() => {
-    return sessionStorage.getItem("site_unlocked") === "true";
+    return localStorage.getItem("site_unlocked") === "true";
   });
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
@@ -29,7 +29,7 @@ const PasswordGate = ({ children }: PasswordGateProps) => {
       if (fnError || !data?.valid) {
         setError(true);
       } else {
-        sessionStorage.setItem("site_unlocked", "true");
+        localStorage.setItem("site_unlocked", "true");
         setUnlocked(true);
       }
     } catch {
