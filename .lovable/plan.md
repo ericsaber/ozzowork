@@ -1,10 +1,14 @@
 
 
-## Plan: Allow /auth/callback route when unauthenticated
+## Plan: Improve AuthCallback session detection
 
-**File:** `src/App.tsx`
+**File:** `src/pages/AuthCallback.tsx`
 
-Replace the early `if (!session) return <Auth />;` with a `<Routes>` block that renders `<AuthCallback />` on `/auth/callback` and `<Auth />` on all other paths. This ensures the OAuth callback can process the session token before the app redirects to the login page.
+Replace the existing `useEffect` with a more robust version that:
+1. Tries `getSession()` first — if session exists, navigates to `/` immediately
+2. If no session yet, subscribes to `onAuthStateChange` to wait for `SIGNED_IN`
+3. Adds a 5-second fallback timeout that redirects to `/auth` if nothing happens
+4. Properly cleans up subscription and timer
 
 No other files touched. All `console.log` statements preserved.
 
