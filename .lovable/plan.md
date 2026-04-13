@@ -1,10 +1,20 @@
 
 
-## Plan: Add debug log before draft insert/update
+## Plan: Use real timestamp in CompleteFollowupSheet
 
-**File:** `src/components/LogInteractionSheet.tsx`
+**File:** `src/components/CompleteFollowupSheet.tsx` (line 63)
 
-Add `console.log("[debug] getConnectDateISO:", getConnectDateISO(), "connectDate:", connectDate);` in the `logMutation` `mutationFn`, immediately before the draft insert call and immediately before the draft update call — two insertions total.
+Replace the noon-anchored date with the current timestamp.
 
-No other files touched. All existing `console.log` statements preserved.
+**Before:**
+```ts
+const connectDate = new Date(format(new Date(), "yyyy-MM-dd") + "T12:00:00").toISOString();
+```
+
+**After:**
+```ts
+const connectDate = new Date().toISOString();
+```
+
+No other files touched. All `console.log` statements preserved.
 
