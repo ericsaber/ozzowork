@@ -50,6 +50,10 @@ const LogInteractionSheet = ({
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   const [contactCleared, setContactCleared] = useState(false);
   const [connectDate, setConnectDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const getConnectDateISO = () =>
+    connectDate === format(new Date(), "yyyy-MM-dd")
+      ? new Date().toISOString()
+      : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
   const [skippedInteraction, setSkippedInteraction] = useState(false);
@@ -176,9 +180,6 @@ const LogInteractionSheet = ({
       if (!contactId) throw new Error("Select a contact");
 
 
-      const computedConnectDate = connectDate === format(new Date(), "yyyy-MM-dd")
-        ? new Date().toISOString()
-        : new Date(connectDate + "T12:00:00").toISOString();
 
       // Update existing draft
       if (draftId) {
@@ -187,11 +188,11 @@ const LogInteractionSheet = ({
           .update({
             connect_type: connectType || null,
             note: note || null,
-            connect_date: computedConnectDate,
+            connect_date: getConnectDateISO(),
           })
           .eq("id", draftId);
         if (error) throw error;
-        console.log("[draft] interactions updated:", { draftId, connect_type: connectType, note, connect_date: computedConnectDate });
+        console.log("[draft] interactions updated:", { draftId, connect_type: connectType, note, connect_date: getConnectDateISO() });
         return { id: draftId };
       }
 
@@ -203,7 +204,7 @@ const LogInteractionSheet = ({
           contact_id: contactId,
           user_id: user.id,
           connect_type: connectType || null,
-          connect_date: computedConnectDate,
+          connect_date: getConnectDateISO(),
           note: note || null,
           status: "draft",
         })
