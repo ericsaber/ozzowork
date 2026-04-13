@@ -1,22 +1,22 @@
 
 
-## Plan: Use real timestamp for today's interactions
+## Plan: Extract `getConnectDateISO` helper in LogInteractionSheet
 
-**File:** `src/components/LogInteractionSheet.tsx` (line 179)
+### What changes
 
-Replace the noon-anchored date construction with a conditional that uses `new Date().toISOString()` (real current timestamp) when logging today's date, and keeps the noon anchor for backdated entries.
+**File:** `src/components/LogInteractionSheet.tsx`
 
-**Before:**
+1. **Add helper** after line 52 (the `connectDate` state declaration):
 ```ts
-const computedConnectDate = new Date(connectDate + "T12:00:00").toISOString();
+const getConnectDateISO = () =>
+  connectDate === format(new Date(), "yyyy-MM-dd")
+    ? new Date().toISOString()
+    : new Date(connectDate + "T12:00:00").toISOString();
 ```
 
-**After:**
-```ts
-const computedConnectDate = connectDate === format(new Date(), "yyyy-MM-dd")
-  ? new Date().toISOString()
-  : new Date(connectDate + "T12:00:00").toISOString();
-```
+2. **Remove lines 179-181** (the `computedConnectDate` variable inside `logMutation`'s `mutationFn`) and replace all references to it (lines 190, 194, 206) with `getConnectDateISO()`.
 
-`format` from `date-fns` is already imported. No other files touched. All `console.log` statements preserved.
+3. **Lines 260 and 356 are NOT touched** — those are `completed_at` timestamps using `new Date().toISOString()`, unrelated to `connectDate`. They happen to share the variable name but serve a different purpose.
+
+### No other files touched. All `console.log` statements preserved.
 
