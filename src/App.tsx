@@ -56,7 +56,14 @@ const AppContent = () => {
     );
   }
 
-  if (!session) return <Auth />;
+  if (!session) {
+    return (
+      <Routes>
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="*" element={<Auth />} />
+      </Routes>
+    );
+  }
 
   return (
     <>
