@@ -3,32 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 
 const AuthCallback = () => {
   useEffect(() => {
-    // Try getSession first — Supabase may have already processed the hash
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        window.location.replace("/");
-        return;
-      }
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
 
-      // Otherwise wait for auth state change
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          subscription.unsubscribe();
-          window.location.replace("/");
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+        if (error) {
+          console.error('[AuthCallback] setSession error:', error);
+          window.location.replace('/auth');
+        } else {
+          console.log('[AuthCallback] session set successfully');
+          window.location.replace('/');
         }
       });
-
-      // Fallback timeout after 5 seconds
-      const timer = setTimeout(() => {
-        subscription.unsubscribe();
-        window.location.replace("/auth");
-      }, 5000);
-
-      return () => {
-        subscription.unsubscribe();
-        clearTimeout(timer);
-      };
-    });
+    } else {
+      console.log('[AuthCallback] no tokens in URL, redirecting to auth');
+      window.location.replace('/auth');
+    }
   }, []);
 
   return (
