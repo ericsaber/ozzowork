@@ -48,7 +48,9 @@ const InlineInteractionEdit = ({ interaction, onClose }: InlineInteractionEditPr
       .from("interactions")
       .update({
         connect_type: editType,
-        connect_date: editDate,
+        connect_date: editDate === format(new Date(), "yyyy-MM-dd")
+          ? new Date().toISOString()
+          : new Date(editDate + "T12:00:00").toISOString(),
         note: editNote.trim() || null,
       })
       .eq("id", interaction.id);
