@@ -181,7 +181,6 @@ const LogInteractionSheet = ({
 
 
 
-      console.log("[debug] getConnectDateISO:", getConnectDateISO(), "connectDate:", connectDate);
       // Update existing draft
       if (draftId) {
         const { error } = await supabase
@@ -197,7 +196,7 @@ const LogInteractionSheet = ({
         return { id: draftId };
       }
 
-      console.log("[debug] getConnectDateISO:", getConnectDateISO(), "connectDate:", connectDate);
+      
       // Create new draft
       
       const { data, error } = await supabase
