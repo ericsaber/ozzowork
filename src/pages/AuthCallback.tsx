@@ -1,15 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const AuthCallback = () => {
-  const navigate = useNavigate();
-
   useEffect(() => {
     // Try getSession first — Supabase may have already processed the hash
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/", { replace: true });
+        window.location.replace("/");
         return;
       }
 
@@ -17,14 +14,14 @@ const AuthCallback = () => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
           subscription.unsubscribe();
-          navigate("/", { replace: true });
+          window.location.replace("/");
         }
       });
 
       // Fallback timeout after 5 seconds
       const timer = setTimeout(() => {
         subscription.unsubscribe();
-        navigate("/auth", { replace: true });
+        window.location.replace("/auth");
       }, 5000);
 
       return () => {
@@ -32,7 +29,7 @@ const AuthCallback = () => {
         clearTimeout(timer);
       };
     });
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
