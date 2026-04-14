@@ -159,7 +159,7 @@ If the transcript is unclear or very short, return it as-is with minimal cleanup
     });
   } catch (e) {
     console.error('transcribe-audio error:', e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
