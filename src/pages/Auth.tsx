@@ -44,9 +44,9 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-heading text-foreground italic">ozzo</h1>
+          <h1 className="text-4xl text-foreground" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 500 }}>ozzo</h1>
           <p className="text-muted-foreground mt-2">
-            Never forget to follow up.
+            Follow Through.
           </p>
         </div>
 
