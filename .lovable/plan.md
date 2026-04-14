@@ -1,21 +1,23 @@
 
 
-## Plan: Apply real-timestamp logic to EditInteractionSheet
+## Plan: Auth Screen Copy/Style + Favicon Update
 
-**File:** `src/components/EditInteractionSheet.tsx`
+### 1. Auth screen (`src/pages/Auth.tsx`)
 
-`format` from `date-fns` is already imported (line 7). No import changes needed.
+**Line ~50 — `<h1>` tag**: Change class from `font-heading ... italic` to use inline style `fontFamily: "'Outfit', sans-serif"`, `fontWeight: 500`. Remove `italic` class. Keep `text-4xl` and `text-foreground`. Ensure lowercase text (it already is).
 
-**Line 57** — replace:
-```ts
-connect_date: new Date(date + "T12:00:00").toISOString(),
-```
-with:
-```ts
-connect_date: date === format(new Date(), "yyyy-MM-dd")
-  ? new Date().toISOString()
-  : new Date(date + "T12:00:00").toISOString(),
-```
+**Line ~51 — `<p>` tagline**: Change text from `"Never forget to follow up."` to `"Follow Through."`
 
-All `console.log` statements preserved. No other files touched.
+### 2. Favicon (`public/favicon.svg` + `index.html`)
+
+- Copy uploaded SVG from `user-uploads://ozzo-icon.svg` to `public/favicon.svg`
+- Delete `public/favicon.ico` if it exists
+- Add `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` to `<head>` in `index.html`
+- Remove any existing `.ico` favicon link
+
+### 3. Build error fix (`supabase/functions/transcribe-audio/index.ts`)
+
+Line 162: cast `e` to `Error` — `(e as Error).message` — to resolve the existing TS18046 build error.
+
+No other files touched. All `console.log` statements preserved.
 
