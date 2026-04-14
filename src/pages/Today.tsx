@@ -216,7 +216,7 @@ const Today = () => {
       </div>
       <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
-        {!isLoading && attentionCount > 0 && <span> · {attentionCount} need attention</span>}
+        {!isLoading && attentionCount > 0 && <span> · {attentionCount} {attentionCount === 1 ? "needs" : "need"} attention</span>}
       </p>
 
       {isLoading ? (
