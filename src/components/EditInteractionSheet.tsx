@@ -55,7 +55,9 @@ const EditInteractionSheet = ({ open, onClose, interaction, contactId }: EditInt
         .update({
           connect_type: connectType || null,
           note: note || null,
-          connect_date: new Date(date + "T12:00:00").toISOString(),
+          connect_date: date === format(new Date(), "yyyy-MM-dd")
+            ? new Date().toISOString()
+            : new Date(date + "T12:00:00").toISOString(),
         })
         .eq("id", interaction.id);
       if (intErr) throw intErr;
