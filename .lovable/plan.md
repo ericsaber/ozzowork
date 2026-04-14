@@ -1,20 +1,20 @@
 
 
-## Plan: Apply real-timestamp logic to InlineInteractionEdit save
+## Plan: Apply real-timestamp logic to EditInteractionSheet
 
-**File:** `src/components/InlineInteractionEdit.tsx`
+**File:** `src/components/EditInteractionSheet.tsx`
 
 `format` from `date-fns` is already imported (line 7). No import changes needed.
 
-**Line 51** — replace:
+**Line 57** — replace:
 ```ts
-connect_date: editDate,
+connect_date: new Date(date + "T12:00:00").toISOString(),
 ```
 with:
 ```ts
-connect_date: editDate === format(new Date(), "yyyy-MM-dd")
+connect_date: date === format(new Date(), "yyyy-MM-dd")
   ? new Date().toISOString()
-  : new Date(editDate + "T12:00:00").toISOString(),
+  : new Date(date + "T12:00:00").toISOString(),
 ```
 
 All `console.log` statements preserved. No other files touched.
