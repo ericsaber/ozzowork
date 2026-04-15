@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
+import { Analytics } from "@vercel/analytics/react";
 import Today from "./pages/Today";
 import Contacts from "./pages/Contacts";
 import ContactHistory from "./pages/ContactHistory";
@@ -94,6 +95,7 @@ const App = () => (
           <AppContent />
         </BrowserRouter>
       </PasswordGate>
+      <Analytics />
     </TooltipProvider>
   </QueryClientProvider>
 );
