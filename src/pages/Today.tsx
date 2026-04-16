@@ -8,7 +8,13 @@ import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
-import { Calendar, Eye, UserRound } from "lucide-react";
+import { Calendar, Eye, UserRound, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -47,6 +53,12 @@ const Today = () => {
   }, []);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
 
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
@@ -212,7 +224,19 @@ const Today = () => {
         <span style={{ fontFamily: "var(--font-body)", fontSize: "30px", fontWeight: 500, color: "#383838", lineHeight: "normal" }}>
           ozzo
         </span>
-        <UserRound size={24} style={{ color: "#999" }} />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label="Account menu" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+              <UserRound size={24} style={{ color: "#999" }} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut size={16} className="mr-2" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <p style={{ fontFamily: "var(--font-body)", fontSize: "15px", color: "#71717a", marginBottom: "20px" }}>
         {format(new Date(), "EEEE, MMMM d")}
