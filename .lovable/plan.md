@@ -1,37 +1,53 @@
 
+## Plan: Wrap UserRound icon in a sign-out dropdown menu
 
-## Plan: Add magic link verification to AuthCallback.tsx
+**File:** `src/pages/Today.tsx`
 
-**File:** `src/pages/AuthCallback.tsx`
+### 1. Imports
+- Add `LogOut` to the existing `lucide-react` import alongside `Calendar`, `Eye`, `UserRound`.
+- Add a new import for the dropdown primitives:
+  ```ts
+  import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu";
+  ```
 
-Inside the `useEffect`, before the existing hash-based token check, read `token_hash` and `type` from `window.location.search` (query params). If both are present, call `supabase.auth.verifyOtp({ token_hash, type })`. On success, log and redirect to `/`. On error, log the error and redirect to `/auth?error=link_expired`. Return early so the existing OAuth flow below is not triggered.
-
-The existing `access_token`/`refresh_token` hash handling remains unchanged beneath this new block.
-
-### Pseudocode
-
+### 2. Handler
+Inside the `Today` component, add:
 ```ts
-useEffect(() => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const token_hash = searchParams.get('token_hash');
-  const type = searchParams.get('type');
+const handleSignOut = async () => {
+  await supabase.auth.signOut();
+  navigate("/auth");
+};
+```
+(Uses existing `navigate` and `supabase` imports.)
 
-  if (token_hash && type) {
-    supabase.auth.verifyOtp({ token_hash, type: type as any }).then(({ error }) => {
-      if (error) {
-        console.error('[AuthCallback] verifyOtp error:', error);
-        window.location.replace('/auth?error=link_expired');
-      } else {
-        console.log('[AuthCallback] verifyOtp success');
-        window.location.replace('/');
-      }
-    });
-    return; // skip hash-based OAuth handling
-  }
-
-  // ... existing hash-based setSession logic unchanged ...
-}, []);
+### 3. JSX change (line ~215)
+Replace:
+```tsx
+<UserRound size={24} style={{ color: "#999" }} />
+```
+With:
+```tsx
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <button type="button" aria-label="Account menu" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+      <UserRound size={24} style={{ color: "#999" }} />
+    </button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem onClick={handleSignOut}>
+      <LogOut size={16} className="mr-2" />
+      Sign out
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
 ```
 
-No other files touched. All `console.log` statements preserved.
-
+### Notes
+- No new dependencies — `dropdown-menu.tsx` already exists in `src/components/ui/`.
+- All existing `console.log` statements preserved.
+- No other files touched.
