@@ -8,7 +8,13 @@ import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 import LogInteractionSheet from "@/components/LogInteractionSheet";
 import LastInteractionSheet from "@/components/LastInteractionSheet";
 import { format, addDays, parseISO } from "date-fns";
-import { Calendar, Eye, UserRound } from "lucide-react";
+import { Calendar, Eye, UserRound, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
