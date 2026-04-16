@@ -54,6 +54,12 @@ const Today = () => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+
   const { data: followUpsData, isLoading: followUpsLoading } = useQuery({
     queryKey: ["follow-ups-today"],
     queryFn: async () => {
