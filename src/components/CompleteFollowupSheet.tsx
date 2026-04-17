@@ -47,6 +47,9 @@ const CompleteFollowupSheet = ({
   const [connectType, setConnectType] = useState(plannedType || "");
   const [note, setNote] = useState("");
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["interactions"] });
