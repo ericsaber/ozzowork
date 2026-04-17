@@ -284,188 +284,184 @@ const LogStep2 = ({
         Set a follow-up
       </h2>
 
-      {!isEditing && (
-        <>
-          {/* Section 3 — Date chips */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 8,
-              marginBottom: 8,
+      {/* Section 3 — Date chips */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        {dateChips.map((chip) => {
+          const chipDate = chip.date();
+          const selected = selectedDate === chipDate;
+          return (
+            <button
+              key={chip.label}
+              onClick={() => handleChipClick(chipDate)}
+              style={{
+                background: selected ? "#fdf4f0" : "#faf8f5",
+                border: selected ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+                borderRadius: 12,
+                padding: "13px 8px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: selected ? "#c8622a" : "#1c1a17",
+                fontFamily: "Outfit, sans-serif",
+                textAlign: "center",
+                width: "100%",
+                cursor: "pointer",
+                transition: "all 0.12s ease",
+              }}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => setShowCalendar((v) => !v)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          background: isCustomDate ? "#fdf4f0" : "#faf8f5",
+          border: isCustomDate ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+          borderRadius: 12,
+          padding: 13,
+          fontSize: 14,
+          fontWeight: 500,
+          color: isCustomDate ? "#c8622a" : "#1c1a17",
+          fontFamily: "Outfit, sans-serif",
+          width: "100%",
+          cursor: "pointer",
+          transition: "all 0.12s ease",
+        }}
+      >
+        <CalendarIcon size={15} color={isCustomDate ? "#c8622a" : "#888480"} />
+        {isCustomDate ? customDateLabel : "Pick date"}
+      </button>
+
+      {/* Section 4 — Inline calendar */}
+      {showCalendar && (
+        <div
+          style={{
+            marginTop: 8,
+            background: "#faf8f5",
+            border: "1px solid #e8e4de",
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <Calendar
+            mode="single"
+            selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
+            onSelect={(date) => {
+              if (date) {
+                setSelectedDate(format(date, "yyyy-MM-dd"));
+                setShowCalendar(false);
+              }
             }}
-          >
-            {dateChips.map((chip) => {
-              const chipDate = chip.date();
-              const selected = selectedDate === chipDate;
-              return (
-                <button
-                  key={chip.label}
-                  onClick={() => handleChipClick(chipDate)}
-                  style={{
-                    background: selected ? "#fdf4f0" : "#faf8f5",
-                    border: selected ? "1.5px solid #c8622a" : "1px solid #e8e4de",
-                    borderRadius: 12,
-                    padding: "13px 8px",
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: selected ? "#c8622a" : "#1c1a17",
-                    fontFamily: "Outfit, sans-serif",
-                    textAlign: "center",
-                    width: "100%",
-                    cursor: "pointer",
-                    transition: "all 0.12s ease",
-                  }}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
+            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+            initialFocus
+            className="p-3 pointer-events-auto"
+          />
+        </div>
+      )}
+
+      {/* Section 5 — Via + reminder */}
+      {selectedDate && (
+        <div
+          style={{
+            marginTop: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          {/* Via row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span
+              style={{
+                fontSize: 11,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                flexShrink: 0,
+              }}
+            >
+              via
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {typeOptions.map((t) => {
+                const selected = followUpType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => handlePillClick(t.value)}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      background: selected ? "#c8622a" : "#f0ede8",
+                      border: selected ? "none" : "1px solid #e8e4de",
+                      transition: "all 0.12s ease",
+                    }}
+                    title={t.label}
+                  >
+                    <t.icon size={14} color={selected ? "#fff" : "#6b6860"} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <button
-            onClick={() => setShowCalendar((v) => !v)}
+          {/* Reminder row */}
+          <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
               gap: 8,
-              background: isCustomDate ? "#fdf4f0" : "#faf8f5",
-              border: isCustomDate ? "1.5px solid #c8622a" : "1px solid #e8e4de",
-              borderRadius: 12,
-              padding: 13,
-              fontSize: 14,
-              fontWeight: 500,
-              color: isCustomDate ? "#c8622a" : "#1c1a17",
-              fontFamily: "Outfit, sans-serif",
-              width: "100%",
-              cursor: "pointer",
-              transition: "all 0.12s ease",
+              borderTop: "1px dashed #d8d4ce",
+              paddingTop: 10,
             }}
           >
-            <CalendarIcon size={15} color={isCustomDate ? "#c8622a" : "#888480"} />
-            {isCustomDate ? customDateLabel : "Pick date"}
-          </button>
-
-          {/* Section 4 — Inline calendar */}
-          {showCalendar && (
-            <div
+            <Pencil size={13} color="#888480" style={{ flexShrink: 0 }} />
+            <input
+              type="text"
+              value={reminderNote}
+              onChange={(e) => setReminderNote(e.target.value)}
+              placeholder="Add a reminder note..."
+              maxLength={44}
               style={{
-                marginTop: 8,
-                background: "#faf8f5",
-                border: "1px solid #e8e4de",
-                borderRadius: 12,
-                overflow: "hidden",
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 13,
+                color: "#1c1a17",
+                fontFamily: "Outfit, sans-serif",
+                minWidth: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                flexShrink: 0,
               }}
             >
-              <Calendar
-                mode="single"
-                selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(format(date, "yyyy-MM-dd"));
-                    setShowCalendar(false);
-                  }
-                }}
-                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </div>
-          )}
-
-          {/* Section 5 — Via + reminder reveal */}
-          <div
-            style={{
-              maxHeight: selectedDate ? "160px" : "0",
-              opacity: selectedDate ? 1 : 0,
-              overflow: "hidden",
-              transition: "max-height 0.32s ease, opacity 0.22s ease",
-              marginTop: revealOpen ? 16 : 0,
-            }}
-          >
-            {/* Via row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#888480",
-                  fontFamily: "Outfit, sans-serif",
-                  flexShrink: 0,
-                }}
-              >
-                via
-              </span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {typeOptions.map((t) => {
-                  const selected = followUpType === t.value;
-                  return (
-                    <button
-                      key={t.value}
-                      onClick={() => handlePillClick(t.value)}
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        background: selected ? "#c8622a" : "#f0ede8",
-                        border: selected ? "none" : "1px solid #e8e4de",
-                        transition: "all 0.12s ease",
-                      }}
-                      title={t.label}
-                    >
-                      <t.icon size={14} color={selected ? "#fff" : "#6b6860"} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Reminder row */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                borderTop: "1px dashed #d8d4ce",
-                paddingTop: 10,
-                marginTop: 10,
-              }}
-            >
-              <Pencil size={13} color="#888480" style={{ flexShrink: 0 }} />
-              <input
-                type="text"
-                value={reminderNote}
-                onChange={(e) => setReminderNote(e.target.value)}
-                placeholder="Add a reminder note..."
-                maxLength={44}
-                style={{
-                  flex: 1,
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  fontSize: 13,
-                  color: "#1c1a17",
-                  fontFamily: "Outfit, sans-serif",
-                  minWidth: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 12,
-                  color: "#888480",
-                  fontFamily: "Outfit, sans-serif",
-                  flexShrink: 0,
-                }}
-              >
-                {reminderNote.length}/44
-              </span>
-            </div>
+              {reminderNote.length}/44
+            </span>
           </div>
-        </>
+        </div>
       )}
 
       {/* Save/Skip moved to parent (LogInteractionSheet / CompleteFollowupSheet) */}
