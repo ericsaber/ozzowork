@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import FullscreenTakeover from "@/components/FullscreenTakeover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -551,9 +551,12 @@ const LogInteractionSheet = ({
 
   return (
     <>
-      <Drawer open={open} onOpenChange={handleOpen} snapPoints={isContactPrefilled ? undefined : [0.95]}>
-        <DrawerContent maxHeightRatio={isContactPrefilled ? 0.9 : 0.95} onContextMenu={(e) => e?.preventDefault?.()}>
-          <div className="overflow-y-auto px-5 pb-6">
+      <FullscreenTakeover open={open} onOpenChange={handleOpen}>
+        <div
+          className="px-5 pb-6"
+          style={{ flex: 1, overflowY: "auto" }}
+          onContextMenu={(e) => e?.preventDefault?.()}
+        >
             {step !== "outstanding" && startStep !== 2 && !logOnly && (
               <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
             )}
@@ -652,13 +655,12 @@ const LogInteractionSheet = ({
                 skippedInteraction={false}
               />
             ) : null}
-          </div>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </FullscreenTakeover>
 
       {/* Discard dialog */}
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[60]">
           <AlertDialogHeader>
             <AlertDialogTitle>Discard this log?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -688,7 +690,7 @@ const LogInteractionSheet = ({
 
       {/* Cancel follow-up confirmation */}
       <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[60]">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this follow-up?</AlertDialogTitle>
             <AlertDialogDescription>
