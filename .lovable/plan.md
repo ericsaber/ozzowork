@@ -1,52 +1,54 @@
 
 
-## Plan: Close animation fixes for Upcoming + FAB
+## Plan: Direction-aware close animation for FullscreenTakeover
 
-**Files:** `src/pages/Upcoming.tsx`, `src/components/FullscreenTakeover.tsx`
+**File:** `src/components/FullscreenTakeover.tsx` only.
 
-### Issue 1 — Upcoming.tsx (always-mounted CompleteFollowupSheet)
+### Changes
 
-Same fix already applied to `Today.tsx`. Remove the `{completeTarget && (...)}` wrapper and keep `<CompleteFollowupSheet>` always mounted with optional chaining on the four target-derived props:
+**1. Sheet — slide only on close (no fade)**
 
-```tsx
-<CompleteFollowupSheet
-  open={!!completeTarget}
-  onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
-  followUpId={completeTarget?.followUpId ?? ""}
-  contactId={completeTarget?.contactId ?? ""}
-  contactName={completeTarget?.contactName ?? ""}
-  plannedType={completeTarget?.plannedType ?? null}
-  userId=""
-/>
-```
-
-### Issue 2 — FullscreenTakeover.tsx (asymmetric open/close timing)
-
-Make the sheet transition string conditional on `visible` so open stays snappy and close glides:
+Replace the current sheet opacity + transition:
 
 ```tsx
+opacity: 1,  // always opaque — no fade on either direction
+transform: visible ? "translateY(0)" : "translateY(100%)",
 transition: visible
   ? "opacity 300ms ease, transform 420ms cubic-bezier(0.32, 0.72, 0, 1)"
-  : "opacity 250ms ease, transform 550ms cubic-bezier(0.4, 0, 0.2, 1)",
+  : "transform 480ms cubic-bezier(0.4, 0, 1, 1)",
 ```
 
-Bump the unmount timeout from 420ms to 560ms so the sheet stays mounted through the longer close transition:
+The ease-in curve `cubic-bezier(0.4, 0, 1, 1)` accelerates downward — feels like gravity rather than a uniform slide.
+
+**2. Backdrop — sync close duration to sheet**
 
 ```tsx
-const t = setTimeout(() => setMounted(false), 560);
+opacity: visible ? 1 : 0,
+transition: visible ? "opacity 200ms ease" : "opacity 480ms ease",
+pointerEvents: visible ? "auto" : "none",
 ```
 
-Backdrop transition (200ms ease) and close-button fade (200ms with 250ms delay) stay as-is.
+Backdrop dims gradually alongside the sliding sheet so they finish together — no flash of the page underneath.
+
+**3. Close button — unchanged**
+
+The 200ms fade with 250ms delay stays as-is.
+
+**4. Unmount timeout — unchanged**
+
+Stays at 560ms (current value), which comfortably exceeds the 480ms close transition.
 
 ### Preserved
 - All `console.log` statements
-- visualViewport listener, double-rAF open trick, `visibility: hidden` guard
-- All other state/handlers/mutations
+- `mounted` / `visible` state machine, double-rAF open trick, `visibility: hidden` guard
+- visualViewport resize listener
+- Backdrop `onPointerDown` close handler
 
 ### Checklist
-- ✅ Only `Upcoming.tsx` and `FullscreenTakeover.tsx` touched
-- ✅ Upcoming: conditional wrapper removed, `?.` + `??` on all four props
-- ✅ Transition string is conditional on `visible`, close = 550ms
-- ✅ Unmount timeout bumped to 560ms
+- ✅ Only `FullscreenTakeover.tsx` touched
+- ✅ Sheet opacity is `1` in both states — no fade on close
+- ✅ Sheet transition conditional on `visible` (spring open, ease-in close)
+- ✅ Backdrop transition conditional on `visible` (200ms open, 480ms close)
+- ✅ Unmount timeout stays at 560ms
 - ✅ All `console.log` preserved
 
