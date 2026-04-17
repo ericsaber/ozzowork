@@ -159,6 +159,7 @@ const LogStep2 = ({
       {isEditing && (
         <div
           style={{
+            marginTop: 12,
             background: "#faf8f5",
             border: "1px solid #e8e4de",
             borderRadius: 16,
