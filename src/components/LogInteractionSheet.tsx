@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Search, CalendarIcon, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
@@ -36,13 +37,27 @@ const LogInteractionSheet = ({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
+  // Determine initial step based on whether contact is pre-filled
+  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 | 3 => {
+    if (preselectedContactId && startStep === 1) return 1;
+    if (startStep === 2) return 2;
+    if (!preselectedContactId) return "contact-picker";
+    return startStep;
+  };
+
+  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2 | 3>(getInitialStep());
 
   useEffect(() => {
     if (open) {
-      setStep(startStep);
+      setStep(getInitialStep());
     }
-  }, [open, startStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, startStep, preselectedContactId]);
+
+  // Contact picker search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
@@ -532,130 +547,429 @@ const LogInteractionSheet = ({
     setExistingFollowup(null);
   };
 
-  // "Want to add one?" — go back to step 1 with contact preserved
-  const handleAddInteraction = () => {
-    setStep(1);
-    setSkippedInteraction(false);
-    setExistingFollowup(null);
-  };
 
   const handleStepBack = () => {
     if (step === "outstanding") {
       setStep(1);
     } else if (step === 3) {
       setStep("outstanding");
+    } else if (step === 2 && !preselectedContactId) {
+      setStep(1);
     } else {
       setStep(1);
     }
   };
 
+  // Filtered contacts for picker (top 8 always)
+  const filteredContacts = useMemo(() => {
+    if (!contacts) return [];
+    if (!searchQuery) return contacts.slice(0, 8);
+    const q = searchQuery.toLowerCase();
+    return contacts
+      .filter((c) => {
+        const name = `${c.first_name} ${c.last_name}`.toLowerCase();
+        return name.includes(q) || (c.company || "").toLowerCase().includes(q);
+      })
+      .slice(0, 8);
+  }, [contacts, searchQuery]);
+
+  const handleContactSelect = (id: string) => {
+    setContactId(id);
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  // Skip step 1 → go to follow-up step with no draft
+  const handleSkipToFollowup = async () => {
+    if (!contactId) {
+      toast.error("Select a contact first.");
+      return;
+    }
+    console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
+    if (draftId) {
+      await supabase.from("interactions").delete().eq("id", draftId);
+      console.log("[skip] deleted existing draft on skip:", draftId);
+      setDraftId(null);
+    }
+    setConnectType("");
+    setNote("");
+    setSkippedInteraction(true);
+    setStep(2);
+  };
+
+  // Active follow-up nudge — publish draft if any, then close (no navigation)
+  const handleSaveLogOnly = async () => {
+    if (!draftId) {
+      clearAndClose();
+      return;
+    }
+    await supabase.from("interactions").update({ status: "published" }).eq("id", draftId);
+    console.log("[saveLogOnly] draft published without touching follow-up:", draftId);
+    invalidateAll();
+    toast.success("Log saved.");
+    clearAndClose();
+  };
+
+  // Next button enablement (does not require contact — already chosen in picker or pre-filled)
+  const canNext = (note.trim().length > 0 || connectType !== "") && !logMutation.isPending;
+
+  // Avoid unused imports if only referenced in some branches
+  void searchOpen;
+
   return (
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div
-          className="px-5 pb-6"
-          style={{ flex: 1, overflowY: "auto" }}
+          style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}
           onContextMenu={(e) => e?.preventDefault?.()}
         >
-            {step !== "outstanding" && startStep !== 2 && !logOnly && (
-              <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
-            )}
+          {step !== "outstanding" && startStep !== 2 && !logOnly && step !== "contact-picker" && (
+            <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
+          )}
 
-            {step === 1 ? (
-              <div className="space-y-5">
-                {showQuickAdd && (
-                  <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
-                    <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
-                        <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
-                      </div>
-                      <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                      <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
-                      <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
-                      <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
-                        {quickAddContact.isPending ? "Creating..." : "Create & Select"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <LogStep1
-                  connectType={connectType}
-                  setConnectType={setConnectType}
-                  note={note}
-                  setNote={setNote}
-                  onSubmit={() => logMutation.mutate()}
-                  isSubmitting={logMutation.isPending}
-                  disabled={!contactId}
-                  submitLabel={logOnly ? "Save →" : undefined}
-                  contactId={contactId}
-                  contactName={contactName}
-                  isContactPrefilled={isContactPrefilled}
-                  contacts={contacts}
-                  onContactSelect={setContactId}
-                  onAddNewContact={handleAddNewContact}
-                  onSkipToFollowup={activeFollowup ? undefined : async () => {
-                    if (!contactId) {
-                      toast.error("Select a contact first.");
-                      return;
-                    }
-                    console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
-                    // If user previously hit Next → (creating a draft) then came back and hit skip,
-                    // delete the draft so no empty interaction record is left behind
-                    if (draftId) {
-                      await supabase.from("interactions").delete().eq("id", draftId);
-                      console.log("[skip] deleted existing draft on skip:", draftId);
-                      setDraftId(null);
-                    }
-                    setConnectType("");
-                    setNote("");
-                    setSkippedInteraction(true);
-                    setStep(2);
+          {step === "contact-picker" && (
+            <div style={{ paddingTop: 8 }}>
+              {/* Search input */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  background: "#faf8f5",
+                  border: "1px solid #e8e4de",
+                  borderRadius: 100,
+                  padding: "12px 16px",
+                  marginBottom: 16,
+                }}
+              >
+                <Search size={18} color="#888480" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  placeholder="Who did you talk to?"
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSearchOpen(true);
                   }}
-                  onChangeContact={handleChangeContact}
-                  connectDate={connectDate}
-                  setConnectDate={setConnectDate}
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    fontSize: 16,
+                    color: "#1c1a17",
+                    fontFamily: "Outfit, sans-serif",
+                  }}
                 />
               </div>
-            ) : step === "outstanding" ? (
-              <OutstandingFollowupStep
-                existingFollowup={existingFollowup}
-                contactName={contactName}
-                onComplete={handleOutstandingComplete}
-                onUpdate={handleOutstandingUpdate}
-                onCancel={handleOutstandingCancel}
-                onBack={() => setStep(1)}
-              />
-            ) : step === 2 ? (
-              <LogStep2
+
+              {/* Contact results */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {filteredContacts.map((c) => {
+                  const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        handleContactSelect(c.id);
+                        setStep(1);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 4px",
+                        background: "none",
+                        border: "none",
+                        borderRadius: 10,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: "50%",
+                          background: "#e8e4de",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#6b6860",
+                          fontFamily: "Outfit, sans-serif",
+                        }}
+                      >
+                        {initials}
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 500,
+                            color: "#1c1a17",
+                            fontFamily: "Outfit, sans-serif",
+                          }}
+                        >
+                          {`${c.first_name} ${c.last_name}`.trim()}
+                        </div>
+                        {c.company && (
+                          <div
+                            style={{
+                              fontSize: 13,
+                              color: "#888480",
+                              fontFamily: "Outfit, sans-serif",
+                            }}
+                          >
+                            {c.company}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {searchQuery && (
+                <button
+                  onClick={() => handleAddNewContact(searchQuery)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 4px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    width: "100%",
+                    textAlign: "left",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: "#c8622a",
+                    fontFamily: "Outfit, sans-serif",
+                    marginTop: 4,
+                  }}
+                >
+                  + Add "{searchQuery}"
+                </button>
+              )}
+
+              {showQuickAdd && (
+                <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in mt-3">
+                  <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
+                    </div>
+                    <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
+                      {quickAddContact.isPending ? "Creating..." : "Create & Select"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 1 && (
+            <>
+              {showQuickAdd && (
+                <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
+                  <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
+                    </div>
+                    <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
+                      {quickAddContact.isPending ? "Creating..." : "Create & Select"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <LogStep1
                 connectType={connectType}
-                contactName={contactName}
+                setConnectType={setConnectType}
                 note={note}
-                logDate={format(new Date(), "MMM d, yyyy")}
-                onBack={handleStepBack}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-                onSkip={startStep === 2 ? undefined : handleSkip}
-                isSaving={followupMutation.isPending}
-                onUpdateLog={handleUpdateLog}
-                skippedInteraction={skippedInteraction || startStep === 2}
-                onAddInteraction={handleAddInteraction}
-              />
-            ) : step === 3 ? (
-              <LogStep2
-                connectType={connectType}
+                setNote={setNote}
+                contactId={contactId}
                 contactName={contactName}
-                note={note}
-                logDate={format(new Date(), "MMM d, yyyy")}
-                onBack={handleStepBack}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-                onSkip={handleSkip}
-                isSaving={followupMutation.isPending}
-                onUpdateLog={handleUpdateLog}
-                skippedInteraction={false}
+                isContactPrefilled={isContactPrefilled}
               />
-            ) : null}
+            </>
+          )}
+
+          {step === "outstanding" && (
+            <OutstandingFollowupStep
+              existingFollowup={existingFollowup}
+              contactName={contactName}
+              onComplete={handleOutstandingComplete}
+              onUpdate={handleOutstandingUpdate}
+              onCancel={handleOutstandingCancel}
+              onBack={() => setStep(1)}
+            />
+          )}
+
+          {step === 2 && (
+            <LogStep2
+              connectType={connectType}
+              contactName={contactName}
+              note={note}
+              logDate={format(new Date(), "MMM d, yyyy")}
+              onBack={handleStepBack}
+              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+              onSkip={startStep === 2 ? undefined : handleSkip}
+              isSaving={followupMutation.isPending}
+              onUpdateLog={handleUpdateLog}
+              skippedInteraction={skippedInteraction || startStep === 2}
+            />
+          )}
+
+          {step === 3 && (
+            <LogStep2
+              connectType={connectType}
+              contactName={contactName}
+              note={note}
+              logDate={format(new Date(), "MMM d, yyyy")}
+              onBack={handleStepBack}
+              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+              onSkip={handleSkip}
+              isSaving={followupMutation.isPending}
+              onUpdateLog={handleUpdateLog}
+              skippedInteraction={false}
+            />
+          )}
         </div>
+
+        {/* Bottom action area — only on step 1 */}
+        {step === 1 && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {activeFollowup && contactId && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  background: "#fdf4f0",
+                  border: "1px solid #e8c4b0",
+                  borderRadius: 16,
+                  padding: "12px 14px",
+                }}
+              >
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    background: "white",
+                    border: "1px solid #e8c4b0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <CalendarIcon size={16} color="#c8622a" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#6b6860",
+                      fontFamily: "Outfit, sans-serif",
+                    }}
+                  >
+                    {contactName} has an active follow-up
+                  </div>
+                  <button
+                    onClick={handleSaveLogOnly}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#c8622a",
+                      fontFamily: "Outfit, sans-serif",
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      textDecoration: "underline",
+                      textUnderlineOffset: "2px",
+                      textAlign: "left",
+                    }}
+                  >
+                    Save log only?
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => logMutation.mutate()}
+              disabled={!canNext}
+              style={{
+                width: "100%",
+                background: canNext ? "#c8622a" : "#ddd8d1",
+                color: canNext ? "white" : "#b0ada8",
+                border: "none",
+                borderRadius: 100,
+                padding: 15,
+                fontSize: 16,
+                fontWeight: 500,
+                fontFamily: "Outfit, sans-serif",
+                cursor: canNext ? "pointer" : "default",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+            >
+              {logMutation.isPending ? "Saving…" : logOnly ? "Save" : "Next"}
+              {!logMutation.isPending && <ArrowRight size={18} />}
+            </button>
+
+            {!logOnly && (
+              <button
+                onClick={activeFollowup ? undefined : handleSkipToFollowup}
+                disabled={!!activeFollowup}
+                style={{
+                  fontSize: 13,
+                  color: activeFollowup ? "#ccc" : "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                  background: "none",
+                  border: "none",
+                  cursor: activeFollowup ? "default" : "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                  textAlign: "center",
+                  padding: 4,
+                }}
+              >
+                Set a follow-up without logging
+              </button>
+            )}
+          </div>
+        )}
       </FullscreenTakeover>
 
       {/* Discard dialog */}

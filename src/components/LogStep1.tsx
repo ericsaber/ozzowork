@@ -1,12 +1,8 @@
-import { useRef, useState, useMemo, useEffect } from "react";
-import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Search, CalendarIcon } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { Mic, Square, Phone, Mail, MessageSquare, Users, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { preventScrollOnFocus } from "@/lib/preventScrollOnFocus";
 import { toast } from "sonner";
-import { format, addDays } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
@@ -16,32 +12,26 @@ const typeOptions = [
   { value: "video", icon: Video, label: "Video" },
 ];
 
-interface Contact {
-  id: string;
-  first_name: string;
-  last_name: string;
-  company: string | null;
-}
-
 interface LogStep1Props {
   connectType: string;
   setConnectType: (v: string) => void;
   note: string;
   setNote: (v: string) => void;
-  onSubmit: () => void;
-  isSubmitting: boolean;
-  disabled?: boolean;
   contactId?: string;
   contactName?: string;
-  contactInitials?: string;
   isContactPrefilled?: boolean;
-  contacts?: Contact[];
+  // Optional — kept for backward compatibility with callers (CompleteFollowupSheet,
+  // any leftover LogInteractionSheet pass-through). Not used in the new UI.
+  onSubmit?: () => void;
+  isSubmitting?: boolean;
+  disabled?: boolean;
+  contactInitials?: string;
+  contacts?: unknown;
   onContactSelect?: (id: string) => void;
   onAddNewContact?: (name: string) => void;
   onSkipToFollowup?: () => void;
   onChangeContact?: () => void;
   submitLabel?: string;
-  // Fix 1: date row for skipFollowupStep mode
   showDateRow?: boolean;
   connectDate?: string;
   setConnectDate?: (v: string) => void;
@@ -52,37 +42,17 @@ const LogStep1 = ({
   setConnectType,
   note,
   setNote,
-  onSubmit,
-  isSubmitting,
-  disabled,
   contactId,
   contactName,
-  contactInitials,
-  isContactPrefilled,
-  contacts,
-  onContactSelect,
-  onAddNewContact,
-  onSkipToFollowup,
-  onChangeContact,
-  submitLabel,
-  showDateRow,
-  connectDate,
-  setConnectDate,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [isRawTranscript, setIsRawTranscript] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  // Fix 1: date picker state
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const yesterdayStr = format(addDays(new Date(), -1), "yyyy-MM-dd");
-
-  // Auto-grow textarea when note is set programmatically
+  // Auto-grow textarea when note is set programmatically (preserved)
   useEffect(() => {
     if (textareaRef.current && note) {
       textareaRef.current.style.height = "auto";
@@ -90,68 +60,10 @@ const LogStep1 = ({
     }
   }, [note]);
 
-  // Auto-focus textarea when typing mode activates
-  useEffect(() => {
-    if (isTyping) {
-      setTimeout(() => textareaRef.current?.focus(), 0);
-    }
-  }, [isTyping]);
-
-  // Contact search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const searchWrapperRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Bug 9: Soft flag when recording completes without contact
-  const [showContactFlag, setShowContactFlag] = useState(false);
-
-  const contactSelected = !!contactId;
-
-  const filteredContacts = useMemo(() => {
-    if (!contacts) return [];
-    if (!searchQuery) return contacts.slice(0, 3);
-    const q = searchQuery.toLowerCase();
-    return contacts
-      .filter((c) => {
-        const name = `${c.first_name} ${c.last_name}`.toLowerCase();
-        return name.includes(q) || (c.company || "").toLowerCase().includes(q);
-      })
-      .slice(0, 5);
-  }, [contacts, searchQuery]);
-
-  // Close search on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const handleContactSelect = (id: string) => {
-    onContactSelect?.(id);
-    setSearchOpen(false);
-    setSearchQuery("");
-    setShowContactFlag(false); // Bug 9: clear flag on contact select
-  };
-
-  const handleChangeContact = () => {
-    if (onChangeContact) {
-      onChangeContact();
-    }
-    setSearchOpen(true);
-    setSearchQuery("");
-    setTimeout(() => searchInputRef.current?.focus(), 50);
-  };
-
-  // Recording logic
+  // Recording logic — preserved verbatim
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Bug 5: Lower bitrate for faster upload
       const options: MediaRecorderOptions = { mimeType: "audio/webm" };
       try { options.audioBitsPerSecond = 32000; } catch {}
       const mediaRecorder = new MediaRecorder(stream, options);
@@ -176,13 +88,11 @@ const LogStep1 = ({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
-    // Bug 4: Show transcribing state immediately
     setIsRecording(false);
     setIsTranscribing(true);
   };
 
   const transcribeAudio = async (blob: Blob) => {
-    // isTranscribing already set by stopRecording
     try {
       const formData = new FormData();
       formData.append("audio", blob, "audio.webm");
@@ -206,11 +116,6 @@ const LogStep1 = ({
       if (summary) {
         setNote(summary);
         setIsRawTranscript(!!rawFlag);
-        // Bug 9: Flag if no contact selected after transcription
-        if (!contactId) {
-          setShowContactFlag(true);
-        }
-        // Bug 11: No toast — populated note is confirmation enough
       } else {
         toast.info("No speech detected.");
       }
@@ -230,477 +135,236 @@ const LogStep1 = ({
     }
   };
 
-  const handleMainCTA = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      onSubmit();
-    }
-  };
-
   const handlePillClick = (value: string) => {
     setConnectType(connectType === value ? "" : value);
   };
 
-  const initials = contactInitials || (contactName ? contactName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "");
-  const showContactSearch = !isContactPrefilled && onContactSelect;
-  // Fix 3: connect type optional — activate when connectType OR note exists
-  const canSubmit = !disabled && contactSelected && (!!connectType || !!note) && !isSubmitting;
+  // Avatar initials for contact chip
+  const initials = contactName
+    ? contactName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "";
 
-  // Bug 1: Only render avatar when data is ready
-  const hasContactData = !!initials && !!contactName;
+  // Type pills reveal gate
+  const showTypeRow = note.trim().length > 0 || connectType !== "";
+
+  // Used to silence unused-var warning on isRawTranscript while we don't render it explicitly
+  void isRawTranscript;
 
   return (
-    <div className="space-y-5">
-      {/* Unified Card */}
-      <div
-        className="rounded-[14px] bg-card overflow-hidden"
-        style={{
-          border: showContactFlag
-            ? "1.5px solid rgba(200,98,42,0.4)"
-            : "0.5px solid hsl(var(--border))",
-        }}
-      >
-        {/* Contact header row */}
-        <div
-          className="flex items-center px-[14px] border-b border-border"
-          style={{ minHeight: "54px", padding: "12px 14px" }}
-        >
-          {showContactSearch ? (
-            /* Searchable contact */
-            <div ref={searchWrapperRef} className="flex-1 relative">
-              {contactSelected && !searchOpen && hasContactData ? (
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                      style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                    >
-                      {initials}
-                    </div>
-                    <span className="text-[16px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                      {contactName}
-                    </span>
-                  </div>
-                  {/* Bug 3: Always show Change when contact is selected */}
-                  <button
-                    onClick={handleChangeContact}
-                    className="text-[13px] underline"
-                    style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                  >
-                    Change
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="rounded-full flex items-center justify-center shrink-0"
-                      style={{ width: 30, height: 30, border: "1.5px dashed hsl(var(--border))" }}
-                    >
-                      <Search size={13} className="text-muted-foreground" />
-                    </div>
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      value={searchQuery}
-                       placeholder="Who did you talk to?"
-                       onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-                       onFocus={(e) => { preventScrollOnFocus(e); setSearchOpen(true); }}
-                       className="flex-1 bg-transparent border-none outline-none text-[16px] text-foreground placeholder:text-muted-foreground"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    />
-                  </div>
-                  {searchOpen && (
-                    <div
-                      className="absolute left-0 right-0 top-full mt-1 rounded-[10px] border border-border bg-card overflow-hidden"
-                      style={{ boxShadow: "0 8px 24px rgba(0,0,0,.10)", zIndex: 50 }}
-                    >
-                      <div className="overflow-y-auto" style={{ maxHeight: `${filteredContacts.length * 44 + 4}px` }}>
-                        {filteredContacts.length === 0 && (
-                          <div className="px-3 py-2.5 text-[14px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                            No contacts found
-                          </div>
-                        )}
-                        {filteredContacts.map((c) => {
-                          const cInitials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
-                          return (
-                            <button
-                              key={c.id}
-                              type="button"
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => handleContactSelect(c.id)}
-                              className="w-full text-left px-3 py-2.5 hover:bg-secondary transition-colors flex items-center gap-2"
-                              style={{ fontFamily: "var(--font-body)" }}
-                            >
-                              <div
-                                className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                                style={{ width: 26, height: 26, fontSize: 10.5, fontWeight: 600, background: "hsl(var(--primary))" }}
-                              >
-                                {cInitials}
-                              </div>
-                              <div>
-                              <div className="text-foreground" style={{ fontSize: "14px" }}>{`${c.first_name} ${c.last_name}`.trim()}</div>
-                                {c.company && <div className="text-muted-foreground" style={{ fontSize: "12px" }}>{c.company}</div>}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="border-t border-border">
-                        <button
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            onAddNewContact?.(searchQuery);
-                            setSearchOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2.5 text-[14px] font-medium hover:bg-secondary transition-colors"
-                          style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                        >
-                          + Add "{searchQuery || "new contact"}"
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ) : (
-            /* Prefilled contact (not searchable) */
-            hasContactData ? (
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="rounded-full flex items-center justify-center text-primary-foreground shrink-0"
-                    style={{ width: 30, height: 30, fontSize: 12, fontWeight: 600, background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                  >
-                    {initials}
-                  </div>
-                  <span className="text-[16px] font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    {contactName}
-                  </span>
-                </div>
-                {/* Bug 3: Change link on prefilled contacts too */}
-                {onChangeContact && (
-                  <button
-                    onClick={handleChangeContact}
-                    className="text-[13px] underline"
-                    style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
-                  >
-                    Change
-                  </button>
-                )}
-              </div>
-            ) : (
-              /* Bug 1: Show placeholder while data loads */
-              <div className="flex items-center gap-2">
-                <div
-                  className="rounded-full flex items-center justify-center shrink-0"
-                  style={{ width: 30, height: 30, border: "1.5px dashed hsl(var(--border))" }}
-                >
-                  <Search size={13} className="text-muted-foreground" />
-                </div>
-                <span className="text-[16px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  Loading…
-                </span>
-              </div>
-            )
-          )}
-        </div>
-
-        {/* Bug 9: Contact flag message — always in DOM, visibility toggled */}
-        <div
-          className="px-[14px] py-1.5 border-b border-border"
-          style={{ visibility: showContactFlag ? "visible" : "hidden" }}
-        >
-          <span className="text-[13px]" style={{ color: "rgba(200,98,42,0.7)", fontFamily: "var(--font-body)" }}>
-            Select a contact to continue
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 8 }}>
+      {/* Section 1 — Contact chip */}
+      {contactId && contactName && (
+        <div>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#faf8f5",
+              border: "1px solid #e8e4de",
+              borderRadius: 100,
+              padding: "6px 14px 6px 8px",
+            }}
+          >
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "#e8c4b0",
+                color: "#c8622a",
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "Outfit, sans-serif",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </span>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#1c1a17",
+                fontFamily: "Outfit, sans-serif",
+              }}
+            >
+              {contactName}
+            </span>
           </span>
         </div>
+      )}
 
-        {/* Note / mic area — mic CTA always in flow to hold height */}
-        <div className="px-[14px] py-[12px] relative">
-          {/* Mic CTA — ALWAYS in flow, holds container height */}
-          <div style={{
-            visibility: (!isTyping && !note && !isRecording && !isTranscribing) ? 'visible' : 'hidden',
-          }}>
-            <div className="flex flex-col items-center py-4 gap-2">
-              <button
-                onClick={handleRecordingCTA}
-                className="rounded-full flex items-center justify-center shrink-0 transition-colors"
+      {/* Section 2 — Note + voice card */}
+      <div
+        style={{
+          background: "#faf8f5",
+          border: "1px solid #e8e4de",
+          borderRadius: 16,
+          padding: 14,
+        }}
+      >
+        <textarea
+          ref={textareaRef}
+          value={note}
+          placeholder="What did you talk about?"
+          onChange={(e) => {
+            setNote(e.target.value);
+            const el = e.target;
+            el.style.height = "auto";
+            el.style.height = el.scrollHeight + "px";
+          }}
+          onFocus={preventScrollOnFocus}
+          style={{
+            width: "100%",
+            minHeight: 100,
+            background: "transparent",
+            border: "none",
+            outline: "none",
+            resize: "none",
+            fontFamily: "Outfit, sans-serif",
+            fontSize: 16,
+            color: "#1c1a17",
+          }}
+        />
+
+        <div style={{ borderTop: "1px solid #e8e4de", marginTop: 12, paddingTop: 12 }}>
+          {isRecording ? (
+            <button
+              onClick={handleRecordingCTA}
+              className="animate-pulse"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "#fdecea",
+                border: "1.5px solid #f5b8b4",
+                borderRadius: 100,
+                padding: "10px 18px",
+                cursor: "pointer",
+              }}
+            >
+              <Square size={16} fill="#c0392b" color="#c0392b" />
+              <span
                 style={{
-                  width: 48,
-                  height: 48,
-                  background: "hsl(var(--secondary))",
-                  border: "1px solid hsl(var(--border))",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#c0392b",
+                  fontFamily: "Outfit, sans-serif",
                 }}
               >
-                <Mic size={20} className="text-muted-foreground" />
-              </button>
-              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                Speak a few sentences
+                Stop recording
               </span>
-              <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                AI will sum it up
-              </span>
-              <div className="w-12 border-t border-border my-1" />
-              <button
-                onClick={() => setIsTyping(true)}
-                className="text-[15px] italic text-muted-foreground"
-                style={{ fontFamily: "var(--font-heading)" }}
+            </button>
+          ) : isTranscribing ? (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "#f5f3f0",
+                border: "1.5px solid #e8e4de",
+                borderRadius: 100,
+                padding: "10px 18px",
+              }}
+            >
+              <Mic size={18} color="#888480" />
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  fontStyle: "italic",
+                  color: "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                }}
               >
-                or tap here to type…
-              </button>
+                Transcribing…
+              </span>
             </div>
-          </div>
-
-          {/* Recording — absolute overlay */}
-          {isRecording && (
-            <div className="absolute inset-0 px-[14px] py-[12px]">
-              <div className="flex flex-col items-center py-4 gap-2">
-                <button
-                  onClick={stopRecording}
-                  className="rounded-full flex items-center justify-center shrink-0 transition-colors animate-pulse"
-                  style={{
-                    width: 48,
-                    height: 48,
-                    background: "hsl(var(--destructive))",
-                  }}
-                >
-                  <Square size={16} className="text-destructive-foreground" />
-                </button>
-                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  Recording… tap to stop
-                </span>
-                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  AI will sum it up
-                </span>
-                <div className="w-12 border-t border-border my-1" />
-                <button
-                  onClick={() => setIsTyping(true)}
-                  className="text-[15px] italic text-muted-foreground"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  or tap here to type…
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Transcribing — absolute overlay */}
-          {isTranscribing && (
-            <div className="absolute inset-0 px-[14px] py-[12px]">
-              <div className="flex flex-col items-center py-4 gap-2">
-                <button
-                  disabled
-                  className="rounded-full flex items-center justify-center shrink-0"
-                  style={{
-                    width: 48,
-                    height: 48,
-                    background: "hsl(var(--secondary))",
-                    border: "1px solid hsl(var(--border))",
-                  }}
-                >
-                  <Mic size={20} className="text-muted-foreground" />
-                </button>
-                <span
-                  className="text-[13px] italic animate-pulse"
-                  style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-heading)" }}
-                >
-                  Transcribing…
-                </span>
-                <span className="text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  AI will sum it up
-                </span>
-                <div className="w-12 border-t border-border my-1" />
-                <span className="text-[15px] italic text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
-                  or tap here to type…
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Typing / note populated — absolute overlay */}
-          {(isTyping || note) && !isRecording && !isTranscribing && (
-            <div className="absolute inset-0 px-[14px] py-[12px]">
-              <div className="relative py-4">
-                <div className="flex items-start gap-2">
-                  <button onClick={handleRecordingCTA} className="mt-0.5 shrink-0">
-                    <Mic size={18} className="text-muted-foreground" />
-                  </button>
-                  <div className="flex-1">
-                    <span className="uppercase tracking-[0.08em] block mb-1" style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}>
-                      {isRawTranscript ? "Transcript" : "Note"}
-                    </span>
-                    <textarea
-                      ref={textareaRef}
-                      placeholder="What happened?"
-                      value={note}
-                      onChange={(e) => {
-                        setNote(e.target.value);
-                        const el = e.target;
-                        el.style.height = "auto";
-                        el.style.height = el.scrollHeight + "px";
-                      }}
-                      onFocus={preventScrollOnFocus}
-                      className="w-full bg-transparent border-none outline-none resize-none text-foreground placeholder:text-muted-foreground italic overflow-hidden"
-                      style={{ fontFamily: "var(--font-heading)", minHeight: "56px", fontSize: "16px" }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+          ) : (
+            <button
+              onClick={handleRecordingCTA}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "#fdf4f0",
+                border: "1.5px solid #e8c4b0",
+                borderRadius: 100,
+                padding: "10px 18px",
+                cursor: "pointer",
+              }}
+            >
+              <Mic size={18} color="#c8622a" />
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#c8622a",
+                  fontFamily: "Outfit, sans-serif",
+                }}
+              >
+                Log with Voice
+              </span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* Connect type chips — BELOW card */}
+      {/* Section 3 — Type pills (progressive reveal) */}
       <div
-        style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
+        style={{
+          maxHeight: showTypeRow ? 200 : 0,
+          opacity: showTypeRow ? 1 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.3s ease, opacity 0.2s ease",
+        }}
       >
         <p
-          className="font-medium uppercase tracking-[0.1em] mb-2"
-          style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "#888480",
+            fontFamily: "Outfit, sans-serif",
+            marginBottom: 8,
+          }}
         >
           How'd you connect?
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {typeOptions.map((t) => {
             const selected = connectType === t.value;
             return (
               <button
                 key={t.value}
                 onClick={() => handlePillClick(t.value)}
-                className={`inline-flex items-center gap-1.5 py-[8px] px-[15px] text-[14px] font-medium transition-colors ${
-                  selected
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}
                 style={{
-                  borderRadius: "100px",
-                  fontFamily: "var(--font-body)",
-                  ...(selected
-                    ? { background: "hsl(var(--primary))" }
-                    : { background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }),
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "6px 12px",
+                  borderRadius: 100,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: "pointer",
+                  background: selected ? "#fdf4f0" : "#faf8f5",
+                  border: selected ? "1px solid #c8622a" : "1px solid #e8e4de",
+                  color: selected ? "#c8622a" : "#6b6860",
                 }}
               >
-                <t.icon size={15} />
+                <t.icon size={13} color={selected ? "#c8622a" : "#6b6860"} />
                 {t.label}
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* Fix 1: Date row for past interactions — only in skipFollowupStep mode */}
-      {showDateRow && connectDate && setConnectDate && (
-        <div
-          style={{ opacity: contactSelected ? 1 : 0.4, pointerEvents: contactSelected ? "auto" : "none" }}
-        >
-          <p
-            className="font-medium uppercase tracking-[0.1em] mb-2"
-            style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "#999" }}
-          >
-            When?
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {/* Today chip */}
-            <button
-              onClick={() => { setConnectDate(todayStr); setShowDatePicker(false); }}
-              className="transition-colors"
-              style={{
-                borderRadius: "100px",
-                padding: "8px 13px",
-                fontSize: "13px",
-                fontFamily: "var(--font-body)",
-                fontWeight: 500,
-                ...(connectDate === todayStr
-                  ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                  : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
-              }}
-            >
-              Today
-            </button>
-            {/* Yesterday chip */}
-            <button
-              onClick={() => { setConnectDate(yesterdayStr); setShowDatePicker(false); }}
-              className="transition-colors"
-              style={{
-                borderRadius: "100px",
-                padding: "8px 13px",
-                fontSize: "13px",
-                fontFamily: "var(--font-body)",
-                fontWeight: 500,
-                ...(connectDate === yesterdayStr
-                  ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                  : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
-              }}
-            >
-              Yesterday
-            </button>
-            {/* Pick date */}
-            <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-              <PopoverTrigger asChild>
-                <button
-                  className="inline-flex items-center gap-1 transition-colors"
-                  style={{
-                    borderRadius: "100px",
-                    padding: "8px 13px",
-                    fontSize: "13px",
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 500,
-                    ...(connectDate !== todayStr && connectDate !== yesterdayStr
-                      ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                      : showDatePicker
-                      ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                      : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
-                  }}
-                >
-                  <CalendarIcon size={13} />
-                  {connectDate !== todayStr && connectDate !== yesterdayStr
-                    ? format(new Date(connectDate + "T00:00:00"), "MMM d")
-                    : "Pick date"}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={connectDate ? new Date(connectDate + "T00:00:00") : undefined}
-                  onSelect={(d) => {
-                    if (d) {
-                      setConnectDate(format(d, "yyyy-MM-dd"));
-                      setShowDatePicker(false);
-                    }
-                  }}
-                  disabled={(d) => d > new Date()}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      )}
-
-      {/* CTA */}
-      <button
-        onClick={handleMainCTA}
-        disabled={isRecording ? false : (!canSubmit && !isTranscribing)}
-        className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
-        style={{
-          borderRadius: "100px",
-          background: "hsl(var(--primary))",
-          fontFamily: "var(--font-body)",
-        }}
-      >
-        {isRecording
-          ? "Done recording →"
-          : isSubmitting
-          ? "Saving..."
-          : (submitLabel || "Next →")}
-      </button>
-
     </div>
   );
 };
