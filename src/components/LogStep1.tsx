@@ -327,6 +327,18 @@ const LogStep1 = ({
               </span>
             </button>
           )}
+          {!isRecording && !isTranscribing && (
+            <span
+              style={{
+                fontSize: 13,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                flexShrink: 0,
+              }}
+            >
+              AI will summarise
+            </span>
+          )}
         </div>
       </div>
 
