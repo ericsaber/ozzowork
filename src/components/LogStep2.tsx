@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil, ArrowRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -26,6 +26,7 @@ interface LogStep2Props {
   onSkip?: () => void;
   isSaving: boolean;
   onUpdateLog?: (connectType: string, note: string) => void;
+  onFollowupStateChange?: (date: string, type: string, reminderNote: string) => void;
 }
 
 const LogStep2 = ({
@@ -36,6 +37,7 @@ const LogStep2 = ({
   onSkip,
   isSaving,
   onUpdateLog,
+  onFollowupStateChange,
 }: LogStep2Props) => {
   useEffect(() => {
     console.log("[LogStep2] connectType received on mount:", connectType);
