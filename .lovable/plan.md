@@ -1,74 +1,54 @@
 
 
-## Plan: Prompt 2a Visual Fixes
+## Plan: Prompt 2a Visual Fixes v3
 
-**Files:** `src/components/LogInteractionSheet.tsx`, `src/components/LogStep1.tsx`
+**Files:** `src/components/FullscreenTakeover.tsx`, `src/components/LogInteractionSheet.tsx`, `src/components/LogStep1.tsx`
 
-### Fix 1 — Remove StepIndicator (LogInteractionSheet.tsx)
-- Delete the conditional block at lines 626-628 rendering `<StepIndicator currentStep={...} />`.
-- Remove the `import StepIndicator from "@/components/StepIndicator";` at line 21.
-- `StepIndicator.tsx` itself is not touched.
+### Fix 1 — Close button styling (FullscreenTakeover.tsx)
+Replace the bare-text close button styles with a 30×30 gray circle:
+- `width: 30, height: 30, borderRadius: 50%, background: #e8e4de`
+- `top: calc(env(safe-area-inset-top) + 16px)` (was `+ 12px`)
+- Remove `padding: 8`, add flex centering
+- Lucide `<X size={16} color="#6b6860" />` (was 24/#666)
+- Keep `opacity`/`transition`/`transitionDelay` exactly as-is
 
-### Fix 2 — Contact picker layout (LogInteractionSheet.tsx, lines 630-780)
-
-Restructure the `step === "contact-picker"` block:
-
-1. **Top padding:** outer wrapper uses `paddingTop: 20` so header clears the FullscreenTakeover × button.
-2. **Header row:** add a new `<h2>` above the search input — text "Who did you talk to?", Crimson Pro, `fontSize: 24`, `fontWeight: 500`, `color: #1c1a17`, no margin-bottom (spacing handled by next element's `marginTop`).
-3. **Search input:** restyle existing pill row — `marginTop: 16`, `border: 1.5px solid #c8622a` (was `1px solid #e8e4de`), Search icon size `16` (was 18). Remove the `placeholder="Who did you talk to?"` (becomes empty string). No clear/× button (none exists today — confirmed).
-4. **"RECENT" label:** insert above the contacts list, only when `!searchQuery`. Style: `10px`, `fontWeight: 600`, `letterSpacing: 0.1em`, `textTransform: uppercase`, `color: #888480`, Outfit, `marginTop: 20`, `marginBottom: 8`.
-5. **Contact rows:** update each row:
-   - Avatar `40px` (was 36), `fontSize: 13` (was 12), background + color from new `getAvatarColors(name)` helper.
-   - Name `fontWeight: 600` (was 500).
-   - Row `padding: 10px 0` (was `10px 4px`).
-   - List wrapper `gap: 0` (was 2) — no separators.
-
-### Fix 3 — Deterministic avatar color helper
-
-Add a small helper (defined once, exported or duplicated in both files — I'll define inline at the top of each file since spec says only these two files):
-
+### Fix 2 — Avatar color hash (both files)
+Replace the existing `getAvatarColors` helper in both `LogInteractionSheet.tsx` and `LogStep1.tsx` with the sum-of-two-initials version:
 ```ts
-const getAvatarColors = (name: string) => {
-  const palette = [
-    { bg: "#fde8da", text: "#c8622a" },
-    { bg: "#d4edda", text: "#2d6a4f" },
-    { bg: "#dce8f5", text: "#2c5f8a" },
-    { bg: "#e8ddf5", text: "#6b3fa0" },
-    { bg: "#f5e8d0", text: "#8a5c2a" },
-  ];
-  const ch = (name?.[0] || "A").toUpperCase().charCodeAt(0);
-  return palette[ch % 5];
-};
+const parts = (name || "").trim().split(" ");
+const a = (parts[0]?.[0] || "A").toUpperCase().charCodeAt(0);
+const b = (parts[1]?.[0] || parts[0]?.[1] || "A").toUpperCase().charCodeAt(0);
+return palette[(a + b) % 5];
 ```
+Palette unchanged (5 pairs).
 
-Used in:
-- Picker list rows (key from `c.first_name`)
-- LogStep1 contact chip avatar (key from `contactName`)
+### Fix 3 — Note card fills available height
+**LogStep1.tsx outer wrapper:** change `flex: 1, paddingTop: 8` → `minHeight: "100%", paddingTop: 0` (keep `display: flex, flexDirection: column, gap: 16`).
 
-### Fix 4 — Step 1 layout (LogStep1.tsx)
+**LogStep1.tsx note card:** add `minHeight: 200` (keep existing `flex: 1, display: flex, flexDirection: column, background, border, borderRadius, padding`).
 
-1. **Contact chip avatar:** replace hardcoded `background: "#e8c4b0"` / `color: "#c8622a"` with `getAvatarColors(contactName).bg` / `.text`. Keep size 28px, font 11px.
-2. **Outer wrapper:** add `flex: 1` to existing flex column (`display: flex; flexDirection: column; gap: 16; paddingTop: 8` → add `flex: 1`).
-3. **Note card:** add `flex: 1; display: flex; flexDirection: column` to the card container.
-4. **Textarea:** add `flex: 1` (keep `minHeight: 80` instead of current 100).
-5. **Voice section wrapper** (the `borderTop` div, currently `marginTop: 12; paddingTop: 12`): add `display: flex; alignItems: center; gap: 12; flexShrink: 0`.
-6. **"AI will summarise" caption:** in the **idle** state only, render a `<span>` to the right of the "Log with Voice" pill — `fontSize: 13`, `color: #888480`, Outfit, `flexShrink: 0`. Recording and Transcribing states get no caption (the pill remains the only child of the flex row).
+**LogStep1.tsx textarea:** already `flex: 1, minHeight: 80` — leave as-is.
+
+**LogInteractionSheet.tsx scrollable content div** (the `flex: 1, overflowY: auto, padding: "0 20px"` div): add `minHeight: 0`.
+
+### Fix 4 — Top padding on step 1 (LogInteractionSheet.tsx)
+The current `step === 1` render uses a `<>` fragment containing the quick-add form + `<LogStep1>`. Wrap it in a `<div style={{ paddingTop: 20 }}>` so the contact chip clears the close button. Quick-add form remains inside this wrapper.
 
 ### Preserved
 - All `console.log` statements
 - All voice recording logic, refs, state, transcribeAudio
+- All other FullscreenTakeover behavior (mounted/visible state, double-rAF, visualViewport listener, backdrop, slide animation)
 - Bottom action area, nudge, Next button, skip link
-- Quick-add form, all mutations, all step routing
-- StepIndicator.tsx file itself (untouched)
+- Contact picker layout, "RECENT" label, search input styling
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` and `LogStep1.tsx` touched
-- ✅ StepIndicator import + render removed; component file untouched
-- ✅ Crimson Pro "Who did you talk to?" header above search input
-- ✅ Search pill: `1.5px solid #c8622a` border, no placeholder, no clear button
-- ✅ "RECENT" label shown only when `!searchQuery`
-- ✅ Deterministic avatar colors (5 pairs, `charCodeAt(0) % 5`) applied in picker + chip
-- ✅ Note card uses `flex: 1` chain to fill height
-- ✅ "AI will summarise" sits inline right of the voice pill (idle only)
+- ✅ Only `FullscreenTakeover.tsx`, `LogInteractionSheet.tsx`, `LogStep1.tsx` touched
+- ✅ Close button = 30×30 `#e8e4de` circle, X icon 16px `#6b6860`
+- ✅ Avatar hash = sum of both initials `charCodeAt`, fallback to second char of first name
+- ✅ Helper updated in both files
+- ✅ LogStep1 wrapper uses `minHeight: 100%` (not `flex: 1`)
+- ✅ Note card has `minHeight: 200` + `flex: 1`
+- ✅ Scrollable content div has `minHeight: 0`
+- ✅ Step 1 wrapper has `paddingTop: 20`
 - ✅ All `console.log` preserved
 
