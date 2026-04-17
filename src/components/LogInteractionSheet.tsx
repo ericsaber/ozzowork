@@ -18,7 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
 import OutstandingFollowupStep from "@/components/OutstandingFollowupStep";
@@ -623,12 +622,20 @@ const LogInteractionSheet = ({
           style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}
           onContextMenu={(e) => e?.preventDefault?.()}
         >
-          {step !== "outstanding" && startStep !== 2 && !logOnly && step !== "contact-picker" && (
-            <StepIndicator currentStep={step === 2 || step === 3 ? 2 : 1} />
-          )}
-
           {step === "contact-picker" && (
-            <div style={{ paddingTop: 8 }}>
+            <div style={{ paddingTop: 20 }}>
+              <h2
+                style={{
+                  fontFamily: "'Crimson Pro', serif",
+                  fontSize: 24,
+                  fontWeight: 500,
+                  color: "#1c1a17",
+                  margin: 0,
+                }}
+              >
+                Who did you talk to?
+              </h2>
+
               {/* Search input */}
               <div
                 style={{
@@ -636,18 +643,17 @@ const LogInteractionSheet = ({
                   alignItems: "center",
                   gap: 10,
                   background: "#faf8f5",
-                  border: "1px solid #e8e4de",
+                  border: "1.5px solid #c8622a",
                   borderRadius: 100,
                   padding: "12px 16px",
-                  marginBottom: 16,
+                  marginTop: 16,
                 }}
               >
-                <Search size={18} color="#888480" />
+                <Search size={16} color="#888480" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
-                  placeholder="Who did you talk to?"
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setSearchOpen(true);
@@ -665,10 +671,28 @@ const LogInteractionSheet = ({
                 />
               </div>
 
+              {!searchQuery && (
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "#888480",
+                    fontFamily: "Outfit, sans-serif",
+                    marginTop: 20,
+                    marginBottom: 8,
+                  }}
+                >
+                  RECENT
+                </div>
+              )}
+
               {/* Contact results */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {filteredContacts.map((c) => {
                   const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
+                  const colors = getAvatarColors(c.first_name);
                   return (
                     <button
                       key={c.id}
@@ -680,7 +704,7 @@ const LogInteractionSheet = ({
                         display: "flex",
                         alignItems: "center",
                         gap: 12,
-                        padding: "10px 4px",
+                        padding: "10px 0",
                         background: "none",
                         border: "none",
                         borderRadius: 10,
@@ -691,17 +715,17 @@ const LogInteractionSheet = ({
                     >
                       <div
                         style={{
-                          width: 36,
-                          height: 36,
+                          width: 40,
+                          height: 40,
                           borderRadius: "50%",
-                          background: "#e8e4de",
+                          background: colors.bg,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: 600,
-                          color: "#6b6860",
+                          color: colors.text,
                           fontFamily: "Outfit, sans-serif",
                         }}
                       >
@@ -711,7 +735,7 @@ const LogInteractionSheet = ({
                         <div
                           style={{
                             fontSize: 15,
-                            fontWeight: 500,
+                            fontWeight: 600,
                             color: "#1c1a17",
                             fontFamily: "Outfit, sans-serif",
                           }}
