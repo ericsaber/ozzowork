@@ -20,8 +20,10 @@ const getAvatarColors = (name: string) => {
     { bg: "#e8ddf5", text: "#6b3fa0" },
     { bg: "#f5e8d0", text: "#8a5c2a" },
   ];
-  const ch = (name?.[0] || "A").toUpperCase().charCodeAt(0);
-  return palette[ch % 5];
+  const parts = (name || "").trim().split(" ");
+  const a = (parts[0]?.[0] || "A").toUpperCase().charCodeAt(0);
+  const b = (parts[1]?.[0] || parts[0]?.[1] || "A").toUpperCase().charCodeAt(0);
+  return palette[(a + b) % 5];
 };
 
 interface LogStep1Props {
@@ -163,7 +165,7 @@ const LogStep1 = ({
   void isRawTranscript;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 16, paddingTop: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", gap: 16, paddingTop: 0 }}>
       {/* Section 1 — Contact chip */}
       {contactId && contactName && (
         <div>
@@ -218,6 +220,7 @@ const LogStep1 = ({
           borderRadius: 16,
           padding: 14,
           flex: 1,
+          minHeight: 200,
           display: "flex",
           flexDirection: "column",
         }}

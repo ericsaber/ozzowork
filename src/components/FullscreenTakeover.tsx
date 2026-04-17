@@ -94,19 +94,24 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
           aria-label="Close"
           style={{
             position: "absolute",
-            top: "calc(env(safe-area-inset-top) + 12px)",
+            top: "calc(env(safe-area-inset-top) + 16px)",
             right: 16,
-            background: "none",
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            background: "#e8e4de",
             border: "none",
             cursor: "pointer",
-            padding: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             zIndex: 1,
             opacity: visible ? 1 : 0,
             transition: "opacity 200ms ease",
             transitionDelay: visible ? "250ms" : "0ms",
           }}
         >
-          <X size={24} color="#666" />
+          <X size={16} color="#6b6860" />
         </button>
         {children}
       </div>
