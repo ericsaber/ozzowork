@@ -10,12 +10,24 @@ interface FullscreenTakeoverProps {
 const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeoverProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
 
-  // Mount on open, delay unmount until close transition finishes
+  // Mount on open, then trigger transition on next frame so initial closed state paints first
   useEffect(() => {
     if (open) {
       setMounted(true);
+      const r1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => setVisible(true));
+        // store inner id on outer for cleanup
+        (r1 as unknown as { inner?: number }).inner = r2;
+      });
+      return () => {
+        cancelAnimationFrame(r1);
+        const inner = (r1 as unknown as { inner?: number }).inner;
+        if (inner !== undefined) cancelAnimationFrame(inner);
+      };
     } else {
+      setVisible(false);
       const t = setTimeout(() => setMounted(false), 400);
       return () => clearTimeout(t);
     }
