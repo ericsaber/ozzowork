@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ArrowRight } from "lucide-react";
 import CelebrationHeader from "@/components/CelebrationHeader";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
 import StepIndicator from "@/components/StepIndicator";
@@ -48,6 +49,9 @@ const CompleteFollowupSheet = ({
   const [note, setNote] = useState("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [pendingDate, setPendingDate] = useState("");
+  const [pendingType, setPendingType] = useState("");
+  const [pendingReminder, setPendingReminder] = useState("");
 
   const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
 
@@ -92,7 +96,7 @@ const CompleteFollowupSheet = ({
   });
 
   const followupMutation = useMutation({
-    mutationFn: async ({ type, date }: { type: string; date: string }) => {
+    mutationFn: async ({ type, date, reminderNote }: { type: string; date: string; reminderNote: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!draftId) throw new Error("No interaction draft");
@@ -122,6 +126,7 @@ const CompleteFollowupSheet = ({
 
       // 3. Insert new follow-up if date set
       if (date) {
+        console.log("[completion] insert reminder_note:", reminderNote);
         const { error: insertError } = await supabase
           .from("follow_ups")
           .insert({
@@ -130,9 +135,10 @@ const CompleteFollowupSheet = ({
             planned_type: type || null,
             planned_date: date,
             status: "active",
+            reminder_note: reminderNote.trim() || null,
           });
         if (insertError) throw insertError;
-        console.log("[completion] new follow_up inserted:", { type, date });
+        console.log("[completion] new follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
       }
     },
     onSuccess: () => {
@@ -190,6 +196,9 @@ const CompleteFollowupSheet = ({
       setConnectType(plannedType || "");
       setNote("");
       setDraftId(null);
+      setPendingDate("");
+      setPendingType("");
+      setPendingReminder("");
     }, 300);
   };
 
@@ -242,13 +251,89 @@ const CompleteFollowupSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
               onUpdateLog={handleUpdateLog}
+              onFollowupStateChange={(date, type, reminder) => {
+                setPendingDate(date);
+                setPendingType(type);
+                setPendingReminder(reminder);
+              }}
             />
           )}
         </div>
+
+        {step === 2 && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                maxHeight: pendingDate ? 60 : 0,
+                opacity: pendingDate ? 1 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.3s ease, opacity 0.25s ease",
+              }}
+            >
+              <button
+                onClick={() => {
+                  console.log("[completion] save step2:", { pendingType, pendingDate, pendingReminder });
+                  followupMutation.mutate({ type: pendingType, date: pendingDate, reminderNote: pendingReminder });
+                }}
+                disabled={followupMutation.isPending}
+                style={{
+                  width: "100%",
+                  background: "#c8622a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 100,
+                  padding: 15,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: followupMutation.isPending ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {followupMutation.isPending ? "Saving…" : (
+                  <>
+                    Save
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <button
+              onClick={handleSkip}
+              disabled={followupMutation.isPending}
+              style={{
+                fontSize: 13,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                textAlign: "center",
+                padding: 4,
+              }}
+            >
+              Skip follow-up
+            </button>
+          </div>
+        )}
       </FullscreenTakeover>
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <AlertDialogContent className="z-[60]">

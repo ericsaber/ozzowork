@@ -84,6 +84,9 @@ const LogInteractionSheet = ({
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [pendingDate, setPendingDate] = useState("");
+  const [pendingType, setPendingType] = useState("");
+  const [pendingReminder, setPendingReminder] = useState("");
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
@@ -140,6 +143,9 @@ const LogInteractionSheet = ({
       setShowQuickAdd(false);
       setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       setShowCancelConfirmDialog(false);
+      setPendingDate("");
+      setPendingType("");
+      setPendingReminder("");
     }, 300);
   };
 
@@ -279,7 +285,7 @@ const LogInteractionSheet = ({
 
   // ── Follow-up mutation: step 2 normal + step 3 complete path ──
   const followupMutation = useMutation({
-    mutationFn: async ({ type, date }: { type: string; date: string }) => {
+    mutationFn: async ({ type, date, reminderNote }: { type: string; date: string; reminderNote: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!draftId && !existingFollowup) {
@@ -318,6 +324,7 @@ const LogInteractionSheet = ({
 
         // 3. If a new follow-up date was set, insert a new follow_ups row
         if (date) {
+          console.log("[followupMutation] complete-path insert reminder_note:", reminderNote);
           const { error: insertError } = await supabase
             .from("follow_ups")
             .insert({
@@ -326,9 +333,10 @@ const LogInteractionSheet = ({
               planned_type: type || null,
               planned_date: date,
               status: "active",
+              reminder_note: reminderNote.trim() || null,
             });
           if (insertError) throw insertError;
-          console.log("[followupMutation] new follow_up inserted:", { type, date });
+          console.log("[followupMutation] new follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
         }
 
         return { completePath: true, hasFollowup: !!date };
@@ -348,6 +356,7 @@ const LogInteractionSheet = ({
       }
 
       // 2. Insert new follow_up
+      console.log("[followupMutation] normal-path insert reminder_note:", reminderNote);
       const { error: insertError } = await supabase
         .from("follow_ups")
         .insert({
@@ -356,9 +365,10 @@ const LogInteractionSheet = ({
           planned_type: type || null,
           planned_date: date,
           status: "active",
+          reminder_note: reminderNote.trim() || null,
         });
       if (insertError) throw insertError;
-      console.log("[followupMutation] follow_up inserted:", { type, date });
+      console.log("[followupMutation] follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
 
       return { completePath: false, hasFollowup: true };
     },
@@ -864,10 +874,15 @@ const LogInteractionSheet = ({
                 connectType={connectType}
                 contactName={contactName}
                 note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={startStep === 2 ? undefined : handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
+                onFollowupStateChange={(date, type, reminder) => {
+                  setPendingDate(date);
+                  setPendingType(type);
+                  setPendingReminder(reminder);
+                }}
               />
             </div>
           )}
@@ -878,10 +893,15 @@ const LogInteractionSheet = ({
                 connectType={connectType}
                 contactName={contactName}
                 note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
+                onFollowupStateChange={(date, type, reminder) => {
+                  setPendingDate(date);
+                  setPendingType(type);
+                  setPendingReminder(reminder);
+                }}
               />
             </div>
           )}
@@ -1001,6 +1021,80 @@ const LogInteractionSheet = ({
                 }}
               >
                 Set a follow-up without logging
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Bottom action area — step 2 / step 3 */}
+        {(step === 2 || step === 3) && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                maxHeight: pendingDate ? 60 : 0,
+                opacity: pendingDate ? 1 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.3s ease, opacity 0.25s ease",
+              }}
+            >
+              <button
+                onClick={() => {
+                  console.log("[LogInteractionSheet] save step2:", { pendingType, pendingDate, pendingReminder });
+                  followupMutation.mutate({ type: pendingType, date: pendingDate, reminderNote: pendingReminder });
+                }}
+                disabled={followupMutation.isPending}
+                style={{
+                  width: "100%",
+                  background: "#c8622a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 100,
+                  padding: 15,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: followupMutation.isPending ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {followupMutation.isPending ? "Saving…" : (
+                  <>
+                    Save
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {startStep !== 2 && (
+              <button
+                onClick={handleSkip}
+                disabled={followupMutation.isPending}
+                style={{
+                  fontSize: 13,
+                  color: "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                  textAlign: "center",
+                  padding: 4,
+                }}
+              >
+                Skip follow-up
               </button>
             )}
           </div>

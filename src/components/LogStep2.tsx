@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil, ArrowRight } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -26,6 +26,7 @@ interface LogStep2Props {
   onSkip?: () => void;
   isSaving: boolean;
   onUpdateLog?: (connectType: string, note: string) => void;
+  onFollowupStateChange?: (date: string, type: string, reminderNote: string) => void;
 }
 
 const LogStep2 = ({
@@ -36,6 +37,7 @@ const LogStep2 = ({
   onSkip,
   isSaving,
   onUpdateLog,
+  onFollowupStateChange,
 }: LogStep2Props) => {
   useEffect(() => {
     console.log("[LogStep2] connectType received on mount:", connectType);
@@ -50,6 +52,10 @@ const LogStep2 = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
+
+  useEffect(() => {
+    onFollowupStateChange?.(selectedDate, followUpType, reminderNote);
+  }, [selectedDate, followUpType, reminderNote]);
 
   const handlePillClick = (value: string) => {
     setFollowUpType(followUpType === value ? "" : value);
@@ -81,8 +87,8 @@ const LogStep2 = ({
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* Section 1 — Summary pill or inline edit */}
-      {showSummary && !isEditing && (
+      {/* Section 1 — Summary pill (always visible when there is content) */}
+      {showSummary && (
         <div
           style={{
             display: "flex",
@@ -124,7 +130,7 @@ const LogStep2 = ({
           >
             {connectType ? `${typeLabel} · ${contactName}` : `Note · ${contactName}`}
           </span>
-          {onUpdateLog && (
+          {onUpdateLog && !isEditing && (
             <>
               <span style={{ fontSize: 13, color: "rgba(45,106,79,0.6)", flexShrink: 0 }}>·</span>
               <button
@@ -171,7 +177,7 @@ const LogStep2 = ({
         </div>
       )}
 
-      {showSummary && isEditing && (
+      {isEditing && (
         <div
           style={{
             background: "#faf8f5",
@@ -198,9 +204,8 @@ const LogStep2 = ({
               border: "none",
               outline: "none",
               resize: "none",
-              fontFamily: "'Crimson Pro', serif",
+              fontFamily: "Outfit, sans-serif",
               fontSize: 16,
-              fontStyle: "italic",
               color: "#1c1a17",
             }}
           />
@@ -299,243 +304,192 @@ const LogStep2 = ({
         Set a follow-up
       </h2>
 
-      {/* Section 3 — Date chips */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 8,
-          marginBottom: 8,
-        }}
-      >
-        {dateChips.map((chip) => {
-          const chipDate = chip.date();
-          const selected = selectedDate === chipDate;
-          return (
-            <button
-              key={chip.label}
-              onClick={() => handleChipClick(chipDate)}
-              style={{
-                background: selected ? "#fdf4f0" : "#faf8f5",
-                border: selected ? "1.5px solid #c8622a" : "1px solid #e8e4de",
-                borderRadius: 12,
-                padding: "13px 8px",
-                fontSize: 14,
-                fontWeight: 500,
-                color: selected ? "#c8622a" : "#1c1a17",
-                fontFamily: "Outfit, sans-serif",
-                textAlign: "center",
-                width: "100%",
-                cursor: "pointer",
-                transition: "all 0.12s ease",
-              }}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        onClick={() => setShowCalendar((v) => !v)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          background: isCustomDate ? "#fdf4f0" : "#faf8f5",
-          border: isCustomDate ? "1.5px solid #c8622a" : "1px solid #e8e4de",
-          borderRadius: 12,
-          padding: 13,
-          fontSize: 14,
-          fontWeight: 500,
-          color: isCustomDate ? "#c8622a" : "#1c1a17",
-          fontFamily: "Outfit, sans-serif",
-          width: "100%",
-          cursor: "pointer",
-          transition: "all 0.12s ease",
-        }}
-      >
-        <CalendarIcon size={15} color={isCustomDate ? "#c8622a" : "#888480"} />
-        {isCustomDate ? customDateLabel : "Pick date"}
-      </button>
-
-      {/* Section 4 — Inline calendar */}
-      {showCalendar && (
-        <div
-          style={{
-            marginTop: 8,
-            background: "#faf8f5",
-            border: "1px solid #e8e4de",
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          <Calendar
-            mode="single"
-            selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
-            onSelect={(date) => {
-              if (date) {
-                setSelectedDate(format(date, "yyyy-MM-dd"));
-                setShowCalendar(false);
-              }
-            }}
-            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-            initialFocus
-            className="p-3 pointer-events-auto"
-          />
-        </div>
-      )}
-
-      {/* Section 5 — Via + reminder reveal */}
-      <div
-        style={{
-          maxHeight: revealOpen ? 200 : 0,
-          opacity: revealOpen ? 1 : 0,
-          overflow: "hidden",
-          transition: "max-height 0.32s ease, opacity 0.22s ease",
-          marginTop: revealOpen ? 16 : 0,
-        }}
-      >
-        {/* Via row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span
+      {!isEditing && (
+        <>
+          {/* Section 3 — Date chips */}
+          <div
             style={{
-              fontSize: 11,
-              color: "#888480",
-              fontFamily: "Outfit, sans-serif",
-              flexShrink: 0,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
+              marginBottom: 8,
             }}
           >
-            via
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {typeOptions.map((t) => {
-              const selected = followUpType === t.value;
+            {dateChips.map((chip) => {
+              const chipDate = chip.date();
+              const selected = selectedDate === chipDate;
               return (
                 <button
-                  key={t.value}
-                  onClick={() => handlePillClick(t.value)}
+                  key={chip.label}
+                  onClick={() => handleChipClick(chipDate)}
                   style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    background: selected ? "#fdf4f0" : "#faf8f5",
+                    border: selected ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+                    borderRadius: 12,
+                    padding: "13px 8px",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: selected ? "#c8622a" : "#1c1a17",
+                    fontFamily: "Outfit, sans-serif",
+                    textAlign: "center",
+                    width: "100%",
                     cursor: "pointer",
-                    background: selected ? "#c8622a" : "#f0ede8",
-                    border: selected ? "none" : "1px solid #e8e4de",
                     transition: "all 0.12s ease",
                   }}
-                  title={t.label}
                 >
-                  <t.icon size={14} color={selected ? "#fff" : "#6b6860"} />
+                  {chip.label}
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Reminder row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            borderTop: "1px dashed #d8d4ce",
-            paddingTop: 10,
-            marginTop: 10,
-          }}
-        >
-          <Pencil size={13} color="#888480" style={{ flexShrink: 0 }} />
-          <input
-            type="text"
-            value={reminderNote}
-            onChange={(e) => setReminderNote(e.target.value)}
-            placeholder="Add a reminder note..."
-            maxLength={44}
+          <button
+            onClick={() => setShowCalendar((v) => !v)}
             style={{
-              flex: 1,
-              background: "transparent",
-              border: "none",
-              outline: "none",
-              fontSize: 13,
-              color: "#1c1a17",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: isCustomDate ? "#fdf4f0" : "#faf8f5",
+              border: isCustomDate ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+              borderRadius: 12,
+              padding: 13,
+              fontSize: 14,
+              fontWeight: 500,
+              color: isCustomDate ? "#c8622a" : "#1c1a17",
               fontFamily: "Outfit, sans-serif",
-              minWidth: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: 12,
-              color: "#888480",
-              fontFamily: "Outfit, sans-serif",
-              flexShrink: 0,
+              width: "100%",
+              cursor: "pointer",
+              transition: "all 0.12s ease",
             }}
           >
-            {reminderNote.length}/44
-          </span>
-        </div>
-      </div>
+            <CalendarIcon size={15} color={isCustomDate ? "#c8622a" : "#888480"} />
+            {isCustomDate ? customDateLabel : "Pick date"}
+          </button>
 
-      {/* Section 6 — Save button */}
-      <button
-        onClick={() => {
-          console.log("[LogStep2] saving with:", { followUpType, selectedDate, reminderNote });
-          onSaveWithFollowup(followUpType, selectedDate);
-        }}
-        disabled={!selectedDate || isSaving}
-        style={{
-          marginTop: 20,
-          width: "100%",
-          borderRadius: 100,
-          padding: 15,
-          fontSize: 16,
-          fontWeight: 500,
-          fontFamily: "Outfit, sans-serif",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          cursor: !selectedDate || isSaving ? "not-allowed" : "pointer",
-          background: !selectedDate || isSaving ? "#ddd8d1" : "#c8622a",
-          color: !selectedDate || isSaving ? "#b0ada8" : "#fff",
-          border: "none",
-          transition: "all 0.12s ease",
-        }}
-      >
-        {isSaving ? "Saving…" : (
-          <>
-            Save
-            <ArrowRight size={18} />
-          </>
-        )}
-      </button>
+          {/* Section 4 — Inline calendar */}
+          {showCalendar && (
+            <div
+              style={{
+                marginTop: 8,
+                background: "#faf8f5",
+                border: "1px solid #e8e4de",
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Calendar
+                mode="single"
+                selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(format(date, "yyyy-MM-dd"));
+                    setShowCalendar(false);
+                  }
+                }}
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </div>
+          )}
 
-      {/* Section 7 — Skip link */}
-      {onSkip && (
-        <button
-          onClick={onSkip}
-          disabled={isSaving}
-          style={{
-            marginTop: 8,
-            width: "100%",
-            textAlign: "center",
-            background: "none",
-            border: "none",
-            fontSize: 13,
-            color: "#888480",
-            fontFamily: "Outfit, sans-serif",
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
-            padding: "4px 0",
-            cursor: "pointer",
-          }}
-        >
-          Skip follow-up
-        </button>
+          {/* Section 5 — Via + reminder reveal */}
+          <div
+            style={{
+              maxHeight: revealOpen ? 200 : 0,
+              opacity: revealOpen ? 1 : 0,
+              overflow: "hidden",
+              transition: "max-height 0.32s ease, opacity 0.22s ease",
+              marginTop: revealOpen ? 16 : 0,
+            }}
+          >
+            {/* Via row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                  flexShrink: 0,
+                }}
+              >
+                via
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {typeOptions.map((t) => {
+                  const selected = followUpType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => handlePillClick(t.value)}
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        background: selected ? "#c8622a" : "#f0ede8",
+                        border: selected ? "none" : "1px solid #e8e4de",
+                        transition: "all 0.12s ease",
+                      }}
+                      title={t.label}
+                    >
+                      <t.icon size={14} color={selected ? "#fff" : "#6b6860"} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Reminder row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                borderTop: "1px dashed #d8d4ce",
+                paddingTop: 10,
+                marginTop: 10,
+              }}
+            >
+              <Pencil size={13} color="#888480" style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                value={reminderNote}
+                onChange={(e) => setReminderNote(e.target.value)}
+                placeholder="Add a reminder note..."
+                maxLength={44}
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  fontSize: 13,
+                  color: "#1c1a17",
+                  fontFamily: "Outfit, sans-serif",
+                  minWidth: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                  flexShrink: 0,
+                }}
+              >
+                {reminderNote.length}/44
+              </span>
+            </div>
+          </div>
+        </>
       )}
+
+      {/* Save/Skip moved to parent (LogInteractionSheet / CompleteFollowupSheet) */}
+      {(() => { void onSaveWithFollowup; void onSkip; void isSaving; return null; })()}
     </div>
   );
 };
