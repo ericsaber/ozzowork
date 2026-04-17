@@ -1,46 +1,101 @@
 
 
-## Plan: Fix isDirty detection + close animation timing
+## Plan: Add discard dialog to CompleteFollowupSheet
 
-**Files:** `src/components/LogInteractionSheet.tsx`, `src/components/FullscreenTakeover.tsx`
+**File:** `src/components/CompleteFollowupSheet.tsx` only.
 
-### Issue 1 — `isDirty` misses pre-Next input (LogInteractionSheet.tsx)
+### Changes
 
-Current line: `const isDirty = !!draftId;`
+1. **Imports** — add AlertDialog primitives:
+   ```tsx
+   import {
+     AlertDialog,
+     AlertDialogAction,
+     AlertDialogCancel,
+     AlertDialogContent,
+     AlertDialogDescription,
+     AlertDialogFooter,
+     AlertDialogHeader,
+     AlertDialogTitle,
+   } from "@/components/ui/alert-dialog";
+   ```
 
-Replace with:
-```ts
-const isDirty = !!draftId || note.trim().length > 0 || connectType !== "";
-```
+2. **State** — add alongside existing `useState` calls:
+   ```tsx
+   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+   ```
 
-This is a single-line change. `handleOpen`, `clearAndClose`, the discard `AlertDialog`, and all other logic remain untouched. After this, typing a note or picking a connect type before tapping Next will correctly trigger the discard confirmation when the user attempts to close the sheet.
+3. **isDirty** — baseline accounts for `plannedType` pre-fill:
+   ```tsx
+   const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
+   ```
 
-I'll verify in the file that `note` and `connectType` are the exact state variable names in scope at the `isDirty` declaration site (and adjust to the real names if they differ — e.g. `noteText`, `connect_type`) — but the shape of the change is the one-line OR above.
+4. **handleOpen interceptor** — added above the `return`:
+   ```tsx
+   const handleOpen = (o: boolean) => {
+     if (!o) {
+       if (isDirty) {
+         setShowDiscardDialog(true);
+         return;
+       }
+       handleClose();
+     }
+   };
+   ```
 
-### Issue 2 — Close animation timing (FullscreenTakeover.tsx)
+5. **Wire to FullscreenTakeover** — replace inline arrow:
+   ```tsx
+   <FullscreenTakeover open={open} onOpenChange={handleOpen}>
+   ```
 
-Two coordinated changes:
+6. **Wrap return in fragment** and append AlertDialog after `</FullscreenTakeover>`:
+   - `AlertDialogContent` gets `className="z-[60]"` to sit above the sheet (z-50).
+   - "Keep editing" reopens via `requestAnimationFrame(() => handleOpen(true))` — note: spec says `onOpenChange(true)` but this component doesn't expose `onOpenChange` from props in the same way; the equivalent is to simply close the dialog and leave the sheet open (it never actually closed because `handleOpen` returned early). So Cancel just calls `setShowDiscardDialog(false)` — no need to reopen.
+   - "Discard" deletes the draft row (if any), logs the deletion, then calls `handleClose()`.
 
-1. Sheet container transition — extend the transform duration so the close glide matches the open feel:
-```ts
-transition: "opacity 300ms ease, transform 420ms cubic-bezier(0.32, 0.72, 0, 1)",
-```
+   Final dialog block:
+   ```tsx
+   <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+     <AlertDialogContent className="z-[60]">
+       <AlertDialogHeader>
+         <AlertDialogTitle>Discard this log?</AlertDialogTitle>
+         <AlertDialogDescription>
+           You have unsaved changes that will be lost.
+         </AlertDialogDescription>
+       </AlertDialogHeader>
+       <AlertDialogFooter>
+         <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>
+           Keep editing
+         </AlertDialogCancel>
+         <AlertDialogAction onClick={async () => {
+           setShowDiscardDialog(false);
+           if (draftId) {
+             await supabase.from("interactions").delete().eq("id", draftId);
+             console.log("[completion] discarded interaction draft:", draftId);
+           }
+           handleClose();
+         }}>
+           Discard
+         </AlertDialogAction>
+       </AlertDialogFooter>
+     </AlertDialogContent>
+   </AlertDialog>
+   ```
 
-2. Unmount timeout — bump from 400ms to 420ms so the sheet stays mounted through the full transform transition:
-```ts
-const t = setTimeout(() => setMounted(false), 420);
-```
-
-Backdrop transition stays at `opacity 200ms ease`. Close button fade timing (`200ms ease` with `250ms` appear delay) stays as-is. The `visualViewport` listener, double-`requestAnimationFrame` open trick, and `visibility: hidden` guard all stay as-is.
+### Animation fallback
+Not applied. `FullscreenTakeover.tsx` already at 420ms. Wait for visual QA after Issue 1 lands before touching it.
 
 ### Preserved
 - All `console.log` statements
-- All other state, handlers, mutations, props
-- Discard dialog logic itself — only the `isDirty` predicate widens
+- Props interface unchanged
+- All mutations, state, query invalidation logic unchanged
+- The follow-up specific completion flow (mark followup completed, publish draft, insert new follow-up) untouched
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` and `FullscreenTakeover.tsx` touched
-- ✅ `isDirty` change is exactly one line
-- ✅ `setTimeout` bumped to 420ms to match the new 420ms transform transition
-- ✅ No other behavior changes
+- ✅ Only `CompleteFollowupSheet.tsx` touched
+- ✅ `isDirty` baseline = `connectType !== (plannedType || "")` to ignore pre-fill
+- ✅ `handleOpen` wired to `FullscreenTakeover`
+- ✅ `AlertDialogContent` at `z-[60]`
+- ✅ Discard deletes draft if present
+- ✅ All `console.log` preserved
 
