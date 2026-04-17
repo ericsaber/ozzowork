@@ -30,8 +30,10 @@ const getAvatarColors = (name: string) => {
     { bg: "#e8ddf5", text: "#6b3fa0" },
     { bg: "#f5e8d0", text: "#8a5c2a" },
   ];
-  const ch = (name?.[0] || "A").toUpperCase().charCodeAt(0);
-  return palette[ch % 5];
+  const parts = (name || "").trim().split(" ");
+  const a = (parts[0]?.[0] || "A").toUpperCase().charCodeAt(0);
+  const b = (parts[1]?.[0] || parts[0]?.[1] || "A").toUpperCase().charCodeAt(0);
+  return palette[(a + b) % 5];
 };
 
 interface LogInteractionSheetProps {
@@ -630,7 +632,7 @@ const LogInteractionSheet = ({
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div
-          style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}
+          style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0 }}
           onContextMenu={(e) => e?.preventDefault?.()}
         >
           {step === "contact-picker" && (
@@ -703,7 +705,7 @@ const LogInteractionSheet = ({
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {filteredContacts.map((c) => {
                   const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
-                  const colors = getAvatarColors(c.first_name);
+                  const colors = getAvatarColors(`${c.first_name} ${c.last_name}`);
                   return (
                     <button
                       key={c.id}
@@ -815,7 +817,7 @@ const LogInteractionSheet = ({
           )}
 
           {step === 1 && (
-            <>
+            <div style={{ paddingTop: 20, display: "flex", flexDirection: "column", minHeight: "100%" }}>
               {showQuickAdd && (
                 <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
                   <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
@@ -842,7 +844,7 @@ const LogInteractionSheet = ({
                 contactName={contactName}
                 isContactPrefilled={isContactPrefilled}
               />
-            </>
+            </div>
           )}
 
           {step === "outstanding" && (
