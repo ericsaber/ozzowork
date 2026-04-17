@@ -20,9 +20,21 @@ interface LogStep1Props {
   contactId?: string;
   contactName?: string;
   isContactPrefilled?: boolean;
-  // Optional — kept for CompleteFollowupSheet compatibility, not used in UI
+  // Optional — kept for backward compatibility with callers (CompleteFollowupSheet,
+  // any leftover LogInteractionSheet pass-through). Not used in the new UI.
   onSubmit?: () => void;
   isSubmitting?: boolean;
+  disabled?: boolean;
+  contactInitials?: string;
+  contacts?: unknown;
+  onContactSelect?: (id: string) => void;
+  onAddNewContact?: (name: string) => void;
+  onSkipToFollowup?: () => void;
+  onChangeContact?: () => void;
+  submitLabel?: string;
+  showDateRow?: boolean;
+  connectDate?: string;
+  setConnectDate?: (v: string) => void;
 }
 
 const LogStep1 = ({
