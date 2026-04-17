@@ -183,8 +183,8 @@ const LogStep1 = ({
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: "#e8c4b0",
-                color: "#c8622a",
+                background: getAvatarColors(contactName).bg,
+                color: getAvatarColors(contactName).text,
                 fontSize: 11,
                 fontWeight: 600,
                 fontFamily: "Outfit, sans-serif",
@@ -217,6 +217,9 @@ const LogStep1 = ({
           border: "1px solid #e8e4de",
           borderRadius: 16,
           padding: 14,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <textarea
@@ -232,7 +235,8 @@ const LogStep1 = ({
           onFocus={preventScrollOnFocus}
           style={{
             width: "100%",
-            minHeight: 100,
+            flex: 1,
+            minHeight: 80,
             background: "transparent",
             border: "none",
             outline: "none",
@@ -243,7 +247,7 @@ const LogStep1 = ({
           }}
         />
 
-        <div style={{ borderTop: "1px solid #e8e4de", marginTop: 12, paddingTop: 12 }}>
+        <div style={{ borderTop: "1px solid #e8e4de", marginTop: 12, paddingTop: 12, display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
           {isRecording ? (
             <button
               onClick={handleRecordingCTA}
