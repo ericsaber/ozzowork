@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil } from "lucide-react";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, Pencil } from "lucide-react";
 import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -154,25 +154,6 @@ const LogStep2 = ({
                 edit
               </button>
             </>
-          )}
-          {onSkip && (
-            <button
-              onClick={() => onSkip()}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                marginLeft: 2,
-                cursor: "pointer",
-                opacity: 0.5,
-                display: "flex",
-                alignItems: "center",
-                flexShrink: 0,
-              }}
-              aria-label="Dismiss"
-            >
-              <X size={12} color="#2d6a4f" />
-            </button>
           )}
         </div>
       )}
@@ -397,8 +378,8 @@ const LogStep2 = ({
           {/* Section 5 — Via + reminder reveal */}
           <div
             style={{
-              maxHeight: revealOpen ? 200 : 0,
-              opacity: revealOpen ? 1 : 0,
+              maxHeight: selectedDate ? "160px" : "0",
+              opacity: selectedDate ? 1 : 0,
               overflow: "hidden",
               transition: "max-height 0.32s ease, opacity 0.22s ease",
               marginTop: revealOpen ? 16 : 0,
