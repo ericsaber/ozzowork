@@ -859,27 +859,31 @@ const LogInteractionSheet = ({
           )}
 
           {step === 2 && (
-            <LogStep2
-              connectType={connectType}
-              contactName={contactName}
-              note={note}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-              onSkip={startStep === 2 ? undefined : handleSkip}
-              isSaving={followupMutation.isPending}
-              onUpdateLog={handleUpdateLog}
-            />
+            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <LogStep2
+                connectType={connectType}
+                contactName={contactName}
+                note={note}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSkip={startStep === 2 ? undefined : handleSkip}
+                isSaving={followupMutation.isPending}
+                onUpdateLog={handleUpdateLog}
+              />
+            </div>
           )}
 
           {step === 3 && (
-            <LogStep2
-              connectType={connectType}
-              contactName={contactName}
-              note={note}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-              onSkip={handleSkip}
-              isSaving={followupMutation.isPending}
-              onUpdateLog={handleUpdateLog}
-            />
+            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <LogStep2
+                connectType={connectType}
+                contactName={contactName}
+                note={note}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSkip={handleSkip}
+                isSaving={followupMutation.isPending}
+                onUpdateLog={handleUpdateLog}
+              />
+            </div>
           )}
         </div>
 
