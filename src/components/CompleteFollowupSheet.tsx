@@ -206,41 +206,78 @@ const CompleteFollowupSheet = ({
     }
   };
 
+  const handleOpen = (o: boolean) => {
+    if (!o) {
+      if (isDirty) {
+        setShowDiscardDialog(true);
+        return;
+      }
+      handleClose();
+    }
+  };
+
   return (
-    <FullscreenTakeover open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      {showToast && (
-        <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
-      )}
-      <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto" }}>
-        <StepIndicator currentStep={step} />
-        {step === 1 ? (
-          <LogStep1
-            connectType={connectType}
-            setConnectType={setConnectType}
-            note={note}
-            setNote={setNote}
-            onSubmit={() => logMutation.mutate()}
-            isSubmitting={logMutation.isPending}
-            contactId={contactId}
-            contactName={contactName}
-            isContactPrefilled={true}
-            onChangeContact={undefined}
-          />
-        ) : (
-          <LogStep2
-            connectType={connectType}
-            contactName={contactName}
-            note={note}
-            logDate={format(new Date(), "MMM d, yyyy")}
-            onBack={() => setStep(1)}
-            onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-            onSkip={handleSkip}
-            isSaving={followupMutation.isPending}
-            onUpdateLog={handleUpdateLog}
-          />
+    <>
+      <FullscreenTakeover open={open} onOpenChange={handleOpen}>
+        {showToast && (
+          <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
         )}
-      </div>
-    </FullscreenTakeover>
+        <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto" }}>
+          <StepIndicator currentStep={step} />
+          {step === 1 ? (
+            <LogStep1
+              connectType={connectType}
+              setConnectType={setConnectType}
+              note={note}
+              setNote={setNote}
+              onSubmit={() => logMutation.mutate()}
+              isSubmitting={logMutation.isPending}
+              contactId={contactId}
+              contactName={contactName}
+              isContactPrefilled={true}
+              onChangeContact={undefined}
+            />
+          ) : (
+            <LogStep2
+              connectType={connectType}
+              contactName={contactName}
+              note={note}
+              logDate={format(new Date(), "MMM d, yyyy")}
+              onBack={() => setStep(1)}
+              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+              onSkip={handleSkip}
+              isSaving={followupMutation.isPending}
+              onUpdateLog={handleUpdateLog}
+            />
+          )}
+        </div>
+      </FullscreenTakeover>
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard this log?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes that will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDiscardDialog(false)}>
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              setShowDiscardDialog(false);
+              if (draftId) {
+                await supabase.from("interactions").delete().eq("id", draftId);
+                console.log("[completion] discarded interaction draft:", draftId);
+              }
+              handleClose();
+            }}>
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
