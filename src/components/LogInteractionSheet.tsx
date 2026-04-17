@@ -62,8 +62,8 @@ const LogInteractionSheet = ({
   const [draftId, setDraftId] = useState<string | null>(null);
   const [existingFollowup, setExistingFollowup] = useState<any | null>(null);
 
-  // isDirty tied to draft existence (spec: false before Next →, true after)
-  const isDirty = !!draftId;
+  // isDirty tied to draft existence OR any unsaved Step 1 input
+  const isDirty = !!draftId || note.trim().length > 0 || connectType !== "";
 
   // Sync contactId when preselectedContactId changes
   useEffect(() => {
