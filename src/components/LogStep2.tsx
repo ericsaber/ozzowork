@@ -53,6 +53,10 @@ const LogStep2 = ({
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
 
+  useEffect(() => {
+    onFollowupStateChange?.(selectedDate, followUpType, reminderNote);
+  }, [selectedDate, followUpType, reminderNote]);
+
   const handlePillClick = (value: string) => {
     setFollowUpType(followUpType === value ? "" : value);
   };
@@ -200,9 +204,8 @@ const LogStep2 = ({
               border: "none",
               outline: "none",
               resize: "none",
-              fontFamily: "'Crimson Pro', serif",
+              fontFamily: "Outfit, sans-serif",
               fontSize: 16,
-              fontStyle: "italic",
               color: "#1c1a17",
             }}
           />
