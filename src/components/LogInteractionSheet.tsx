@@ -134,7 +134,7 @@ const LogInteractionSheet = ({
       setNote("");
       setDraftId(null);
       setExistingFollowup(null);
-      setSkippedInteraction(false);
+      
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
@@ -244,7 +244,7 @@ const LogInteractionSheet = ({
     },
     onSuccess: (result) => {
       setDraftId(result.id);
-      setSkippedInteraction(!connectType && !note);
+      
 
       // logOnly mode — publish draft immediately and close, no Step 2
       if (logOnly) {
@@ -605,7 +605,7 @@ const LogInteractionSheet = ({
     }
     setConnectType("");
     setNote("");
-    setSkippedInteraction(true);
+    
     setStep(2);
   };
 
