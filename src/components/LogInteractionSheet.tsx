@@ -1025,6 +1025,80 @@ const LogInteractionSheet = ({
             )}
           </div>
         )}
+
+        {/* Bottom action area — step 2 / step 3 */}
+        {(step === 2 || step === 3) && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                maxHeight: pendingDate ? 60 : 0,
+                opacity: pendingDate ? 1 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.3s ease, opacity 0.25s ease",
+              }}
+            >
+              <button
+                onClick={() => {
+                  console.log("[LogInteractionSheet] save step2:", { pendingType, pendingDate, pendingReminder });
+                  followupMutation.mutate({ type: pendingType, date: pendingDate, reminderNote: pendingReminder });
+                }}
+                disabled={followupMutation.isPending}
+                style={{
+                  width: "100%",
+                  background: "#c8622a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 100,
+                  padding: 15,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: followupMutation.isPending ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {followupMutation.isPending ? "Saving…" : (
+                  <>
+                    Save
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {startStep !== 2 && (
+              <button
+                onClick={handleSkip}
+                disabled={followupMutation.isPending}
+                style={{
+                  fontSize: 13,
+                  color: "#888480",
+                  fontFamily: "Outfit, sans-serif",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "3px",
+                  textAlign: "center",
+                  padding: 4,
+                }}
+              >
+                Skip follow-up
+              </button>
+            )}
+          </div>
+        )}
       </FullscreenTakeover>
 
       {/* Discard dialog */}
