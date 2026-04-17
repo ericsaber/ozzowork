@@ -1,77 +1,37 @@
 
 
-## Plan: Prompt 2b — LogStep2 Redesign
+## Plan: Prompt 2b Visual Fixes — Padding + Inline Edit Panel
 
-**Files:** `src/components/LogStep2.tsx` (full rewrite), `src/components/LogInteractionSheet.tsx` (cleanup)
+**Files:** `src/components/LogInteractionSheet.tsx`, `src/components/LogStep2.tsx`
 
-### Part 1 — LogStep2.tsx full rewrite
+### Fix 1 — Top padding on step 2 and step 3 (LogInteractionSheet.tsx)
 
-**Props interface (final):**
-```ts
-{
-  connectType: string;
-  contactName: string;
-  note: string;
-  onSaveWithFollowup: (type: string, date: string) => void;
-  onSkip?: () => void;
-  isSaving: boolean;
-  onUpdateLog?: (connectType: string, note: string) => void;
-}
+Wrap both `<LogStep2 .../>` renders (step === 2 and step === 3) in a flex-chain wrapper:
+```tsx
+<div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+  <LogStep2 ... />
+</div>
 ```
-Removed: `skippedInteraction`, `onAddInteraction`, `onBack`, `logDate`.
+This matches the step 1 wrapper and clears the summary pill from the close button. All existing props on `<LogStep2>` remain unchanged.
 
-**State:**
-- `followUpType` — init from `connectType` if truthy
-- `selectedDate` — `""`
-- `showCalendar` — `false`
-- `reminderNote` — `""` (local only, 44 char max, not yet wired to save)
-- `isEditing`, `editConnectType`, `editNote` — preserved for inline edit
-- Removed: `viaActivated`, `showDatePicker`
+### Fix 2 — Inline edit panel redesign (LogStep2.tsx)
 
-**Mount logging:** preserved verbatim.
+Replace the current `isEditing && ...` block with a new white card:
+- **Container:** `bg #faf8f5`, `1px solid #e8e4de`, radius 16, padding 16, flex column, gap 12.
+- **Note textarea:** transparent, no border/outline, Crimson Pro 16px italic `#1c1a17`, placeholder "What happened?" `#c8c4be`, `width: 100%`, `min-height: 60px`, auto-grow via inline `onInput` (`e.currentTarget.style.height = 'auto'; ... = scrollHeight + 'px'`). Bound to `editNote`.
+- **Label:** "HOW DID YOU CONNECT?" — 10px, weight 600, tracking `0.1em`, uppercase, `#888480`, Outfit, margin-bottom 6.
+- **Type pills row:** flex wrap, gap 6. Same 5 options (Call/Email/Text/Meeting/Video) with Lucide icons. Unselected: `#faf8f5` bg, `1px solid #e8e4de`, `#6b6860`, radius 100, padding `6px 12px`, 13px Outfit. Selected: `#fdf4f0` bg, `1.5px solid #c8622a`, `#c8622a`. Toggles `editConnectType`.
+- **Action row:** flex, justify-end, gap 10, margin-top 4.
+  - **Cancel:** transparent, no border, 14px weight 500, `#888480`, Outfit. On click: `setIsEditing(false); setEditConnectType(connectType); setEditNote(note);` (discard).
+  - **Done:** transparent bg, `1.5px solid #c8622a`, radius 100, padding `7px 18px`, 14px weight 500, `#c8622a`, Outfit. On click: existing `handleDoneEditing()`.
 
-**Render structure (flex column):**
-
-1. **Summary pill** — only when `connectType || note`. Green pill (`#f0f7f4` bg, `#b7d9cc` border, 100px radius, `align-self: flex-start`). 18px green check circle, "{TypeLabel} · {contactName}" or "Note · {contactName}", " · edit" tappable link → sets `isEditing(true)`, × button → calls `onSkip?.()`. When `isEditing`, swap pill for existing inline edit panel (type pill row + textarea + Done editing) — logic preserved.
-
-2. **Heading** — "Set a follow-up", Crimson Pro 28px, weight 500, `#1c1a17`, `letterSpacing: -0.01em`, margins `16px 0`.
-
-3. **Date chips** — CSS grid 2×2, gap 8px. Chips: Tomorrow / 3 days / 1 week / 2 weeks. Default `#faf8f5`/`#e8e4de` border/12px radius. Selected: `#fdf4f0` bg + `1.5px solid #c8622a` + `#c8622a` text. Then full-width **Pick date** button (CalendarIcon 15px) below grid. When selected date is custom (not one of the 4 presets), button shows formatted date label in selected style. Tapping toggles `showCalendar`.
-
-4. **Inline calendar** — when `showCalendar`, render shadcn `<Calendar>` directly (no Popover wrapper). Same `disabled` rule. Selecting closes calendar, sets `selectedDate`, does not clear chips.
-
-5. **Via + reminder reveal** — wrapper with `max-height` + `opacity` transition; hidden when `!selectedDate`.
-   - Via row: "via" label + 5 icon circles (34px). Selected = `#c8622a` bg / white icon. Pre-populate from `connectType` mount.
-   - Reminder row: dashed top border, Pencil 13px, transparent input (`maxLength={44}`), counter `{n}/44`.
-
-6. **Save button** — full-width pill, sienna bg when enabled / `#ddd8d1` disabled. Label "Save" + ArrowRight 18px (or "Saving…"). Calls `onSaveWithFollowup(followUpType, selectedDate)`.
-
-7. **Skip link** — only when `onSkip` provided; underlined `#888480` 13px.
-
-### Part 2 — LogInteractionSheet.tsx cleanup
-
-- Remove `skippedInteraction` state declaration and any setters.
-- Remove `handleAddInteraction` (if present).
-- Remove `skippedInteraction`, `onAddInteraction`, `onBack`, `logDate` props from BOTH `<LogStep2>` call sites (step 2 and step 3 renders). Keep all other props unchanged.
-
-### Preserved
-- All `console.log` statements in both files
-- Voice recording, draft/publish flow, mutations, step routing
-- `handleDoneEditing` and inline edit logic in LogStep2
-- `CompleteFollowupSheet.tsx` untouched
+All other logic, state, sections, and `console.log`s untouched.
 
 ### Checklist
-- ✅ Only LogStep2.tsx + LogInteractionSheet.tsx touched
-- ✅ Dead props removed from interface and call sites
-- ✅ Summary pill conditional on `connectType || note`
-- ✅ Heading Crimson Pro 28px
-- ✅ 2×2 chip grid + full-width Pick date
-- ✅ Inline Calendar (no Popover import)
-- ✅ Via + reminder reveal gated by `selectedDate`
-- ✅ `followUpType` pre-populated from `connectType`
-- ✅ Reminder note local state, 44 char counter
-- ✅ Save disabled until date set
-- ✅ `skippedInteraction` state removed from sheet
+- ✅ Only LogInteractionSheet.tsx + LogStep2.tsx touched
+- ✅ Step 2 and step 3 wrapped with `paddingTop: 20` flex chain
+- ✅ Inline edit = white card with textarea + label + pills + Cancel/Done
+- ✅ Cancel discards changes; Done calls existing `handleDoneEditing()`
+- ✅ Textarea auto-grows
 - ✅ All `console.log` preserved
-- ✅ CompleteFollowupSheet untouched
 
