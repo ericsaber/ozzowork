@@ -84,7 +84,7 @@ const LogInteractionSheet = ({
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
-  const [skippedInteraction, setSkippedInteraction] = useState(false);
+  
 
   // Draft state (FAB / Log button flows only — not completion flow)
   const [draftId, setDraftId] = useState<string | null>(null);
@@ -134,7 +134,7 @@ const LogInteractionSheet = ({
       setNote("");
       setDraftId(null);
       setExistingFollowup(null);
-      setSkippedInteraction(false);
+      
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
@@ -244,7 +244,7 @@ const LogInteractionSheet = ({
     },
     onSuccess: (result) => {
       setDraftId(result.id);
-      setSkippedInteraction(!connectType && !note);
+      
 
       // logOnly mode — publish draft immediately and close, no Step 2
       if (logOnly) {
@@ -605,7 +605,7 @@ const LogInteractionSheet = ({
     }
     setConnectType("");
     setNote("");
-    setSkippedInteraction(true);
+    
     setStep(2);
   };
 
@@ -863,13 +863,10 @@ const LogInteractionSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={handleStepBack}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={startStep === 2 ? undefined : handleSkip}
               isSaving={followupMutation.isPending}
               onUpdateLog={handleUpdateLog}
-              skippedInteraction={skippedInteraction || startStep === 2}
             />
           )}
 
@@ -878,13 +875,10 @@ const LogInteractionSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={handleStepBack}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
               onUpdateLog={handleUpdateLog}
-              skippedInteraction={false}
             />
           )}
         </div>

@@ -242,8 +242,6 @@ const CompleteFollowupSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={() => setStep(1)}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
