@@ -1,12 +1,12 @@
 
 
-## Plan: Keep CompleteFollowupSheet mounted in Today.tsx
+## Plan: Close animation fixes for Upcoming + FAB
 
-**File:** `src/pages/Today.tsx` only.
+**Files:** `src/pages/Upcoming.tsx`, `src/components/FullscreenTakeover.tsx`
 
-### Change
+### Issue 1 — Upcoming.tsx (always-mounted CompleteFollowupSheet)
 
-Replace the conditional `{completeTarget && (...)}` wrapper (lines ~280-290) with an always-mounted `<CompleteFollowupSheet>` whose visibility is controlled by the `open` prop. Use optional chaining + `??` fallbacks on the four target-derived props so they're safe when `completeTarget` is null during the close animation window.
+Same fix already applied to `Today.tsx`. Remove the `{completeTarget && (...)}` wrapper and keep `<CompleteFollowupSheet>` always mounted with optional chaining on the four target-derived props:
 
 ```tsx
 <CompleteFollowupSheet
@@ -20,18 +20,33 @@ Replace the conditional `{completeTarget && (...)}` wrapper (lines ~280-290) wit
 />
 ```
 
-This lets `FullscreenTakeover` play its full 420ms close transition before the parent state is cleared, since the component stays mounted across the open→closed prop change.
+### Issue 2 — FullscreenTakeover.tsx (asymmetric open/close timing)
+
+Make the sheet transition string conditional on `visible` so open stays snappy and close glides:
+
+```tsx
+transition: visible
+  ? "opacity 300ms ease, transform 420ms cubic-bezier(0.32, 0.72, 0, 1)"
+  : "opacity 250ms ease, transform 550ms cubic-bezier(0.4, 0, 0.2, 1)",
+```
+
+Bump the unmount timeout from 420ms to 560ms so the sheet stays mounted through the longer close transition:
+
+```tsx
+const t = setTimeout(() => setMounted(false), 560);
+```
+
+Backdrop transition (200ms ease) and close-button fade (200ms with 250ms delay) stay as-is.
 
 ### Preserved
 - All `console.log` statements
-- All other logic, state, mutations, queries
-- `LogInteractionSheet` and `LastInteractionSheet` blocks below it (already use the same always-mounted pattern)
-- `AlertDialog` for cancel flow
+- visualViewport listener, double-rAF open trick, `visibility: hidden` guard
+- All other state/handlers/mutations
 
 ### Checklist
-- ✅ Only `Today.tsx` touched
-- ✅ Conditional wrapper removed
-- ✅ All four target-derived props use `?.` + `??` fallbacks
-- ✅ No other logic changed
+- ✅ Only `Upcoming.tsx` and `FullscreenTakeover.tsx` touched
+- ✅ Upcoming: conditional wrapper removed, `?.` + `??` on all four props
+- ✅ Transition string is conditional on `visible`, close = 550ms
+- ✅ Unmount timeout bumped to 560ms
 - ✅ All `console.log` preserved
 
