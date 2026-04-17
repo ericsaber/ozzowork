@@ -28,7 +28,7 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
       };
     } else {
       setVisible(false);
-      const t = setTimeout(() => setMounted(false), 400);
+      const t = setTimeout(() => setMounted(false), 420);
       return () => clearTimeout(t);
     }
   }, [open]);
@@ -81,7 +81,7 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(100%)",
           transition:
-            "opacity 300ms ease, transform 380ms cubic-bezier(0.32, 0.72, 0, 1)",
+            "opacity 300ms ease, transform 420ms cubic-bezier(0.32, 0.72, 0, 1)",
           visibility: mounted ? "visible" : "hidden",
         }}
       >
