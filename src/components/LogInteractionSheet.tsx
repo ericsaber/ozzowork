@@ -84,7 +84,7 @@ const LogInteractionSheet = ({
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
-  const [skippedInteraction, setSkippedInteraction] = useState(false);
+  
 
   // Draft state (FAB / Log button flows only — not completion flow)
   const [draftId, setDraftId] = useState<string | null>(null);
