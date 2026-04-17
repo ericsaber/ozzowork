@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ArrowRight } from "lucide-react";
 import CelebrationHeader from "@/components/CelebrationHeader";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
 import StepIndicator from "@/components/StepIndicator";
@@ -48,6 +49,9 @@ const CompleteFollowupSheet = ({
   const [note, setNote] = useState("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [pendingDate, setPendingDate] = useState("");
+  const [pendingType, setPendingType] = useState("");
+  const [pendingReminder, setPendingReminder] = useState("");
 
   const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
 
@@ -92,7 +96,7 @@ const CompleteFollowupSheet = ({
   });
 
   const followupMutation = useMutation({
-    mutationFn: async ({ type, date }: { type: string; date: string }) => {
+    mutationFn: async ({ type, date, reminderNote }: { type: string; date: string; reminderNote: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!draftId) throw new Error("No interaction draft");
@@ -122,6 +126,7 @@ const CompleteFollowupSheet = ({
 
       // 3. Insert new follow-up if date set
       if (date) {
+        console.log("[completion] insert reminder_note:", reminderNote);
         const { error: insertError } = await supabase
           .from("follow_ups")
           .insert({
@@ -130,9 +135,10 @@ const CompleteFollowupSheet = ({
             planned_type: type || null,
             planned_date: date,
             status: "active",
+            reminder_note: reminderNote.trim() || null,
           });
         if (insertError) throw insertError;
-        console.log("[completion] new follow_up inserted:", { type, date });
+        console.log("[completion] new follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
       }
     },
     onSuccess: () => {
@@ -190,6 +196,9 @@ const CompleteFollowupSheet = ({
       setConnectType(plannedType || "");
       setNote("");
       setDraftId(null);
+      setPendingDate("");
+      setPendingType("");
+      setPendingReminder("");
     }, 300);
   };
 
