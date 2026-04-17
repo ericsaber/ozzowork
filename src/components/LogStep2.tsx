@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, ClipboardList } from "lucide-react";
-import { addDays, addWeeks, format, parseISO, getYear, startOfDay } from "date-fns";
+import { Phone, Mail, MessageSquare, Users, Video, CalendarIcon, Check, X, Pencil, ArrowRight } from "lucide-react";
+import { addDays, addWeeks, format, parseISO, getYear } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 const typeOptions = [
   { value: "call", icon: Phone, label: "Call" },
@@ -24,56 +22,43 @@ interface LogStep2Props {
   connectType: string;
   contactName: string;
   note: string;
-  logDate: string;
-  onBack?: () => void;
   onSaveWithFollowup: (type: string, date: string) => void;
-  onSkip: () => void;
+  onSkip?: () => void;
   isSaving: boolean;
   onUpdateLog?: (connectType: string, note: string) => void;
-  skippedInteraction?: boolean;
-  onAddInteraction?: () => void;
 }
 
 const LogStep2 = ({
   connectType,
   contactName,
   note,
-  logDate,
-  onBack,
   onSaveWithFollowup,
   onSkip,
   isSaving,
   onUpdateLog,
-  skippedInteraction = false,
-  onAddInteraction,
 }: LogStep2Props) => {
-  // Fix 3: Log connectType on mount for verification
   useEffect(() => {
     console.log("[LogStep2] connectType received on mount:", connectType);
   }, []);
 
   console.log("[LogStep2] mounted:", { connectType, contactName });
 
-  // Fix 3: When connectType is empty, via row starts fully dimmed with no pre-selection
-  const [followUpType, setFollowUpType] = useState("");
+  const [followUpType, setFollowUpType] = useState(connectType || "");
   const [selectedDate, setSelectedDate] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [reminderNote, setReminderNote] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editConnectType, setEditConnectType] = useState(connectType);
   const [editNote, setEditNote] = useState(note);
-  // Fix 3: viaActivated starts false when no connectType (row fully dimmed)
-  const [viaActivated, setViaActivated] = useState(false);
 
   const handlePillClick = (value: string) => {
-    if (!viaActivated) setViaActivated(true);
     setFollowUpType(followUpType === value ? "" : value);
   };
 
   const handleChipClick = (chipDate: string) => {
     const newDate = selectedDate === chipDate ? "" : chipDate;
     setSelectedDate(newDate);
-    if (newDate && !viaActivated) setViaActivated(true);
-    setShowDatePicker(false);
+    setShowCalendar(false);
   };
 
   const handleDoneEditing = () => {
@@ -82,292 +67,435 @@ const LogStep2 = ({
   };
 
   const typeLabel = connectType ? connectType.charAt(0).toUpperCase() + connectType.slice(1) : "";
+  const showSummary = !!(connectType || note);
+  const isCustomDate = selectedDate && !dateChips.some((c) => c.date() === selectedDate);
+  const customDateLabel = (() => {
+    if (!selectedDate) return "";
+    const parsed = parseISO(selectedDate);
+    return getYear(parsed) === getYear(new Date())
+      ? format(parsed, "EEE, MMM d")
+      : format(parsed, "EEE, MMM d, yyyy");
+  })();
+
+  const revealOpen = !!selectedDate;
 
   return (
-    <div className="space-y-5">
-
-      {/* Green confirmation card — only shown when interaction was logged */}
-      {!skippedInteraction && (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* Section 1 — Summary pill or inline edit */}
+      {showSummary && !isEditing && (
         <div
-          className="rounded-[14px] overflow-hidden"
           style={{
-            background: isEditing ? "hsl(var(--card))" : "#eaf4ed",
-            border: isEditing ? "0.5px solid hsl(var(--border))" : "0.5px solid rgba(42,112,72,0.2)",
-            padding: "14px 16.5px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "#f0f7f4",
+            border: "1px solid #b7d9cc",
+            borderRadius: 100,
+            padding: "6px 10px 6px 8px",
+            alignSelf: "flex-start",
+            maxWidth: "100%",
           }}
         >
-          {!isEditing ? (
+          <div
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: "#2d6a4f",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Check size={10} color="#fff" strokeWidth={3} />
+          </div>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "#2d6a4f",
+              fontFamily: "Outfit, sans-serif",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              minWidth: 0,
+            }}
+          >
+            {connectType ? `${typeLabel} · ${contactName}` : `Note · ${contactName}`}
+          </span>
+          {onUpdateLog && (
             <>
-              {connectType && (
-                <div className="flex items-center gap-2">
-                  <div
-                    className="rounded-full flex items-center justify-center shrink-0"
-                    style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
-                  >
-                    <Check size={12} className="text-white" strokeWidth={3} />
-                  </div>
-                  <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                    {typeLabel} · {contactName}
-                  </span>
-                  <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    {logDate}
-                  </span>
-                </div>
-              )}
-              {!connectType && (
-                <div className="flex items-center gap-2">
-                  <div
-                    className="rounded-full flex items-center justify-center shrink-0"
-                    style={{ width: 21, height: 21, background: "hsl(var(--success))" }}
-                  >
-                    <Check size={12} className="text-white" strokeWidth={3} />
-                  </div>
-                  <ClipboardList size={14} style={{ color: "#2a7048" }} />
-                  <span className="text-[14px] font-medium" style={{ color: "#2a7048", fontFamily: "var(--font-body)" }}>
-                    Interacted · {contactName}
-                  </span>
-                  <span className="ml-auto text-[13px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    {logDate}
-                  </span>
-                </div>
-              )}
-              {note && (
-                <p
-                  className="italic mt-1.5"
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    fontSize: "14px",
-                    color: "#2a5c3a",
-                    paddingLeft: "29px",
-                  }}
-                >
-                  {note}
-                </p>
-              )}
-              {onUpdateLog && (
-                <button
-                  onClick={() => {
-                    setEditConnectType(connectType);
-                    setEditNote(note);
-                    setIsEditing(true);
-                  }}
-                  className="text-[13px] underline mt-1.5"
-                  style={{ color: "rgba(42,112,72,0.65)", fontFamily: "var(--font-body)", paddingLeft: "29px" }}
-                >
-                  Tap to edit
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {typeOptions.map((t) => {
-                  const selected = editConnectType === t.value;
-                  return (
-                    <button
-                      key={t.value}
-                      onClick={() => setEditConnectType(selected ? "" : t.value)}
-                      className={`inline-flex items-center gap-1.5 py-[7px] px-[14px] text-[14px] font-medium transition-colors ${
-                        selected ? "text-primary-foreground" : "text-muted-foreground"
-                      }`}
-                      style={{
-                        borderRadius: "100px",
-                        fontFamily: "var(--font-body)",
-                        ...(selected
-                          ? { background: "hsl(var(--primary))" }
-                          : { background: "hsl(var(--secondary))", border: "0.5px solid hsl(var(--border))" }),
-                      }}
-                    >
-                      <t.icon size={14} />
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <textarea
-                value={editNote}
-                onChange={(e) => setEditNote(e.target.value)}
-                placeholder="Add a note…"
-                className="w-full bg-secondary rounded-[10px] border-none outline-none resize-none px-3 py-2 italic text-foreground min-h-[48px] placeholder:text-muted-foreground"
-                style={{ fontFamily: "var(--font-heading)", fontSize: "16px" }}
-              />
+              <span style={{ fontSize: 13, color: "rgba(45,106,79,0.6)", flexShrink: 0 }}>·</span>
               <button
-                onClick={handleDoneEditing}
-                className="text-[13px] underline"
-                style={{ color: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+                onClick={() => {
+                  setEditConnectType(connectType);
+                  setEditNote(note);
+                  setIsEditing(true);
+                }}
+                style={{
+                  fontSize: 13,
+                  color: "rgba(45,106,79,0.6)",
+                  fontFamily: "Outfit, sans-serif",
+                  textDecoration: "underline",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
               >
-                Done editing
+                edit
               </button>
-            </div>
+            </>
+          )}
+          {onSkip && (
+            <button
+              onClick={() => onSkip()}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                marginLeft: 2,
+                cursor: "pointer",
+                opacity: 0.5,
+                display: "flex",
+                alignItems: "center",
+                flexShrink: 0,
+              }}
+              aria-label="Dismiss"
+            >
+              <X size={12} color="#2d6a4f" />
+            </button>
           )}
         </div>
       )}
 
-      {/* Unified follow-up card */}
-      <div
-        className="rounded-[14px]"
-        style={{
-          background: "#fff",
-          border: "0.5px solid rgba(28,24,18,0.11)",
-          padding: "13px 14px",
-        }}
-      >
-        {/* Date section */}
-        <p
-          className="font-semibold uppercase tracking-[0.1em] mb-[10px]"
-          style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
-        >
-          Next connect
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {dateChips.map((chip) => {
-            const chipDate = chip.date();
-            const selected = selectedDate === chipDate;
-            return (
-              <button
-                key={chip.label}
-                onClick={() => handleChipClick(chipDate)}
-                className="transition-colors"
-                style={{
-                  borderRadius: "100px",
-                  padding: "8px 13px",
-                  fontSize: "13px",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 500,
-                  ...(selected
-                    ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                    : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
-                }}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
-          <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-            <PopoverTrigger asChild>
-              <button
-                className="inline-flex items-center gap-1 transition-colors"
-                style={{
-                  borderRadius: "100px",
-                  padding: "8px 13px",
-                  fontSize: "13px",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 500,
-                  ...(showDatePicker
-                    ? { background: "#c8622a", color: "#fff", border: "0.5px solid transparent" }
-                    : { background: "#f0ede8", color: "#1c1812", border: "0.5px solid rgba(28,24,18,0.11)" }),
-                }}
-              >
-                <CalendarIcon size={13} />
-                Pick date
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(format(date, "yyyy-MM-dd"));
-                    if (!viaActivated) setViaActivated(true);
-                    setShowDatePicker(false);
-                  }
-                }}
-                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-          {selectedDate && !dateChips.some((chip) => chip.date() === selectedDate) && (() => {
-            const parsed = parseISO(selectedDate);
-            const label = getYear(parsed) === getYear(new Date()) ? format(parsed, "EEE, MMM d") : format(parsed, "EEE, MMM d, yyyy");
-            return (
-              <button
-                onClick={() => setSelectedDate("")}
-                className="inline-flex items-center gap-1.5 transition-colors"
-                style={{
-                  borderRadius: "100px",
-                  padding: "8px 13px",
-                  fontSize: "13px",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 500,
-                  background: "#c8622a",
-                  color: "#fff",
-                  border: "0.5px solid transparent",
-                }}
-              >
-                <CalendarIcon size={13} />
-                {label}
-                <span className="ml-1 text-[14px] leading-none opacity-70">×</span>
-              </button>
-            );
-          })()}
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: "0.5px", background: "rgba(28,24,18,0.11)", margin: "11px 0" }} />
-
-        {/* Via row */}
+      {showSummary && isEditing && (
         <div
-          className="flex items-center gap-2.5"
           style={{
-            opacity: viaActivated ? 1 : 0.38,
-            transition: "opacity 0.2s ease",
+            background: "#faf8f5",
+            border: "1px solid #e8e4de",
+            borderRadius: 14,
+            padding: "14px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
           }}
         >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {typeOptions.map((t) => {
+              const selected = editConnectType === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => setEditConnectType(selected ? "" : t.value)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "7px 14px",
+                    borderRadius: 100,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: "Outfit, sans-serif",
+                    cursor: "pointer",
+                    ...(selected
+                      ? { background: "#c8622a", color: "#fff", border: "1px solid transparent" }
+                      : { background: "#f0ede8", color: "#6b6860", border: "1px solid #e8e4de" }),
+                  }}
+                >
+                  <t.icon size={14} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            value={editNote}
+            onChange={(e) => setEditNote(e.target.value)}
+            placeholder="Add a note…"
+            style={{
+              width: "100%",
+              background: "#f0ede8",
+              borderRadius: 10,
+              border: "none",
+              outline: "none",
+              resize: "none",
+              padding: "8px 12px",
+              fontStyle: "italic",
+              color: "#1c1a17",
+              minHeight: 48,
+              fontFamily: "'Crimson Pro', serif",
+              fontSize: 16,
+            }}
+          />
+          <button
+            onClick={handleDoneEditing}
+            style={{
+              fontSize: 13,
+              color: "#c8622a",
+              fontFamily: "Outfit, sans-serif",
+              textDecoration: "underline",
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              alignSelf: "flex-start",
+            }}
+          >
+            Done editing
+          </button>
+        </div>
+      )}
+
+      {/* Section 2 — Heading */}
+      <h2
+        style={{
+          fontFamily: "'Crimson Pro', serif",
+          fontSize: 28,
+          fontWeight: 500,
+          color: "#1c1a17",
+          letterSpacing: "-0.01em",
+          margin: "16px 0",
+        }}
+      >
+        Set a follow-up
+      </h2>
+
+      {/* Section 3 — Date chips */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        {dateChips.map((chip) => {
+          const chipDate = chip.date();
+          const selected = selectedDate === chipDate;
+          return (
+            <button
+              key={chip.label}
+              onClick={() => handleChipClick(chipDate)}
+              style={{
+                background: selected ? "#fdf4f0" : "#faf8f5",
+                border: selected ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+                borderRadius: 12,
+                padding: "13px 8px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: selected ? "#c8622a" : "#1c1a17",
+                fontFamily: "Outfit, sans-serif",
+                textAlign: "center",
+                width: "100%",
+                cursor: "pointer",
+                transition: "all 0.12s ease",
+              }}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => setShowCalendar((v) => !v)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          background: isCustomDate ? "#fdf4f0" : "#faf8f5",
+          border: isCustomDate ? "1.5px solid #c8622a" : "1px solid #e8e4de",
+          borderRadius: 12,
+          padding: 13,
+          fontSize: 14,
+          fontWeight: 500,
+          color: isCustomDate ? "#c8622a" : "#1c1a17",
+          fontFamily: "Outfit, sans-serif",
+          width: "100%",
+          cursor: "pointer",
+          transition: "all 0.12s ease",
+        }}
+      >
+        <CalendarIcon size={15} color={isCustomDate ? "#c8622a" : "#888480"} />
+        {isCustomDate ? customDateLabel : "Pick date"}
+      </button>
+
+      {/* Section 4 — Inline calendar */}
+      {showCalendar && (
+        <div
+          style={{
+            marginTop: 8,
+            background: "#faf8f5",
+            border: "1px solid #e8e4de",
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <Calendar
+            mode="single"
+            selected={selectedDate ? new Date(selectedDate + "T00:00:00") : undefined}
+            onSelect={(date) => {
+              if (date) {
+                setSelectedDate(format(date, "yyyy-MM-dd"));
+                setShowCalendar(false);
+              }
+            }}
+            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+            initialFocus
+            className="p-3 pointer-events-auto"
+          />
+        </div>
+      )}
+
+      {/* Section 5 — Via + reminder reveal */}
+      <div
+        style={{
+          maxHeight: revealOpen ? 200 : 0,
+          opacity: revealOpen ? 1 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.32s ease, opacity 0.22s ease",
+          marginTop: revealOpen ? 16 : 0,
+        }}
+      >
+        {/* Via row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span
-            className="shrink-0"
-            style={{ fontSize: "11px", color: "#999", fontFamily: "var(--font-body)" }}
+            style={{
+              fontSize: 11,
+              color: "#888480",
+              fontFamily: "Outfit, sans-serif",
+              flexShrink: 0,
+            }}
           >
             via
           </span>
-          <div className="flex items-center gap-2">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {typeOptions.map((t) => {
               const selected = followUpType === t.value;
               return (
                 <button
                   key={t.value}
                   onClick={() => handlePillClick(t.value)}
-                  className="flex items-center justify-center transition-colors"
                   style={{
-                    width: 32,
-                    height: 32,
+                    width: 34,
+                    height: 34,
                     borderRadius: "50%",
-                    ...(selected
-                      ? { background: "#c8622a", borderColor: "transparent", border: "0.5px solid transparent" }
-                      : { background: "#f0ede8", border: "0.5px solid rgba(28,24,18,0.11)" }),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    background: selected ? "#c8622a" : "#f0ede8",
+                    border: selected ? "none" : "1px solid #e8e4de",
+                    transition: "all 0.12s ease",
                   }}
                   title={t.label}
                 >
-                  <t.icon size={14} style={{ color: selected ? "#fff" : "#1c1812" }} />
+                  <t.icon size={14} color={selected ? "#fff" : "#6b6860"} />
                 </button>
               );
             })}
           </div>
         </div>
+
+        {/* Reminder row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            borderTop: "1px dashed #d8d4ce",
+            paddingTop: 10,
+            marginTop: 10,
+          }}
+        >
+          <Pencil size={13} color="#888480" style={{ flexShrink: 0 }} />
+          <input
+            type="text"
+            value={reminderNote}
+            onChange={(e) => setReminderNote(e.target.value)}
+            placeholder="Add a reminder note..."
+            maxLength={44}
+            style={{
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              fontSize: 13,
+              color: "#1c1a17",
+              fontFamily: "Outfit, sans-serif",
+              minWidth: 0,
+            }}
+          />
+          <span
+            style={{
+              fontSize: 12,
+              color: "#888480",
+              fontFamily: "Outfit, sans-serif",
+              flexShrink: 0,
+            }}
+          >
+            {reminderNote.length}/44
+          </span>
+        </div>
       </div>
 
-      {/* CTA */}
+      {/* Section 6 — Save button */}
       <button
         onClick={() => {
-          console.log("[LogStep2] saving with:", { followUpType, selectedDate });
+          console.log("[LogStep2] saving with:", { followUpType, selectedDate, reminderNote });
           onSaveWithFollowup(followUpType, selectedDate);
         }}
         disabled={!selectedDate || isSaving}
-        className="w-full py-[16.5px] text-[17px] font-semibold text-primary-foreground shadow-md transition-opacity disabled:opacity-[0.38]"
-        style={{ borderRadius: "100px", background: "hsl(var(--primary))", fontFamily: "var(--font-body)" }}
+        style={{
+          marginTop: 20,
+          width: "100%",
+          borderRadius: 100,
+          padding: 15,
+          fontSize: 16,
+          fontWeight: 500,
+          fontFamily: "Outfit, sans-serif",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          cursor: !selectedDate || isSaving ? "not-allowed" : "pointer",
+          background: !selectedDate || isSaving ? "#ddd8d1" : "#c8622a",
+          color: !selectedDate || isSaving ? "#b0ada8" : "#fff",
+          border: "none",
+          transition: "all 0.12s ease",
+        }}
       >
-        {isSaving ? "Saving..." : "Save →"}
+        {isSaving ? "Saving…" : (
+          <>
+            Save
+            <ArrowRight size={18} />
+          </>
+        )}
       </button>
 
-      {/* Skip follow-up */}
-      {!skippedInteraction && (
+      {/* Section 7 — Skip link */}
+      {onSkip && (
         <button
           onClick={onSkip}
           disabled={isSaving}
-          className="w-full text-center text-[13px] text-muted-foreground underline py-1"
-          style={{ fontFamily: "var(--font-body)" }}
+          style={{
+            marginTop: 8,
+            width: "100%",
+            textAlign: "center",
+            background: "none",
+            border: "none",
+            fontSize: 13,
+            color: "#888480",
+            fontFamily: "Outfit, sans-serif",
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+            padding: "4px 0",
+            cursor: "pointer",
+          }}
         >
           Skip follow-up
         </button>
