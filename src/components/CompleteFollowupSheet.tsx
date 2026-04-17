@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import CelebrationHeader from "@/components/CelebrationHeader";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import FullscreenTakeover from "@/components/FullscreenTakeover";
 import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
@@ -194,42 +194,40 @@ const CompleteFollowupSheet = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DrawerContent className="max-h-[90vh]">
-        {showToast && (
-          <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
+    <FullscreenTakeover open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
+      {showToast && (
+        <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
+      )}
+      <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto" }}>
+        <StepIndicator currentStep={step} />
+        {step === 1 ? (
+          <LogStep1
+            connectType={connectType}
+            setConnectType={setConnectType}
+            note={note}
+            setNote={setNote}
+            onSubmit={() => logMutation.mutate()}
+            isSubmitting={logMutation.isPending}
+            contactId={contactId}
+            contactName={contactName}
+            isContactPrefilled={true}
+            onChangeContact={undefined}
+          />
+        ) : (
+          <LogStep2
+            connectType={connectType}
+            contactName={contactName}
+            note={note}
+            logDate={format(new Date(), "MMM d, yyyy")}
+            onBack={() => setStep(1)}
+            onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+            onSkip={handleSkip}
+            isSaving={followupMutation.isPending}
+            onUpdateLog={handleUpdateLog}
+          />
         )}
-        <div className="overflow-y-auto px-5 pb-6">
-          <StepIndicator currentStep={step} />
-          {step === 1 ? (
-            <LogStep1
-              connectType={connectType}
-              setConnectType={setConnectType}
-              note={note}
-              setNote={setNote}
-              onSubmit={() => logMutation.mutate()}
-              isSubmitting={logMutation.isPending}
-              contactId={contactId}
-              contactName={contactName}
-              isContactPrefilled={true}
-              onChangeContact={undefined}
-            />
-          ) : (
-            <LogStep2
-              connectType={connectType}
-              contactName={contactName}
-              note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={() => setStep(1)}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
-              onSkip={handleSkip}
-              isSaving={followupMutation.isPending}
-              onUpdateLog={handleUpdateLog}
-            />
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+      </div>
+    </FullscreenTakeover>
   );
 };
 
