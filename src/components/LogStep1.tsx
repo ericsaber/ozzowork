@@ -165,7 +165,7 @@ const LogStep1 = ({
   void isRawTranscript;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", gap: 16, paddingTop: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 16, paddingTop: 0 }}>
       {/* Section 1 — Contact chip */}
       {contactId && contactName && (
         <div>
