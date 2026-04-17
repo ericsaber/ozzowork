@@ -10,12 +10,24 @@ interface FullscreenTakeoverProps {
 const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeoverProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(false);
 
-  // Mount on open, delay unmount until close transition finishes
+  // Mount on open, then trigger transition on next frame so initial closed state paints first
   useEffect(() => {
     if (open) {
       setMounted(true);
+      const r1 = requestAnimationFrame(() => {
+        const r2 = requestAnimationFrame(() => setVisible(true));
+        // store inner id on outer for cleanup
+        (r1 as unknown as { inner?: number }).inner = r2;
+      });
+      return () => {
+        cancelAnimationFrame(r1);
+        const inner = (r1 as unknown as { inner?: number }).inner;
+        if (inner !== undefined) cancelAnimationFrame(inner);
+      };
     } else {
+      setVisible(false);
       const t = setTimeout(() => setMounted(false), 400);
       return () => clearTimeout(t);
     }
@@ -39,15 +51,18 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
     <>
       {/* Backdrop */}
       <div
-        onClick={() => onOpenChange(false)}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          onOpenChange(false);
+        }}
         style={{
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.4)",
           zIndex: 49,
-          opacity: open ? 1 : 0,
+          opacity: visible ? 1 : 0,
           transition: "opacity 200ms ease",
-          pointerEvents: open ? "auto" : "none",
+          pointerEvents: visible ? "auto" : "none",
         }}
       />
       {/* Sheet */}
@@ -63,15 +78,18 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
           flexDirection: "column",
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
-          opacity: open ? 1 : 0,
-          transform: open ? "translateY(0)" : "translateY(100%)",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(100%)",
           transition:
             "opacity 300ms ease, transform 380ms cubic-bezier(0.32, 0.72, 0, 1)",
-          visibility: open ? "visible" : "hidden",
+          visibility: mounted ? "visible" : "hidden",
         }}
       >
         <button
-          onClick={() => onOpenChange(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenChange(false);
+          }}
           aria-label="Close"
           style={{
             position: "absolute",
@@ -82,9 +100,9 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
             cursor: "pointer",
             padding: 8,
             zIndex: 1,
-            opacity: open ? 1 : 0,
+            opacity: visible ? 1 : 0,
             transition: "opacity 200ms ease",
-            transitionDelay: open ? "250ms" : "0ms",
+            transitionDelay: visible ? "250ms" : "0ms",
           }}
         >
           <X size={24} color="#666" />
