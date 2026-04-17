@@ -193,6 +193,17 @@ const LogInteractionSheet = ({
       if (!user) throw new Error("Not authenticated");
       if (!contactId) throw new Error("Select a contact");
 
+const getAvatarColors = (name: string) => {
+  const palette = [
+    { bg: "#fde8da", text: "#c8622a" },
+    { bg: "#d4edda", text: "#2d6a4f" },
+    { bg: "#dce8f5", text: "#2c5f8a" },
+    { bg: "#e8ddf5", text: "#6b3fa0" },
+    { bg: "#f5e8d0", text: "#8a5c2a" },
+  ];
+  const ch = (name?.[0] || "A").toUpperCase().charCodeAt(0);
+  return palette[ch % 5];
+};
 
 
       // Update existing draft
