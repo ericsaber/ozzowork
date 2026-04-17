@@ -37,13 +37,27 @@ const LogInteractionSheet = ({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<1 | "outstanding" | 2 | 3>(startStep);
+  // Determine initial step based on whether contact is pre-filled
+  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 | 3 => {
+    if (preselectedContactId && startStep === 1) return 1;
+    if (startStep === 2) return 2;
+    if (!preselectedContactId) return "contact-picker";
+    return startStep;
+  };
+
+  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2 | 3>(getInitialStep());
 
   useEffect(() => {
     if (open) {
-      setStep(startStep);
+      setStep(getInitialStep());
     }
-  }, [open, startStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, startStep, preselectedContactId]);
+
+  // Contact picker search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
   const [note, setNote] = useState("");
