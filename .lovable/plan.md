@@ -1,49 +1,40 @@
 
 
-## Plan: Prompt 2b Fix 3 — Pill ×, Calendar Card, Via/Reminder Position
+## Plan: Prompt 2b Fix 4 — Date Chips, Edit Gap, Via/Reminder Position
 
 **File:** `src/components/LogStep2.tsx` only.
 
-### Fix 1 — Remove × from summary pill
-Delete the `onSkip` × button block in the summary pill (the trailing `<button aria-label="Dismiss">` with the `<X />` icon). The pill keeps:
-- Green check circle
-- "{TypeLabel} · {contactName}" or "Note · {contactName}" text
-- " · edit" link (still hidden when `isEditing`)
+### Fix 1 — Date chips always render
+Remove the `{!isEditing && (...)}` wrapper around the date chips / Pick date / calendar / via+reminder block. Only the edit panel (`{isEditing && (...)}`) remains conditional. Result: chips, Pick date, and calendar always render; the edit panel renders inline above them when active.
 
-Also remove the now-unused `X` import from `lucide-react` (keep all other imports).
+### Fix 2 — Gap above edit panel
+Add `marginTop: 12` to the outer div of the edit panel card so it sits clear of the summary pill.
 
-### Fix 2 — Calendar contained in a card
-Current code already wraps the `<Calendar>` in a `#faf8f5` / `1px solid #e8e4de` / `borderRadius: 12` card with `overflow: hidden` (gated by `showCalendar`). Confirm + keep that wrapper exactly. Verify `marginTop: 8` is present.
+### Fix 3 — Via + reminder simple conditional
+Replace the `maxHeight`/`opacity` animated wrapper with a plain `{selectedDate && (<div>...</div>)}` block placed immediately after the calendar wrapper. Outer div: `marginTop: 16`, flex column, gap 10. Inside:
+- **Via row:** flex, align-center, gap 10. "via" label (11px `#888480` Outfit) + 5 circular type pills (34×34, `#c8622a` selected / `#f0ede8` unselected, `transition: all 0.12s ease`).
+- **Reminder row:** flex, align-center, gap 8, dashed top border `1px dashed #d8d4ce`, paddingTop 10. Pencil icon 13 `#888480` + transparent input bound to `reminderNote` (maxLength 44) + counter `{reminderNote.length}/44`.
 
-The `disabled` prop already reads:
-```
-disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-```
-No change needed — today remains selectable.
+No `<style>` tag, no fadeIn keyframe — plain conditional render.
 
-### Fix 3 — Via + reminder reveal max-height
-The single reveal wrapper (gated by `revealOpen` / `!!selectedDate`) currently uses `maxHeight: 200`. Both the Via row and the Reminder row already live inside this single wrapper — confirm structure unchanged.
-
-Update only the inline style:
-- `maxHeight: selectedDate ? "160px" : "0"`
-- `opacity: selectedDate ? 1 : 0`
-- `overflow: "hidden"`
-- `transition: "max-height 0.32s ease, opacity 0.22s ease"`
-- Keep the existing `marginTop: revealOpen ? 16 : 0` so spacing above the via row stays correct when open.
+Remove the now-unused `revealOpen` variable.
 
 ### Preserved
 - All `console.log` statements
-- `onSkip` prop in interface (still passed by parents; just no longer wired to a UI element inside LogStep2)
-- All other sections: edit panel, heading, date chips, Pick date button, calendar wrapper, via row, reminder row
-- `handleDoneEditing`, edit-mode logic, `onFollowupStateChange` emission
+- Summary pill (with edit link hidden when `isEditing`)
+- Heading "Set a follow-up"
+- Edit panel structure and `handleDoneEditing`
+- Date chips, Pick date button, inline calendar card
+- `onFollowupStateChange` emission via `useEffect`
+- `onSaveWithFollowup` / `onSkip` / `isSaving` props (unused but kept for interface stability)
 
 ### Checklist
 - ✅ Only `LogStep2.tsx` touched
-- ✅ × removed from summary pill (and `X` import dropped)
-- ✅ "· edit" link remains, hidden when `isEditing`
-- ✅ Calendar wrapped in `#faf8f5` card with `1px solid #e8e4de`, radius 12, `overflow: hidden`, `marginTop: 8`
-- ✅ `disabled` allows today (`< setHours(0,0,0,0)`)
-- ✅ Via + reminder both inside the single `selectedDate`-gated reveal wrapper
-- ✅ Reveal `maxHeight` set to `160px` when open
+- ✅ `{!isEditing && (...)}` wrapper removed
+- ✅ Edit panel `marginTop: 12`
+- ✅ `maxHeight` reveal removed
+- ✅ Via + reminder via `{selectedDate && (...)}`
+- ✅ `revealOpen` removed
+- ✅ All other logic/state unchanged
 - ✅ All `console.log` preserved
 
