@@ -176,76 +176,112 @@ const LogStep2 = ({
           style={{
             background: "#faf8f5",
             border: "1px solid #e8e4de",
-            borderRadius: 14,
-            padding: "14px 16px",
+            borderRadius: 16,
+            padding: 16,
             display: "flex",
             flexDirection: "column",
             gap: 12,
           }}
         >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {typeOptions.map((t) => {
-              const selected = editConnectType === t.value;
-              return (
-                <button
-                  key={t.value}
-                  onClick={() => setEditConnectType(selected ? "" : t.value)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "7px 14px",
-                    borderRadius: 100,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    fontFamily: "Outfit, sans-serif",
-                    cursor: "pointer",
-                    ...(selected
-                      ? { background: "#c8622a", color: "#fff", border: "1px solid transparent" }
-                      : { background: "#f0ede8", color: "#6b6860", border: "1px solid #e8e4de" }),
-                  }}
-                >
-                  <t.icon size={14} />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
           <textarea
             value={editNote}
             onChange={(e) => setEditNote(e.target.value)}
-            placeholder="Add a note…"
+            onInput={(e) => {
+              e.currentTarget.style.height = "auto";
+              e.currentTarget.style.height = e.currentTarget.scrollHeight + "px";
+            }}
+            placeholder="What happened?"
             style={{
               width: "100%",
-              background: "#f0ede8",
-              borderRadius: 10,
+              minHeight: 60,
+              background: "transparent",
               border: "none",
               outline: "none",
               resize: "none",
-              padding: "8px 12px",
-              fontStyle: "italic",
-              color: "#1c1a17",
-              minHeight: 48,
               fontFamily: "'Crimson Pro', serif",
               fontSize: 16,
+              fontStyle: "italic",
+              color: "#1c1a17",
             }}
           />
-          <button
-            onClick={handleDoneEditing}
-            style={{
-              fontSize: 13,
-              color: "#c8622a",
-              fontFamily: "Outfit, sans-serif",
-              textDecoration: "underline",
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              alignSelf: "flex-start",
-            }}
-          >
-            Done editing
-          </button>
+          <div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                marginBottom: 6,
+              }}
+            >
+              How did you connect?
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {typeOptions.map((t) => {
+                const selected = editConnectType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => setEditConnectType(selected ? "" : t.value)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 12px",
+                      borderRadius: 100,
+                      fontSize: 13,
+                      fontFamily: "Outfit, sans-serif",
+                      cursor: "pointer",
+                      ...(selected
+                        ? { background: "#fdf4f0", color: "#c8622a", border: "1.5px solid #c8622a" }
+                        : { background: "#faf8f5", color: "#6b6860", border: "1px solid #e8e4de" }),
+                    }}
+                  >
+                    <t.icon size={13} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setEditConnectType(connectType);
+                setEditNote(note);
+              }}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDoneEditing}
+              style={{
+                background: "transparent",
+                border: "1.5px solid #c8622a",
+                borderRadius: 100,
+                padding: "7px 18px",
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#c8622a",
+                fontFamily: "Outfit, sans-serif",
+                cursor: "pointer",
+              }}
+            >
+              Done
+            </button>
+          </div>
         </div>
       )}
 
