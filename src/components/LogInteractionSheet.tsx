@@ -874,10 +874,15 @@ const LogInteractionSheet = ({
                 connectType={connectType}
                 contactName={contactName}
                 note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={startStep === 2 ? undefined : handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
+                onFollowupStateChange={(date, type, reminder) => {
+                  setPendingDate(date);
+                  setPendingType(type);
+                  setPendingReminder(reminder);
+                }}
               />
             </div>
           )}
@@ -888,10 +893,15 @@ const LogInteractionSheet = ({
                 connectType={connectType}
                 contactName={contactName}
                 note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
+                onFollowupStateChange={(date, type, reminder) => {
+                  setPendingDate(date);
+                  setPendingType(type);
+                  setPendingReminder(reminder);
+                }}
               />
             </div>
           )}
