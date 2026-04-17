@@ -547,12 +547,6 @@ const LogInteractionSheet = ({
     setExistingFollowup(null);
   };
 
-  // "Want to add one?" — go back to step 1 with contact preserved
-  const handleAddInteraction = () => {
-    setStep(1);
-    setSkippedInteraction(false);
-    setExistingFollowup(null);
-  };
 
   const handleStepBack = () => {
     if (step === "outstanding") {
