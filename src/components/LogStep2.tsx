@@ -83,8 +83,6 @@ const LogStep2 = ({
       : format(parsed, "EEE, MMM d, yyyy");
   })();
 
-  const revealOpen = !!selectedDate;
-
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       {/* Section 1 — Summary pill (always visible when there is content) */}
