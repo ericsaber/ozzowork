@@ -863,13 +863,10 @@ const LogInteractionSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={handleStepBack}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={startStep === 2 ? undefined : handleSkip}
               isSaving={followupMutation.isPending}
               onUpdateLog={handleUpdateLog}
-              skippedInteraction={skippedInteraction || startStep === 2}
             />
           )}
 
@@ -878,13 +875,10 @@ const LogInteractionSheet = ({
               connectType={connectType}
               contactName={contactName}
               note={note}
-              logDate={format(new Date(), "MMM d, yyyy")}
-              onBack={handleStepBack}
               onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date })}
               onSkip={handleSkip}
               isSaving={followupMutation.isPending}
               onUpdateLog={handleUpdateLog}
-              skippedInteraction={false}
             />
           )}
         </div>
