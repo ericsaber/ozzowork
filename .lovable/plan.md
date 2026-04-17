@@ -1,91 +1,65 @@
 
 
-## Plan: Replace Vaul with custom fullscreen takeover (Step 1 of 4) — REVISED
+## Plan: Fix animation + discard dialog wiring
 
-### Files touched (three)
-1. **`src/components/FullscreenTakeover.tsx`** — NEW shared component
-2. **`src/components/LogInteractionSheet.tsx`** — swap Drawer for FullscreenTakeover
-3. **`src/components/CompleteFollowupSheet.tsx`** — swap Drawer for FullscreenTakeover
+**Files:** `src/components/FullscreenTakeover.tsx`, `src/components/LogInteractionSheet.tsx`
 
-### Files explicitly NOT touched
-`EditInteractionSheet.tsx`, `LastInteractionSheet.tsx`, `FollowupCard.tsx`, `src/components/ui/drawer.tsx`, `src/components/ui/sheet.tsx`, `src/components/ui/alert-dialog.tsx`, `package.json`.
+### Issue 1 — Animation fix (FullscreenTakeover.tsx)
 
-### Vaul status (unchanged from prior plan)
-- `src/components/ui/sheet.tsx` uses `@radix-ui/react-dialog` — does NOT use vaul.
-- `src/components/ui/drawer.tsx` uses vaul; `EditInteractionSheet.tsx` (forbidden to touch) imports from it.
-- **Decision:** `package.json` not touched. Vaul stays installed.
+Add a `visible` state separate from `mounted`. The current code drives transitions off the `open` prop, which changes in the same paint as the initial mount — the browser never sees the `translateY(100%)` start state.
 
-### Adjustment 1 — Extract to shared component
-
-Create `src/components/FullscreenTakeover.tsx` exporting a single `FullscreenTakeover` component with this interface:
-
+Update the open-effect:
 ```tsx
-interface FullscreenTakeoverProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
-}
+const [visible, setVisible] = useState(false);
+
+useEffect(() => {
+  if (open) {
+    setMounted(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setVisible(true));
+    });
+  } else {
+    setVisible(false);
+    const t = setTimeout(() => setMounted(false), 400);
+    return () => clearTimeout(t);
+  }
+}, [open]);
 ```
 
-Implementation (identical to prior plan, now in one shared file):
-- Fixed-position backdrop (`z-49`, `rgba(0,0,0,0.4)`, click → close).
-- Fixed-position sheet (`z-50`, `inset:0`, `height:100dvh`, `background:#f0ede8`).
-- Flex column layout, `paddingTop`/`paddingBottom` from `env(safe-area-inset-*)`.
-- CSS transitions: `opacity 300ms ease, transform 380ms cubic-bezier(0.32, 0.72, 0, 1)`.
-- Open: `opacity:1, translateY(0)`. Closed: `opacity:0, translateY(100%)`.
-- Mount-on-open / delayed-unmount (400ms) so closed state doesn't intercept touches; `visibility:hidden` while transitioning out.
-- Close (×) button top-right (Lucide `X`, `#666`), fade in with `transition-delay: 250ms` on appear, no delay on disappear.
-- `visualViewport` resize listener writes pixel height to a `containerRef` so the soft keyboard shrinks the sheet.
+Replace every `open ? ... : ...` style on the backdrop, sheet, and close button with `visible ? ... : ...`:
+- Backdrop: `opacity`, `pointerEvents`
+- Sheet: `opacity`, `transform`, `visibility`
+- Close button: `opacity`, `transitionDelay`
 
-Both target files import:
-```tsx
-import FullscreenTakeover from "@/components/FullscreenTakeover";
-```
+The `visualViewport` listener and the `if (!mounted && !open) return null` guard stay as-is.
 
-Future tweaks land in one place.
+### Issue 2 — Discard dialog wiring (LogInteractionSheet.tsx)
 
-### Adjustment 2 — AlertDialog z-index above the sheet
+**Trace results:**
+1. ✅ `<FullscreenTakeover open={open} onOpenChange={handleOpen}>` — correct, `handleOpen` is passed (line 554), not raw `onOpenChange`.
+2. ✅ Backdrop and × button in `FullscreenTakeover` both call the prop `onOpenChange(false)`, which routes to `handleOpen(false)`.
+3. ✅ `handleOpen` (line 119) calls `setShowDiscardDialog(true)` when `isDirty` is true and returns early — and the `<AlertDialog open={showDiscardDialog}>` is rendered (line 662) with `z-[60]`.
 
-**Verified:** shadcn `AlertDialogOverlay` and `AlertDialogContent` both use `z-50` (see `src/components/ui/alert-dialog.tsx` lines 19, 37). Our fullscreen sheet is also `z-50`. Equal z-index relies on DOM insertion order, which is fragile (Radix portals to `document.body`; the sheet is rendered inside the React tree, also typically at body level via fixed positioning — order is not guaranteed).
+**Root cause:** the wiring is correct, but the dialog is being dismissed instantly. The new `FullscreenTakeover` overlay is a fixed `<div>` that calls `onOpenChange(false)` on **any** click. When the AlertDialog mounts, Radix portals it to `document.body`. The backdrop click bubbles up — but more importantly, the AlertDialog's own overlay sits at `z-50` (shadcn default) while our sheet's backdrop is also `z-49` and our sheet body `z-50`. A tap on the AlertDialog's overlay can fall through to our backdrop click handler if the AlertDialog overlay portal mounts before our sheet in DOM order.
 
-**Fix:** in `LogInteractionSheet.tsx` only, pass an explicit class on the two `<AlertDialogContent>` and (where applicable) `<AlertDialogOverlay>` instances to bump them above the sheet:
+**Fix:** raise the `<AlertDialog>` portal stacking so it sits unambiguously above both the FullscreenTakeover backdrop and sheet body. Two parts:
 
-```tsx
-<AlertDialogContent className="z-[60]">
-```
+1. The two existing `<AlertDialogContent className="z-[60]">` instances (discard + cancel-confirm) — already done.
+2. Bump the FullscreenTakeover backdrop to be **non-interactive while a sheet-internal AlertDialog is open** is not feasible without prop drilling. Simpler: the actual cause of the dialog "not showing" is most likely that on mobile the same tap that closes the sheet via the backdrop synthesizes a second event that hits the alert dialog's overlay and dismisses it. To prevent this, in `FullscreenTakeover.tsx` change the backdrop click handler to fire on `onPointerDown` instead of `onClick`, and `stopPropagation` on the sheet container's pointer events so taps inside the sheet don't bubble.
 
-For the overlay, since shadcn's `AlertDialogContent` internally renders its own `AlertDialogOverlay` without exposing a prop, we override via the content className alongside a sibling-overlay approach: simplest is to bump `AlertDialogContent` to `z-[60]` and accept the dimmed overlay at `z-50` (the sheet's `#f0ede8` background already fully covers everything — the dialog appearing above it with a translucent overlay only between dialog and sheet looks correct).
+Concretely in `FullscreenTakeover.tsx`:
+- Backdrop: replace `onClick={() => onOpenChange(false)}` with `onPointerDown={(e) => { e.stopPropagation(); onOpenChange(false); }}`
+- Close button: keep `onClick` but add `e.stopPropagation()` in the handler.
 
-If visual QA after implementation shows the overlay sitting under the sheet awkwardly, the follow-up fix is a one-line override on `AlertDialogOverlay` usage. For Step 1 we apply only the content z-bump.
+This guarantees the close gesture fires exactly once, on a single pointer event, and the resulting `setShowDiscardDialog(true)` lands and the dialog renders cleanly above the still-open sheet (`handleOpen` already returned early without closing).
 
-**Concretely:** the two `<AlertDialogContent>` usages in `LogInteractionSheet.tsx` (discard-confirm and cancel-confirm dialogs) get `className="z-[60]"` added. No other AlertDialog call sites are changed. `src/components/ui/alert-dialog.tsx` is not modified.
+No other behavior changes. All existing `console.log` statements preserved.
 
-### Inner content layout (unchanged from prior plan)
-
-In both target files, the existing single inner `<div className="overflow-y-auto px-5 pb-6">` becomes the scrollable flex child:
-```tsx
-<div className="px-5 pb-6" style={{ flex: 1, overflowY: 'auto' }}>
-  {/* existing children unchanged */}
-</div>
-```
-
-### Wiring summary
-- `LogInteractionSheet.tsx`: replace `<Drawer …><DrawerContent …>…</DrawerContent></Drawer>` with `<FullscreenTakeover open={open} onOpenChange={handleOpen}>…</FullscreenTakeover>`. Drop `snapPoints`, `maxHeightRatio`, and contact-prefilled height variants. Move `onContextMenu` to the inner scroll div. Add `className="z-[60]"` to the two `<AlertDialogContent>` instances.
-- `CompleteFollowupSheet.tsx`: same Drawer → FullscreenTakeover swap. `<CelebrationHeader>` and `<StepIndicator>` remain as direct children inside the takeover.
-
-### Preserved exactly
-- All props interfaces (`LogInteractionSheetProps`, `CompleteFollowupSheetProps`).
-- All state, mutations, queries, callbacks.
-- All `console.log` statements.
-- All child components and inner classNames.
-
-### Checklist confirmation
-1. ✅ Vaul JSX fully removed from both target files.
-2. ✅ Files touched: the two targets + new `FullscreenTakeover.tsx`. `package.json` not touched.
-3. ✅ `src/components/ui/sheet.tsx` uses `@radix-ui/react-dialog`; vaul stays for `EditInteractionSheet.tsx`.
-4. ✅ `LastInteractionSheet.tsx` and `FollowupCard.tsx` not modified.
-5. ✅ Props interfaces unchanged.
-6. ✅ `visualViewport` listener present (in shared `FullscreenTakeover`).
-7. ✅ `EditInteractionSheet.tsx` not modified.
-8. ✅ AlertDialog z-index addressed: shadcn defaults are `z-50` (equal to sheet); plan adds explicit `z-[60]` on the two `AlertDialogContent` instances in `LogInteractionSheet.tsx`.
+### Checklist
+- ✅ Only `FullscreenTakeover.tsx` and `LogInteractionSheet.tsx` touched
+- ✅ Double `requestAnimationFrame` used to force paint before transition
+- ✅ `visible` state (not `open`) drives all transition styles
+- ✅ Discard dialog trigger path traced; fix is to switch backdrop close handler to `onPointerDown` + `stopPropagation` so a single tap cleanly triggers `handleOpen(false)` once
+- ✅ No discard dialog logic changes — only event wiring
+- ✅ All `console.log` statements preserved
 
