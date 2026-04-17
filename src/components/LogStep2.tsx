@@ -87,8 +87,8 @@ const LogStep2 = ({
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* Section 1 — Summary pill or inline edit */}
-      {showSummary && !isEditing && (
+      {/* Section 1 — Summary pill (always visible when there is content) */}
+      {showSummary && (
         <div
           style={{
             display: "flex",
@@ -130,7 +130,7 @@ const LogStep2 = ({
           >
             {connectType ? `${typeLabel} · ${contactName}` : `Note · ${contactName}`}
           </span>
-          {onUpdateLog && (
+          {onUpdateLog && !isEditing && (
             <>
               <span style={{ fontSize: 13, color: "rgba(45,106,79,0.6)", flexShrink: 0 }}>·</span>
               <button
@@ -177,7 +177,7 @@ const LogStep2 = ({
         </div>
       )}
 
-      {showSummary && isEditing && (
+      {isEditing && (
         <div
           style={{
             background: "#faf8f5",
