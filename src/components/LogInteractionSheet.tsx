@@ -84,6 +84,9 @@ const LogInteractionSheet = ({
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [pendingDate, setPendingDate] = useState("");
+  const [pendingType, setPendingType] = useState("");
+  const [pendingReminder, setPendingReminder] = useState("");
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
@@ -140,6 +143,9 @@ const LogInteractionSheet = ({
       setShowQuickAdd(false);
       setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
       setShowCancelConfirmDialog(false);
+      setPendingDate("");
+      setPendingType("");
+      setPendingReminder("");
     }, 300);
   };
 
@@ -279,7 +285,7 @@ const LogInteractionSheet = ({
 
   // ── Follow-up mutation: step 2 normal + step 3 complete path ──
   const followupMutation = useMutation({
-    mutationFn: async ({ type, date }: { type: string; date: string }) => {
+    mutationFn: async ({ type, date, reminderNote }: { type: string; date: string; reminderNote: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       if (!draftId && !existingFollowup) {
@@ -318,6 +324,7 @@ const LogInteractionSheet = ({
 
         // 3. If a new follow-up date was set, insert a new follow_ups row
         if (date) {
+          console.log("[followupMutation] complete-path insert reminder_note:", reminderNote);
           const { error: insertError } = await supabase
             .from("follow_ups")
             .insert({
@@ -326,9 +333,10 @@ const LogInteractionSheet = ({
               planned_type: type || null,
               planned_date: date,
               status: "active",
+              reminder_note: reminderNote.trim() || null,
             });
           if (insertError) throw insertError;
-          console.log("[followupMutation] new follow_up inserted:", { type, date });
+          console.log("[followupMutation] new follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
         }
 
         return { completePath: true, hasFollowup: !!date };
@@ -348,6 +356,7 @@ const LogInteractionSheet = ({
       }
 
       // 2. Insert new follow_up
+      console.log("[followupMutation] normal-path insert reminder_note:", reminderNote);
       const { error: insertError } = await supabase
         .from("follow_ups")
         .insert({
@@ -356,9 +365,10 @@ const LogInteractionSheet = ({
           planned_type: type || null,
           planned_date: date,
           status: "active",
+          reminder_note: reminderNote.trim() || null,
         });
       if (insertError) throw insertError;
-      console.log("[followupMutation] follow_up inserted:", { type, date });
+      console.log("[followupMutation] follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
 
       return { completePath: false, hasFollowup: true };
     },
