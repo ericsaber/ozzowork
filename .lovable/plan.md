@@ -1,46 +1,77 @@
 
 
-## Plan: Fix Note Card Height — Complete Flex Chain
+## Plan: Prompt 2b — LogStep2 Redesign
 
-**Files:** `src/components/LogInteractionSheet.tsx`, `src/components/LogStep1.tsx`
+**Files:** `src/components/LogStep2.tsx` (full rewrite), `src/components/LogInteractionSheet.tsx` (cleanup)
 
-### Root cause
-`min-height: 100%` on LogStep1 resolves against an ancestor (the `paddingTop: 20` wrapper) that has no defined height. The flex chain from the scroll container down to the note card is broken — intermediate divs shrink to content. Fix: make every ancestor a flex column with `flex: 1` so heights propagate.
+### Part 1 — LogStep2.tsx full rewrite
 
-### Changes
-
-**1. LogInteractionSheet.tsx — scrollable content div**
-Add `display: flex; flexDirection: column` to the existing scrollable container (`flex: 1, minHeight: 0, overflowY: auto, padding: "0 20px"`).
-
-**2. LogInteractionSheet.tsx — Step 1 padding wrapper**
-The `<div style={{ paddingTop: 20 }}>` wrapping the quick-add form + `<LogStep1>` becomes:
-```tsx
-{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }
+**Props interface (final):**
+```ts
+{
+  connectType: string;
+  contactName: string;
+  note: string;
+  onSaveWithFollowup: (type: string, date: string) => void;
+  onSkip?: () => void;
+  isSaving: boolean;
+  onUpdateLog?: (connectType: string, note: string) => void;
+}
 ```
+Removed: `skippedInteraction`, `onAddInteraction`, `onBack`, `logDate`.
 
-**3. LogStep1.tsx — outer wrapper**
-Replace `minHeight: "100%"` with `flex: 1`, add `minHeight: 0`. Keep `display: flex, flexDirection: column, gap: 16, paddingTop: 0`.
+**State:**
+- `followUpType` — init from `connectType` if truthy
+- `selectedDate` — `""`
+- `showCalendar` — `false`
+- `reminderNote` — `""` (local only, 44 char max, not yet wired to save)
+- `isEditing`, `editConnectType`, `editNote` — preserved for inline edit
+- Removed: `viaActivated`, `showDatePicker`
 
-**4. LogStep1.tsx — note card**
-Unchanged: keep `flex: 1, display: flex, flexDirection: column, minHeight: 200`.
+**Mount logging:** preserved verbatim.
 
-**5. LogStep1.tsx — textarea**
-Unchanged: keep `flex: 1, minHeight: 80`.
+**Render structure (flex column):**
+
+1. **Summary pill** — only when `connectType || note`. Green pill (`#f0f7f4` bg, `#b7d9cc` border, 100px radius, `align-self: flex-start`). 18px green check circle, "{TypeLabel} · {contactName}" or "Note · {contactName}", " · edit" tappable link → sets `isEditing(true)`, × button → calls `onSkip?.()`. When `isEditing`, swap pill for existing inline edit panel (type pill row + textarea + Done editing) — logic preserved.
+
+2. **Heading** — "Set a follow-up", Crimson Pro 28px, weight 500, `#1c1a17`, `letterSpacing: -0.01em`, margins `16px 0`.
+
+3. **Date chips** — CSS grid 2×2, gap 8px. Chips: Tomorrow / 3 days / 1 week / 2 weeks. Default `#faf8f5`/`#e8e4de` border/12px radius. Selected: `#fdf4f0` bg + `1.5px solid #c8622a` + `#c8622a` text. Then full-width **Pick date** button (CalendarIcon 15px) below grid. When selected date is custom (not one of the 4 presets), button shows formatted date label in selected style. Tapping toggles `showCalendar`.
+
+4. **Inline calendar** — when `showCalendar`, render shadcn `<Calendar>` directly (no Popover wrapper). Same `disabled` rule. Selecting closes calendar, sets `selectedDate`, does not clear chips.
+
+5. **Via + reminder reveal** — wrapper with `max-height` + `opacity` transition; hidden when `!selectedDate`.
+   - Via row: "via" label + 5 icon circles (34px). Selected = `#c8622a` bg / white icon. Pre-populate from `connectType` mount.
+   - Reminder row: dashed top border, Pencil 13px, transparent input (`maxLength={44}`), counter `{n}/44`.
+
+6. **Save button** — full-width pill, sienna bg when enabled / `#ddd8d1` disabled. Label "Save" + ArrowRight 18px (or "Saving…"). Calls `onSaveWithFollowup(followUpType, selectedDate)`.
+
+7. **Skip link** — only when `onSkip` provided; underlined `#888480` 13px.
+
+### Part 2 — LogInteractionSheet.tsx cleanup
+
+- Remove `skippedInteraction` state declaration and any setters.
+- Remove `handleAddInteraction` (if present).
+- Remove `skippedInteraction`, `onAddInteraction`, `onBack`, `logDate` props from BOTH `<LogStep2>` call sites (step 2 and step 3 renders). Keep all other props unchanged.
 
 ### Preserved
-- All `console.log` statements
-- All voice recording logic, refs, state, transcribeAudio
-- All other styling (backgrounds, borders, radii, padding, gap)
-- Contact picker, bottom action area, nudge, Next button, skip link
-- Quick-add form inside the Step 1 wrapper
+- All `console.log` statements in both files
+- Voice recording, draft/publish flow, mutations, step routing
+- `handleDoneEditing` and inline edit logic in LogStep2
+- `CompleteFollowupSheet.tsx` untouched
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` and `LogStep1.tsx` touched
-- ✅ Scrollable content div: `display: flex; flexDirection: column` added
-- ✅ Step 1 padding wrapper: `flex: 1; display: flex; flexDirection: column; minHeight: 0`
-- ✅ LogStep1 outer wrapper: `flex: 1` (not `minHeight: 100%`)
-- ✅ LogStep1 outer wrapper: `minHeight: 0`
-- ✅ Note card retains `flex: 1; display: flex; flexDirection: column; minHeight: 200`
-- ✅ Textarea retains `flex: 1; minHeight: 80`
+- ✅ Only LogStep2.tsx + LogInteractionSheet.tsx touched
+- ✅ Dead props removed from interface and call sites
+- ✅ Summary pill conditional on `connectType || note`
+- ✅ Heading Crimson Pro 28px
+- ✅ 2×2 chip grid + full-width Pick date
+- ✅ Inline Calendar (no Popover import)
+- ✅ Via + reminder reveal gated by `selectedDate`
+- ✅ `followUpType` pre-populated from `connectType`
+- ✅ Reminder note local state, 44 char counter
+- ✅ Save disabled until date set
+- ✅ `skippedInteraction` state removed from sheet
 - ✅ All `console.log` preserved
+- ✅ CompleteFollowupSheet untouched
 
