@@ -1,54 +1,98 @@
 
 
-## Plan: Direction-aware close animation for FullscreenTakeover
+## Plan: Contact Picker State + LogStep1 Redesign (revised)
 
-**File:** `src/components/FullscreenTakeover.tsx` only.
+**Files:** `src/components/LogStep1.tsx`, `src/components/LogInteractionSheet.tsx` only.
 
-### Changes
+### Clarification incorporated
+`skippedInteraction` state and prop pass-through to `<LogStep2>` are preserved unchanged in this prompt:
+- Step 2 render: `skippedInteraction={skippedInteraction || startStep === 2}`
+- Step 3 render: `skippedInteraction={false}`
 
-**1. Sheet — slide only on close (no fade)**
+The earlier "remove `skippedInteraction` references on LogStep2 call sites" item is dropped. The state stays, the prop pass-through stays. That cleanup is deferred to prompt 2b.
 
-Replace the current sheet opacity + transition:
+### Part 1 — `LogStep1.tsx` full rewrite
 
-```tsx
-opacity: 1,  // always opaque — no fade on either direction
-transform: visible ? "translateY(0)" : "translateY(100%)",
-transition: visible
-  ? "opacity 300ms ease, transform 420ms cubic-bezier(0.32, 0.72, 0, 1)"
-  : "transform 480ms cubic-bezier(0.4, 0, 1, 1)",
-```
-
-The ease-in curve `cubic-bezier(0.4, 0, 1, 1)` accelerates downward — feels like gravity rather than a uniform slide.
-
-**2. Backdrop — sync close duration to sheet**
-
-```tsx
-opacity: visible ? 1 : 0,
-transition: visible ? "opacity 200ms ease" : "opacity 480ms ease",
-pointerEvents: visible ? "auto" : "none",
-```
-
-Backdrop dims gradually alongside the sliding sheet so they finish together — no flash of the page underneath.
-
-**3. Close button — unchanged**
-
-The 200ms fade with 250ms delay stays as-is.
-
-**4. Unmount timeout — unchanged**
-
-Stays at 560ms (current value), which comfortably exceeds the 480ms close transition.
-
-### Preserved
+**Preserved verbatim:**
+- All voice recording: `startRecording`, `stopRecording`, `transcribeAudio`, `handleRecordingCTA`, `mediaRecorderRef`, `chunksRef`, `isRecording`, `isTranscribing`, `isRawTranscript`
+- Auto-grow textarea `useEffect` for programmatic note updates
+- All Supabase auth calls inside `transcribeAudio`
 - All `console.log` statements
-- `mounted` / `visible` state machine, double-rAF open trick, `visibility: hidden` guard
-- visualViewport resize listener
-- Backdrop `onPointerDown` close handler
+- `handlePillClick` toggle (tap selected = deselect)
+
+**Removed:** contact search UI + state, submit button, skip link, date row, active follow-up nudge, `showContactFlag`.
+
+**Final props:**
+```ts
+{
+  connectType, setConnectType, note, setNote,
+  contactId?, contactName?, isContactPrefilled?,
+  onSubmit?, isSubmitting?  // optional, unused in UI (CompleteFollowupSheet compat)
+}
+```
+
+**New UI — three sections, gap 16px:**
+1. **Contact chip** (when `contactId && contactName`): pill with 28px avatar (#e8c4b0 bg, #c8622a text, initials) + name. Display only.
+2. **Note + voice card**: `#faf8f5` bg, `#e8e4de` border, 16px radius, 14px padding. Textarea (transparent, 16px Outfit, placeholder "What did you talk about?", min-height 100px, auto-grow) → 1px divider → voice pill button:
+   - Idle: `#fdf4f0`/`#e8c4b0`, Mic + "Log with Voice" in `#c8622a`
+   - Recording: `#fdecea`/`#f5b8b4`, Square + "Stop recording" in `#c0392b`, subtle pulse
+   - Transcribing: `#f5f3f0`/`#e8e4de`, Mic + "Transcribing…" italic muted, no interaction
+3. **Type pills** (Call/Email/Text/Meeting/Video, Lucide Phone/Mail/MessageSquare/Users/Video): progressive reveal via `max-height` + `opacity` when `note.trim().length > 0 || connectType !== ""`. Label "HOW'D YOU CONNECT?" 10px uppercase `#888480`. Selected = `#fdf4f0` bg + `#c8622a` border/text.
+
+### Part 2 — `LogInteractionSheet.tsx` updates
+
+**Step type:**
+```ts
+useState<"contact-picker" | 1 | "outstanding" | 2 | 3>(getInitialStep())
+```
+
+**`getInitialStep()`:**
+- `preselectedContactId && startStep === 1` → `1`
+- `startStep === 2` → `2`
+- `!preselectedContactId` → `"contact-picker"`
+- else → `startStep`
+
+Reset useEffect on `[open, startStep, preselectedContactId]` calls `getInitialStep()`.
+
+**`handleStepBack`:** outstanding→1, 3→outstanding, 2 (no preselect)→1, default→1.
+
+**New handlers:**
+- `handleSkipToFollowup`: validates contact, deletes draft if any, resets type/note, sets `skippedInteraction(true)`, advances to step 2
+- `handleSaveLogOnly`: publishes draft if exists, invalidates, closes — no navigation
+- `canNext = (note.trim().length > 0 || connectType !== "") && !logMutation.isPending`
+
+**State moved from LogStep1:** `searchQuery`, `searchOpen`, `searchInputRef`, `filteredContacts` memo (top 8 always), `handleContactSelect(id)` (sets contactId, clears search; caller advances to step 1).
+
+**JSX inside `FullscreenTakeover`:**
+- Scrollable content (`flex: 1, overflowY: auto, padding: 0 20px`): StepIndicator (hidden for contact-picker / outstanding / `startStep === 2` / logOnly), then per-step. Contact picker = pill search input (autoFocus) + filtered list (36px gray avatar + initials, name, optional company) + "+ Add {query}" CTA + existing quick-add form when `showQuickAdd`.
+- Bottom action area (`flexShrink: 0, padding: 8px 20px 24px`) — only when `step === 1`:
+  - Active follow-up nudge (when `activeFollowup && contactId`): `#fdf4f0` card, white circle + Calendar icon, "{name} has an active follow-up" + underlined "Save log only?" → `handleSaveLogOnly`
+  - Next button: full-width pill, `#c8622a` when `canNext` else `#ddd8d1`/`#b0ada8`, label "Next" or "Save" (logOnly), ArrowRight icon → `logMutation.mutate()`
+  - Skip link "Set a follow-up without logging" → `handleSkipToFollowup`, disabled gray when `activeFollowup`, hidden when `logOnly`
+
+**LogStep2 call sites (preserved unchanged):**
+- Step 2: `skippedInteraction={skippedInteraction || startStep === 2}`
+- Step 3: `skippedInteraction={false}`
+
+**Cleanup (this prompt):**
+- Remove `handleAddInteraction` (dead coin-model code)
+- Stop passing removed props to `<LogStep1>`
+- Keep `handleChangeContact`, `handleAddNewContact`, `skippedInteraction` state and all LogStep2 prop pass-through
+
+### Behavior gates
+- Contact picker only when `!preselectedContactId`
+- `canNext` does NOT require contact selection
+- Nudge only when `activeFollowup && contactId && step === 1`
+- Skip link disabled when `activeFollowup`
 
 ### Checklist
-- ✅ Only `FullscreenTakeover.tsx` touched
-- ✅ Sheet opacity is `1` in both states — no fade on close
-- ✅ Sheet transition conditional on `visible` (spring open, ease-in close)
-- ✅ Backdrop transition conditional on `visible` (200ms open, 480ms close)
-- ✅ Unmount timeout stays at 560ms
+- ✅ Only `LogStep1.tsx` and `LogInteractionSheet.tsx` touched
+- ✅ Voice logic preserved verbatim
+- ✅ LogStep1 renders no submit / skip / contact search
+- ✅ `onSubmit`/`isSubmitting` kept optional on LogStep1
+- ✅ `skippedInteraction` state + LogStep2 prop pass-through unchanged
+- ✅ Bottom action area is `flexShrink: 0` outside scrollable div
+- ✅ `handleSaveLogOnly` publishes + closes, no navigation
 - ✅ All `console.log` preserved
+- ✅ `CompleteFollowupSheet` not modified
 
