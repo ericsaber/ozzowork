@@ -24,7 +24,7 @@ import CompleteFollowupSheet from "@/components/CompleteFollowupSheet";
 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { format, parseISO, startOfToday } from "date-fns";
+import { format, startOfToday } from "date-fns";
 
 const parseDate = (dateStr: string) => {
   if (!dateStr) return new Date();
@@ -582,7 +582,7 @@ const ContactHistory = () => {
                 const plannedDate = fu.planned_date
                   ? format(parseDate(fu.planned_date), "MMM d")
                   : "—";
-                const setDate = format(parseISO(fu.created_at), "MMM d");
+                const setDate = format(parseDate(fu.created_at), "MMM d");
                 return (
                   <div key={`scheduled-${fu.id}`} style={dividerStyle}>
                     <div className="flex gap-3 py-3 px-2 -mx-2" style={{ opacity: 0.6 }}>
@@ -637,7 +637,7 @@ const ContactHistory = () => {
                         </div>
                         <div className="flex-1 min-w-0 flex items-center">
                           <span style={{ fontFamily: "var(--font-body)", fontSize: "16px", color: "#71717a" }}>
-                            Follow-up cancelled{fu.completed_at ? ` · ${format(parseISO(fu.completed_at), "MMM d")}` : ""}
+                            Follow-up cancelled{fu.completed_at ? ` · ${format(parseDate(fu.completed_at), "MMM d")}` : ""}
                           </span>
                         </div>
                       </div>
@@ -652,7 +652,7 @@ const ContactHistory = () => {
                   const dateStr = fu.connect_date
                     ? format(parseDate(fu.connect_date), "MMM d")
                     : fu.completed_at
-                    ? format(parseISO(fu.completed_at), "MMM d")
+                    ? format(parseDate(fu.completed_at), "MMM d")
                     : "";
 
                   if (verb) {
@@ -815,17 +815,15 @@ const ContactHistory = () => {
         startStep={logSheetMode?.startStep ?? 1}
         logOnly={logSheetMode?.logOnly ?? false}
       />
-      {completeTarget && (
-        <CompleteFollowupSheet
-          open={!!completeTarget}
-          onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
-          followUpId={completeTarget.followUpId}
-          contactId={completeTarget.contactId}
-          contactName={completeTarget.contactName}
-          plannedType={completeTarget.plannedType}
-          userId=""
-        />
-      )}
+      <CompleteFollowupSheet
+        open={!!completeTarget}
+        onOpenChange={(o) => { if (!o) setCompleteTarget(null); }}
+        followUpId={completeTarget?.followUpId ?? ""}
+        contactId={completeTarget?.contactId ?? id ?? ""}
+        contactName={completeTarget?.contactName ?? ""}
+        plannedType={completeTarget?.plannedType ?? null}
+        userId=""
+      />
 
       {/* Delete contact */}
       <AlertDialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>
