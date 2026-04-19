@@ -28,7 +28,7 @@ const typeLabels: Record<string, string> = {
   video: "Video",
 };
 
-const typeIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+const typeIcons: Record<string, LucideIcon> = {
   call: Phone,
   email: Mail,
   text: MessageSquare,
