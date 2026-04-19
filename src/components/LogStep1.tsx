@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Tag, ChevronDown } from "lucide-react";
+import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Tag, ChevronDown, ArrowRight, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { preventScrollOnFocus } from "@/lib/preventScrollOnFocus";
 import { toast } from "sonner";
@@ -50,21 +50,16 @@ interface LogStep1Props {
   contactId?: string;
   contactName?: string;
   isContactPrefilled?: boolean;
-  // Optional — kept for backward compatibility with callers (CompleteFollowupSheet,
-  // any leftover LogInteractionSheet pass-through). Not used in the new UI.
-  onSubmit?: () => void;
+  // Bottom action area
+  onNext: () => void;
   isSubmitting?: boolean;
-  disabled?: boolean;
-  contactInitials?: string;
-  contacts?: unknown;
-  onContactSelect?: (id: string) => void;
-  onAddNewContact?: (name: string) => void;
-  onSkipToFollowup?: () => void;
-  onChangeContact?: () => void;
-  submitLabel?: string;
-  showDateRow?: boolean;
-  connectDate?: string;
-  setConnectDate?: (v: string) => void;
+  logOnly?: boolean;
+  onSkipLog?: () => void;
+  activeFollowup?: {
+    planned_type: string | null;
+    planned_date: string;
+  } | null;
+  onSaveLogOnly?: () => void;
 }
 
 const LogStep1 = ({
@@ -74,6 +69,12 @@ const LogStep1 = ({
   setNote,
   contactId,
   contactName,
+  onNext,
+  isSubmitting,
+  logOnly,
+  onSkipLog,
+  activeFollowup,
+  onSaveLogOnly,
 }: LogStep1Props) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -184,6 +185,8 @@ const LogStep1 = ({
 
   // Used to silence unused-var warning on isRawTranscript while we don't render it explicitly
   void isRawTranscript;
+
+  const canNext = note.trim().length > 0 || connectType !== "";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 12, paddingTop: 0 }}>
@@ -462,6 +465,118 @@ const LogStep1 = ({
             })}
           </div>
         </div>
+      </div>
+
+      {/* Bottom action area */}
+      <div style={{ marginTop: "auto", paddingTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Active follow-up nudge */}
+        {activeFollowup && onSaveLogOnly && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              background: "#fdf4f0",
+              border: "1px solid #e8c4b0",
+              borderRadius: 16,
+              padding: "12px 14px",
+            }}
+          >
+            <div
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: "white",
+                border: "1px solid #e8c4b0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <CalendarIcon size={16} color="#c8622a" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "#6b6860", fontFamily: "Outfit, sans-serif" }}>
+                {contactName} has an active follow-up
+              </div>
+              <button
+                onClick={onSaveLogOnly}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#c8622a",
+                  fontFamily: "Outfit, sans-serif",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  textDecoration: "underline",
+                  textUnderlineOffset: "2px",
+                  textAlign: "left",
+                }}
+              >
+                Save log only?
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Next button — progressive reveal */}
+        <div
+          style={{
+            maxHeight: canNext ? "60px" : "0",
+            opacity: canNext ? 1 : 0,
+            overflow: "hidden",
+            transition: "max-height 0.3s ease, opacity 0.25s ease",
+          }}
+        >
+          <button
+            onClick={onNext}
+            disabled={!!isSubmitting}
+            style={{
+              width: "100%",
+              background: "#c8622a",
+              color: "white",
+              border: "none",
+              borderRadius: 100,
+              padding: 15,
+              fontSize: 16,
+              fontWeight: 500,
+              fontFamily: "Outfit, sans-serif",
+              cursor: isSubmitting ? "default" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            {isSubmitting ? "Saving…" : logOnly ? "Save" : "Next"}
+            {!isSubmitting && <ArrowRight size={18} />}
+          </button>
+        </div>
+
+        {/* Skip log link */}
+        {onSkipLog && (
+          <button
+            onClick={onSkipLog}
+            style={{
+              fontSize: 13,
+              color: "#888480",
+              fontFamily: "Outfit, sans-serif",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textDecoration: "underline",
+              textUnderlineOffset: "3px",
+              textAlign: "center",
+              padding: 4,
+            }}
+          >
+            Skip log
+          </button>
+        )}
       </div>
     </div>
   );

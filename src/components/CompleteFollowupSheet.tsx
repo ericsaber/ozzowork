@@ -234,14 +234,12 @@ const CompleteFollowupSheet = ({
     }
   };
 
-  const step1CanSubmit = !!(note.trim() || connectType);
-
   return (
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {step === 1 ? (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ paddingTop: 20, paddingBottom: 24, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <LogStep1
                 connectType={connectType}
                 setConnectType={setConnectType}
@@ -250,7 +248,8 @@ const CompleteFollowupSheet = ({
                 contactId={contactId}
                 contactName={contactName}
                 isContactPrefilled={true}
-                onChangeContact={undefined}
+                onNext={() => logMutation.mutate()}
+                isSubmitting={logMutation.isPending}
               />
             </div>
           ) : (
@@ -273,46 +272,7 @@ const CompleteFollowupSheet = ({
           )}
         </div>
 
-        {step === 1 && (
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "8px 20px 24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <button
-              onClick={() => logMutation.mutate()}
-              disabled={logMutation.isPending || !step1CanSubmit}
-              style={{
-                width: "100%",
-                background: step1CanSubmit ? "#c8622a" : "#ddd8d1",
-                color: step1CanSubmit ? "white" : "#b0ada8",
-                border: "none",
-                borderRadius: 100,
-                padding: 15,
-                fontSize: 16,
-                fontWeight: 500,
-                fontFamily: "Outfit, sans-serif",
-                cursor: step1CanSubmit && !logMutation.isPending ? "pointer" : "default",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                transition: "background 0.15s ease, color 0.15s ease",
-              }}
-            >
-              {logMutation.isPending ? "Saving…" : (
-                <>
-                  Next
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
-          </div>
-        )}
+
 
         {step === 2 && (
           <div
