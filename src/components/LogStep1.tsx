@@ -255,7 +255,7 @@ const LogStep1 = ({
           placeholder="What did you talk about?"
           onChange={(e) => {
             setNote(e.target.value);
-            if (e.target.value.trim().length > 0 && !typeOpen) setTypeOpen(true);
+            if (e.target.value.trim().length > 0 && !typeOpen && !connectType) setTypeOpen(true);
             const el = e.target;
             el.style.height = "auto";
             el.style.height = el.scrollHeight + "px";
