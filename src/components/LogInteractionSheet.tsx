@@ -1002,8 +1002,63 @@ const LogInteractionSheet = ({
           </div>
         )}
 
-        {/* Bottom action area — step 2 / step 3 */}
-        {(step === 2 || step === 3) && (
+        {/* Bottom action area — outstanding step */}
+        {step === "outstanding" && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {(() => {
+              const valid =
+                !!outstandingChoice &&
+                !(outstandingChoice === "reschedule" && !outstandingDate);
+              return (
+                <button
+                  onClick={() => {
+                    console.log("[LogInteractionSheet] outstanding save:", {
+                      outstandingChoice,
+                      outstandingDate,
+                    });
+                    if (outstandingChoice === "keep")
+                      handleOutstandingUpdate(existingFollowup!.planned_date);
+                    else if (outstandingChoice === "reschedule")
+                      handleOutstandingUpdate(outstandingDate);
+                    else if (outstandingChoice === "cancel")
+                      handleOutstandingCancel();
+                  }}
+                  disabled={!valid}
+                  style={{
+                    width: "100%",
+                    background: valid ? "#c8622a" : "#ddd8d1",
+                    color: valid ? "white" : "#b0ada8",
+                    border: "none",
+                    borderRadius: 100,
+                    padding: 15,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    fontFamily: "Outfit, sans-serif",
+                    cursor: valid ? "pointer" : "default",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  Save
+                  <ArrowRight size={18} />
+                </button>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Bottom action area — step 2 */}
+        {step === 2 && (
           <div
             style={{
               flexShrink: 0,
