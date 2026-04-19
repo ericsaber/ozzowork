@@ -4,10 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ArrowRight } from "lucide-react";
-import CelebrationHeader from "@/components/CelebrationHeader";
+import { ArrowRight, Check } from "lucide-react";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
-import StepIndicator from "@/components/StepIndicator";
 import LogStep1 from "@/components/LogStep1";
 import LogStep2 from "@/components/LogStep2";
 import {
@@ -52,6 +50,8 @@ const CompleteFollowupSheet = ({
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationText, setCelebrationText] = useState("Logged.");
 
   const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
 
@@ -143,9 +143,13 @@ const CompleteFollowupSheet = ({
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success(note || connectType ? "Nice work. Follow-up marked complete." : "Done. Follow-up marked complete.");
-      handleClose();
-      navigate(`/contact/${contactId}`);
+      setCelebrationText(pendingDate ? "Logged & set." : "Logged.");
+      setShowCelebration(true);
+      setTimeout(() => {
+        setShowCelebration(false);
+        handleClose();
+        navigate(`/contact/${contactId}`);
+      }, 1800);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -181,9 +185,13 @@ const CompleteFollowupSheet = ({
       }
 
       invalidateAll();
-      toast.success("Follow-up marked complete.");
-      handleClose();
-      navigate(`/contact/${contactId}`);
+      setCelebrationText("Logged.");
+      setShowCelebration(true);
+      setTimeout(() => {
+        setShowCelebration(false);
+        handleClose();
+        navigate(`/contact/${contactId}`);
+      }, 1800);
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -199,6 +207,7 @@ const CompleteFollowupSheet = ({
       setPendingDate("");
       setPendingType("");
       setPendingReminder("");
+      setShowCelebration(false);
     }, 300);
   };
 
@@ -225,44 +234,104 @@ const CompleteFollowupSheet = ({
     }
   };
 
+  const step1CanSubmit = !!(note.trim() || connectType);
+
   return (
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
-        {showToast && (
-          <CelebrationHeader contactId={contactId} contactName={contactName} open={open} />
-        )}
         <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto" }}>
-          <StepIndicator currentStep={step} />
           {step === 1 ? (
-            <LogStep1
-              connectType={connectType}
-              setConnectType={setConnectType}
-              note={note}
-              setNote={setNote}
-              onSubmit={() => logMutation.mutate()}
-              isSubmitting={logMutation.isPending}
-              contactId={contactId}
-              contactName={contactName}
-              isContactPrefilled={true}
-              onChangeContact={undefined}
-            />
+            <div style={{ paddingTop: 20 }}>
+              <LogStep1
+                connectType={connectType}
+                setConnectType={setConnectType}
+                note={note}
+                setNote={setNote}
+                contactId={contactId}
+                contactName={contactName}
+                isContactPrefilled={true}
+                onChangeContact={undefined}
+              />
+            </div>
           ) : (
-            <LogStep2
-              connectType={connectType}
-              contactName={contactName}
-              note={note}
-              onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
-              onSkip={handleSkip}
-              isSaving={followupMutation.isPending}
-              onUpdateLog={handleUpdateLog}
-              onFollowupStateChange={(date, type, reminder) => {
-                setPendingDate(date);
-                setPendingType(type);
-                setPendingReminder(reminder);
-              }}
-            />
+            <div style={{ paddingTop: 20 }}>
+              <LogStep2
+                connectType={connectType}
+                contactName={contactName}
+                note={note}
+                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
+                onSkip={handleSkip}
+                isSaving={followupMutation.isPending}
+                onUpdateLog={handleUpdateLog}
+                onFollowupStateChange={(date, type, reminder) => {
+                  setPendingDate(date);
+                  setPendingType(type);
+                  setPendingReminder(reminder);
+                }}
+              />
+            </div>
           )}
         </div>
+
+        {step === 1 && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <button
+              onClick={() => logMutation.mutate()}
+              disabled={logMutation.isPending || !step1CanSubmit}
+              style={{
+                width: "100%",
+                background: step1CanSubmit ? "#c8622a" : "#ddd8d1",
+                color: step1CanSubmit ? "white" : "#b0ada8",
+                border: "none",
+                borderRadius: 100,
+                padding: 15,
+                fontSize: 16,
+                fontWeight: 500,
+                fontFamily: "Outfit, sans-serif",
+                cursor: step1CanSubmit && !logMutation.isPending ? "pointer" : "default",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+            >
+              {logMutation.isPending ? "Saving…" : (
+                <>
+                  Next
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleSkip}
+              disabled={logMutation.isPending}
+              style={{
+                fontSize: 13,
+                color: "#888480",
+                fontFamily: "Outfit, sans-serif",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                textAlign: "center",
+                padding: 4,
+              }}
+            >
+              Skip follow-up
+            </button>
+          </div>
+        )}
 
         {step === 2 && (
           <div
@@ -335,6 +404,70 @@ const CompleteFollowupSheet = ({
           </div>
         )}
       </FullscreenTakeover>
+
+      {showCelebration && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            background: "#f0f7f4",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            animation: "celebFadeIn 0.25s ease",
+          }}
+        >
+          <style>{`
+            @keyframes celebFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes celebCheck {
+              0% { transform: scale(0.5); opacity: 0; }
+              60% { transform: scale(1.15); opacity: 1; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "#fff",
+              border: "1.5px solid #b7d9cc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "celebCheck 0.5s ease forwards",
+            }}
+          >
+            <Check size={32} color="#2d6a4f" strokeWidth={2.5} />
+          </div>
+          <div
+            style={{
+              fontFamily: "'Crimson Pro', serif",
+              fontSize: 32,
+              color: "#2d6a4f",
+              lineHeight: 1.2,
+            }}
+          >
+            {celebrationText}
+          </div>
+          <div
+            style={{
+              fontFamily: "Outfit, sans-serif",
+              fontSize: 16,
+              color: "#888480",
+            }}
+          >
+            {contactName}
+          </div>
+        </div>
+      )}
+
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <AlertDialogContent className="z-[60]">
           <AlertDialogHeader>
