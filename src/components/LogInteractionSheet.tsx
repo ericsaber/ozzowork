@@ -654,6 +654,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // Next button enablement (does not require contact — already chosen in picker or pre-filled)
