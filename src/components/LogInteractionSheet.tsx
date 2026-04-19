@@ -87,6 +87,8 @@ const LogInteractionSheet = ({
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
+  const [outstandingChoice, setOutstandingChoice] = useState<"keep" | "reschedule" | "cancel" | null>(null);
+  const [outstandingDate, setOutstandingDate] = useState("");
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
