@@ -182,12 +182,20 @@ const LogStep1 = ({
     ? contactName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "";
 
+  const firstName = contactName ? contactName.split(" ")[0] : "";
+
   const SelectedTypeIcon = connectType ? typeIconMap[connectType] : null;
 
   // Used to silence unused-var warning on isRawTranscript while we don't render it explicitly
   void isRawTranscript;
 
   const canNext = note.trim().length > 0 || connectType !== "";
+
+  useEffect(() => {
+    if (canNext && !alertRevealed) setAlertRevealed(true);
+  }, [canNext, alertRevealed]);
+
+  const showAlert = !!(activeFollowup && onSaveLogOnly && (isContactPrefilled || alertRevealed));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 12, paddingTop: 0 }}>
