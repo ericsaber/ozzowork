@@ -442,15 +442,6 @@ const LogInteractionSheet = ({
     navigate(`/contact/${contactId}`);
   };
 
-  // ── Outstanding follow-up: Complete chosen → go to step 3 ──
-  const handleOutstandingComplete = () => {
-    console.log("[outstanding] complete chosen — proceeding to step 3:", {
-      existingFollowupId: existingFollowup?.id,
-      plannedDate: existingFollowup?.planned_date,
-    });
-    setStep(3);
-  };
-
   // ── Outstanding follow-up: Update/keep chosen → save immediately ──
   const handleOutstandingUpdate = async (newDate: string) => {
     if (!existingFollowup || !draftId) return;
