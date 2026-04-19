@@ -501,9 +501,8 @@ const LogInteractionSheet = ({
     console.log("[handleOutstandingUpdate] interaction draft published:", draftId);
 
     invalidateAll();
-    toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    console.log("[handleOutstandingUpdate] success — isKeep:", isKeep);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
@@ -539,9 +538,7 @@ const LogInteractionSheet = ({
 
     setShowCancelConfirmDialog(false);
     invalidateAll();
-    toast.success("Log saved. Follow-up cancelled.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Contact & UI helpers ──
@@ -609,6 +606,10 @@ const LogInteractionSheet = ({
       toast.error("Select a contact first.");
       return;
     }
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
     if (draftId) {
       await supabase.from("interactions").delete().eq("id", draftId);
@@ -661,9 +662,7 @@ const LogInteractionSheet = ({
     }
 
     invalidateAll();
-    toast.success("Log saved.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // Next button enablement (does not require contact — already chosen in picker or pre-filled)
@@ -935,7 +934,7 @@ const LogInteractionSheet = ({
               gap: 8,
             }}
           >
-            {activeFollowup && contactId && (
+            {activeFollowup && contactId && !logOnly && (
               <div
                 style={{
                   display: "flex",
