@@ -679,8 +679,7 @@ const LogInteractionSheet = ({
     triggerCelebration("Logged.", contactId);
   };
 
-  // Next button enablement (does not require contact — already chosen in picker or pre-filled)
-  const canNext = (note.trim().length > 0 || connectType !== "") && !logMutation.isPending;
+  // canNext is now computed inside LogStep1
 
   // Avoid unused imports if only referenced in some branches
   void searchOpen;
@@ -874,7 +873,7 @@ const LogInteractionSheet = ({
           )}
 
           {step === 1 && (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ paddingTop: 20, paddingBottom: 24, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               {showQuickAdd && (
                 <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
                   <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
@@ -900,6 +899,12 @@ const LogInteractionSheet = ({
                 contactId={contactId}
                 contactName={contactName}
                 isContactPrefilled={isContactPrefilled}
+                onNext={() => logMutation.mutate()}
+                isSubmitting={logMutation.isPending}
+                logOnly={logOnly}
+                onSkipLog={!logOnly && !activeFollowup ? handleSkipToFollowup : undefined}
+                activeFollowup={activeFollowup && contactId && !logOnly ? activeFollowup : null}
+                onSaveLogOnly={activeFollowup && contactId && !logOnly ? handleSaveLogOnly : undefined}
               />
             </div>
           )}
@@ -936,132 +941,6 @@ const LogInteractionSheet = ({
             </div>
           )}
         </div>
-
-        {/* Bottom action area — only on step 1 */}
-        {step === 1 && (
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "8px 20px 24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            {activeFollowup && contactId && !logOnly && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  background: "#fdf4f0",
-                  border: "1px solid #e8c4b0",
-                  borderRadius: 16,
-                  padding: "12px 14px",
-                }}
-              >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: "50%",
-                    background: "white",
-                    border: "1px solid #e8c4b0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <CalendarIcon size={16} color="#c8622a" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "#6b6860",
-                      fontFamily: "Outfit, sans-serif",
-                    }}
-                  >
-                    {contactName} has an active follow-up
-                  </div>
-                  <button
-                    onClick={handleSaveLogOnly}
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "#c8622a",
-                      fontFamily: "Outfit, sans-serif",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      textDecoration: "underline",
-                      textUnderlineOffset: "2px",
-                      textAlign: "left",
-                    }}
-                  >
-                    Save log only?
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div
-              style={{
-                maxHeight: canNext ? "60px" : "0",
-                opacity: canNext ? 1 : 0,
-                overflow: "hidden",
-                transition: "max-height 0.3s ease, opacity 0.25s ease",
-              }}
-            >
-              <button
-                onClick={() => logMutation.mutate()}
-                disabled={logMutation.isPending}
-                style={{
-                  width: "100%",
-                  background: "#c8622a",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 100,
-                  padding: 15,
-                  fontSize: 16,
-                  fontWeight: 500,
-                  fontFamily: "Outfit, sans-serif",
-                  cursor: logMutation.isPending ? "default" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
-                {logMutation.isPending ? "Saving…" : logOnly ? "Save" : "Next"}
-                {!logMutation.isPending && <ArrowRight size={18} />}
-              </button>
-            </div>
-
-            {!logOnly && !activeFollowup && (
-              <button
-                onClick={handleSkipToFollowup}
-                style={{
-                  fontSize: 13,
-                  color: "#888480",
-                  fontFamily: "Outfit, sans-serif",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                  textUnderlineOffset: "3px",
-                  textAlign: "center",
-                  padding: 4,
-                }}
-              >
-                Skip log
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Bottom action area — outstanding step */}
         {step === "outstanding" && (

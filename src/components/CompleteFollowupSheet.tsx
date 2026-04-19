@@ -234,14 +234,12 @@ const CompleteFollowupSheet = ({
     }
   };
 
-  const step1CanSubmit = !!(note.trim() || connectType);
-
   return (
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {step === 1 ? (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ paddingTop: 20, paddingBottom: 24, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <LogStep1
                 connectType={connectType}
                 setConnectType={setConnectType}
@@ -250,7 +248,8 @@ const CompleteFollowupSheet = ({
                 contactId={contactId}
                 contactName={contactName}
                 isContactPrefilled={true}
-                onChangeContact={undefined}
+                onNext={() => logMutation.mutate()}
+                isSubmitting={logMutation.isPending}
               />
             </div>
           ) : (
