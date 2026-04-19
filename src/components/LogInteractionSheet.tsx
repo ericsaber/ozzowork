@@ -155,6 +155,8 @@ const LogInteractionSheet = ({
       setOutstandingChoice(null);
       setOutstandingDate("");
       setShowCelebration(false);
+      setShowSkipDiscardDialog(false);
+      setLogSkipped(false);
     }, 300);
   };
 
