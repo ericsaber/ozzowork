@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Mic, Square, Phone, Mail, MessageSquare, Users, Video } from "lucide-react";
+import { Mic, Square, Phone, Mail, MessageSquare, Users, Video, Tag, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { preventScrollOnFocus } from "@/lib/preventScrollOnFocus";
 import { toast } from "sonner";
