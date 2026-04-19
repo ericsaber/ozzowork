@@ -311,25 +311,6 @@ const CompleteFollowupSheet = ({
                 </>
               )}
             </button>
-
-            <button
-              onClick={handleSkip}
-              disabled={logMutation.isPending}
-              style={{
-                fontSize: 13,
-                color: "#888480",
-                fontFamily: "Outfit, sans-serif",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
-                textUnderlineOffset: "3px",
-                textAlign: "center",
-                padding: 4,
-              }}
-            >
-              Skip follow-up
-            </button>
           </div>
         )}
 
