@@ -59,7 +59,7 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
           position: "fixed",
           inset: 0,
           background: "rgba(0,0,0,0.4)",
-          zIndex: 49,
+          zIndex: 59,
           opacity: visible ? 1 : 0,
           transition: visible ? "opacity 200ms ease" : "opacity 480ms ease",
           pointerEvents: visible ? "auto" : "none",
