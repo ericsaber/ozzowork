@@ -51,14 +51,14 @@ const LogInteractionSheet = ({
   const navigate = useNavigate();
 
   // Determine initial step based on whether contact is pre-filled
-  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 | 3 => {
+  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 => {
     if (preselectedContactId && startStep === 1) return 1;
     if (startStep === 2) return 2;
     if (!preselectedContactId) return "contact-picker";
     return startStep;
   };
 
-  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2 | 3>(getInitialStep());
+  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2>(getInitialStep());
 
   useEffect(() => {
     if (open) {
@@ -87,6 +87,8 @@ const LogInteractionSheet = ({
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
+  const [outstandingChoice, setOutstandingChoice] = useState<"keep" | "reschedule" | "cancel" | null>(null);
+  const [outstandingDate, setOutstandingDate] = useState("");
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
@@ -117,7 +119,7 @@ const LogInteractionSheet = ({
       if (!contactId) return null;
       const { data } = await supabase
         .from("follow_ups")
-        .select("id, planned_type, planned_date, status")
+        .select("id, planned_type, planned_date, status, reminder_note")
         .eq("contact_id", contactId)
         .eq("status", "active")
         .limit(1)
@@ -146,6 +148,8 @@ const LogInteractionSheet = ({
       setPendingDate("");
       setPendingType("");
       setPendingReminder("");
+      setOutstandingChoice(null);
+      setOutstandingDate("");
     }, 300);
   };
 
@@ -438,15 +442,6 @@ const LogInteractionSheet = ({
     navigate(`/contact/${contactId}`);
   };
 
-  // ── Outstanding follow-up: Complete chosen → go to step 3 ──
-  const handleOutstandingComplete = () => {
-    console.log("[outstanding] complete chosen — proceeding to step 3:", {
-      existingFollowupId: existingFollowup?.id,
-      plannedDate: existingFollowup?.planned_date,
-    });
-    setStep(3);
-  };
-
   // ── Outstanding follow-up: Update/keep chosen → save immediately ──
   const handleOutstandingUpdate = async (newDate: string) => {
     if (!existingFollowup || !draftId) return;
@@ -573,8 +568,6 @@ const LogInteractionSheet = ({
   const handleStepBack = () => {
     if (step === "outstanding") {
       setStep(1);
-    } else if (step === 3) {
-      setStep("outstanding");
     } else if (step === 2 && !preselectedContactId) {
       setStep(1);
     } else {
@@ -857,14 +850,16 @@ const LogInteractionSheet = ({
             </div>
           )}
 
-          {step === "outstanding" && (
+          {step === "outstanding" && existingFollowup && (
             <OutstandingFollowupStep
               existingFollowup={existingFollowup}
               contactName={contactName}
-              onComplete={handleOutstandingComplete}
               onUpdate={handleOutstandingUpdate}
               onCancel={handleOutstandingCancel}
-              onBack={() => setStep(1)}
+              onChoiceChange={(c, d) => {
+                setOutstandingChoice(c);
+                setOutstandingDate(d);
+              }}
             />
           )}
 
@@ -876,25 +871,6 @@ const LogInteractionSheet = ({
                 note={note}
                 onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={startStep === 2 ? undefined : handleSkip}
-                isSaving={followupMutation.isPending}
-                onUpdateLog={handleUpdateLog}
-                onFollowupStateChange={(date, type, reminder) => {
-                  setPendingDate(date);
-                  setPendingType(type);
-                  setPendingReminder(reminder);
-                }}
-              />
-            </div>
-          )}
-
-          {step === 3 && (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <LogStep2
-                connectType={connectType}
-                contactName={contactName}
-                note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
-                onSkip={handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 onFollowupStateChange={(date, type, reminder) => {
@@ -1026,8 +1002,63 @@ const LogInteractionSheet = ({
           </div>
         )}
 
-        {/* Bottom action area — step 2 / step 3 */}
-        {(step === 2 || step === 3) && (
+        {/* Bottom action area — outstanding step */}
+        {step === "outstanding" && (
+          <div
+            style={{
+              flexShrink: 0,
+              padding: "8px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {(() => {
+              const valid =
+                !!outstandingChoice &&
+                !(outstandingChoice === "reschedule" && !outstandingDate);
+              return (
+                <button
+                  onClick={() => {
+                    console.log("[LogInteractionSheet] outstanding save:", {
+                      outstandingChoice,
+                      outstandingDate,
+                    });
+                    if (outstandingChoice === "keep")
+                      handleOutstandingUpdate(existingFollowup!.planned_date);
+                    else if (outstandingChoice === "reschedule")
+                      handleOutstandingUpdate(outstandingDate);
+                    else if (outstandingChoice === "cancel")
+                      handleOutstandingCancel();
+                  }}
+                  disabled={!valid}
+                  style={{
+                    width: "100%",
+                    background: valid ? "#c8622a" : "#ddd8d1",
+                    color: valid ? "white" : "#b0ada8",
+                    border: "none",
+                    borderRadius: 100,
+                    padding: 15,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    fontFamily: "Outfit, sans-serif",
+                    cursor: valid ? "pointer" : "default",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  Save
+                  <ArrowRight size={18} />
+                </button>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Bottom action area — step 2 */}
+        {step === 2 && (
           <div
             style={{
               flexShrink: 0,
