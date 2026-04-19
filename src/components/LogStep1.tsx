@@ -69,6 +69,7 @@ const LogStep1 = ({
   setNote,
   contactId,
   contactName,
+  isContactPrefilled,
   onNext,
   isSubmitting,
   logOnly,
