@@ -654,6 +654,7 @@ const LogInteractionSheet = ({
     invalidateAll();
     toast.success("Log saved.");
     clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // Next button enablement (does not require contact — already chosen in picker or pre-filled)
@@ -1010,17 +1011,16 @@ const LogInteractionSheet = ({
               {!logMutation.isPending && <ArrowRight size={18} />}
             </button>
 
-            {!logOnly && (
+            {!logOnly && !activeFollowup && (
               <button
-                onClick={activeFollowup ? undefined : handleSkipToFollowup}
-                disabled={!!activeFollowup}
+                onClick={handleSkipToFollowup}
                 style={{
                   fontSize: 13,
-                  color: activeFollowup ? "#ccc" : "#888480",
+                  color: "#888480",
                   fontFamily: "Outfit, sans-serif",
                   background: "none",
                   border: "none",
-                  cursor: activeFollowup ? "default" : "pointer",
+                  cursor: "pointer",
                   textDecoration: "underline",
                   textUnderlineOffset: "3px",
                   textAlign: "center",
