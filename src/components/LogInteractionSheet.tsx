@@ -850,14 +850,16 @@ const LogInteractionSheet = ({
             </div>
           )}
 
-          {step === "outstanding" && (
+          {step === "outstanding" && existingFollowup && (
             <OutstandingFollowupStep
               existingFollowup={existingFollowup}
               contactName={contactName}
-              onComplete={handleOutstandingComplete}
               onUpdate={handleOutstandingUpdate}
               onCancel={handleOutstandingCancel}
-              onBack={() => setStep(1)}
+              onChoiceChange={(c, d) => {
+                setOutstandingChoice(c);
+                setOutstandingDate(d);
+              }}
             />
           )}
 
@@ -869,25 +871,6 @@ const LogInteractionSheet = ({
                 note={note}
                 onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
                 onSkip={startStep === 2 ? undefined : handleSkip}
-                isSaving={followupMutation.isPending}
-                onUpdateLog={handleUpdateLog}
-                onFollowupStateChange={(date, type, reminder) => {
-                  setPendingDate(date);
-                  setPendingType(type);
-                  setPendingReminder(reminder);
-                }}
-              />
-            </div>
-          )}
-
-          {step === 3 && (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <LogStep2
-                connectType={connectType}
-                contactName={contactName}
-                note={note}
-                onSaveWithFollowup={(type, date) => followupMutation.mutate({ type, date, reminderNote: pendingReminder })}
-                onSkip={handleSkip}
                 isSaving={followupMutation.isPending}
                 onUpdateLog={handleUpdateLog}
                 onFollowupStateChange={(date, type, reminder) => {
