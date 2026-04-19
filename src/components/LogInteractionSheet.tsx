@@ -400,6 +400,13 @@ const LogInteractionSheet = ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Nothing to save and no outstanding follow-up — just close
+    if (!draftId && !existingFollowup) {
+      console.log("[handleSkip] no draft, no follow-up — closing");
+      clearAndClose();
+      return;
+    }
+
     // Complete path skip — mark existing follow-up complete, publish draft, no new follow-up
     if (existingFollowup) {
       const computedConnectDate = new Date().toISOString();
@@ -426,9 +433,7 @@ const LogInteractionSheet = ({
       }
 
       invalidateAll();
-      toast.success("Nice work. Log saved.");
-      clearAndClose();
-      navigate(`/contact/${contactId}`);
+      triggerCelebration("Logged.", contactId);
       return;
     }
 
@@ -443,9 +448,7 @@ const LogInteractionSheet = ({
       console.log("[handleSkip] no draft and no follow-up — nothing to save");
     }
     invalidateAll();
-    toast.success("Log saved.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Outstanding follow-up: Update/keep chosen → save immediately ──
