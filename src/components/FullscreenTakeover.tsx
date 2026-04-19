@@ -73,7 +73,7 @@ const FullscreenTakeover = ({ open, onOpenChange, children }: FullscreenTakeover
           inset: 0,
           height: "100dvh",
           background: "#f0ede8",
-          zIndex: 50,
+          zIndex: 60,
           display: "flex",
           flexDirection: "column",
           paddingTop: "env(safe-area-inset-top)",
