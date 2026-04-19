@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +52,12 @@ const CompleteFollowupSheet = ({
   const [pendingReminder, setPendingReminder] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationText, setCelebrationText] = useState("Logged.");
+
+  useEffect(() => {
+    if (open) {
+      setConnectType(plannedType || "");
+    }
+  }, [open, plannedType]);
 
   const isDirty = !!draftId || note.trim().length > 0 || connectType !== (plannedType || "");
 
@@ -239,7 +245,7 @@ const CompleteFollowupSheet = ({
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {step === 1 ? (
-            <div style={{ paddingTop: 20, paddingBottom: 24, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <LogStep1
                 connectType={connectType}
                 setConnectType={setConnectType}

@@ -147,7 +147,7 @@ const LogStep1 = ({
       const { summary, isRawTranscript: rawFlag } = resData;
       if (summary) {
         setNote(summary);
-        setTypeOpen(true);
+        if (!connectType) setTypeOpen(true);
         setIsRawTranscript(!!rawFlag);
       } else {
         toast.info("No speech detected.");
@@ -468,7 +468,7 @@ const LogStep1 = ({
       </div>
 
       {/* Bottom action area */}
-      <div style={{ marginTop: "auto", paddingTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ paddingTop: 12, paddingBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Active follow-up nudge */}
         {activeFollowup && onSaveLogOnly && (
           <div
