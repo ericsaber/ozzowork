@@ -7,6 +7,7 @@ import {
   Users,
   Video,
   CornerDownRight,
+  type LucideIcon,
 } from "lucide-react";
 import {
   addDays,
