@@ -91,6 +91,8 @@ const LogInteractionSheet = ({
   const [outstandingDate, setOutstandingDate] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationText, setCelebrationText] = useState("Logged.");
+  const [showSkipDiscardDialog, setShowSkipDiscardDialog] = useState(false);
+  const [logSkipped, setLogSkipped] = useState(false);
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
@@ -153,6 +155,8 @@ const LogInteractionSheet = ({
       setOutstandingChoice(null);
       setOutstandingDate("");
       setShowCelebration(false);
+      setShowSkipDiscardDialog(false);
+      setLogSkipped(false);
     }, 300);
   };
 
@@ -502,7 +506,8 @@ const LogInteractionSheet = ({
 
     invalidateAll();
     console.log("[handleOutstandingUpdate] success — isKeep:", isKeep);
-    triggerCelebration("Logged.", contactId);
+    const text = !isKeep ? "Logged & set." : "Logged.";
+    triggerCelebration(text, contactId);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
@@ -538,7 +543,9 @@ const LogInteractionSheet = ({
 
     setShowCancelConfirmDialog(false);
     invalidateAll();
-    triggerCelebration("Logged.", contactId);
+    toast.success("Log saved. Follow-up cancelled.");
+    clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Contact & UI helpers ──
@@ -607,7 +614,7 @@ const LogInteractionSheet = ({
       return;
     }
     if (isDirty) {
-      setShowDiscardDialog(true);
+      setShowSkipDiscardDialog(true);
       return;
     }
     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
@@ -618,7 +625,7 @@ const LogInteractionSheet = ({
     }
     setConnectType("");
     setNote("");
-    
+    setLogSkipped(true);
     setStep(2);
   };
 
@@ -1019,7 +1026,7 @@ const LogInteractionSheet = ({
               {!logMutation.isPending && <ArrowRight size={18} />}
             </button>
 
-            {!logOnly && !activeFollowup && (
+            {!logOnly && !activeFollowup && !isContactPrefilled && (
               <button
                 onClick={handleSkipToFollowup}
                 style={{
@@ -1035,7 +1042,7 @@ const LogInteractionSheet = ({
                   padding: 4,
                 }}
               >
-                Set a follow-up without logging
+                Skip log
               </button>
             )}
           </div>
@@ -1147,7 +1154,7 @@ const LogInteractionSheet = ({
               </button>
             </div>
 
-            {startStep !== 2 && (
+            {startStep !== 2 && !logSkipped && (
               <button
                 onClick={handleSkip}
                 disabled={followupMutation.isPending}
@@ -1261,6 +1268,37 @@ const LogInteractionSheet = ({
               clearAndClose();
             }}>
               Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Skip-to-followup discard dialog */}
+      <AlertDialog open={showSkipDiscardDialog} onOpenChange={setShowSkipDiscardDialog}>
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard your note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your note won't be saved if you skip logging.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowSkipDiscardDialog(false)}>
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              setShowSkipDiscardDialog(false);
+              if (draftId) {
+                await supabase.from("interactions").delete().eq("id", draftId);
+                console.log("[skip] discarded draft on skip-to-followup:", draftId);
+                setDraftId(null);
+              }
+              setConnectType("");
+              setNote("");
+              setLogSkipped(true);
+              setStep(2);
+            }}>
+              Discard and skip
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
