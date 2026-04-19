@@ -59,7 +59,7 @@ const canNext = note.trim().length > 0 || connectType !== "";
 - ✅ Skip log only renders when `onSkipLog` provided
 - ✅ `ArrowRight` and `CalendarIcon` added to LogStep1 Lucide imports
 - ✅ LogInteractionSheet: bottom action block + `canNext` removed; `paddingBottom: 24` removed from step 1 wrapper; new props passed
-- ✅ CompleteFollowupSheet: bottom action block + `step1CanSubmit` removed; new props passed
+- ✅ CompleteFollowupSheet: bottom action block + `step1CanSubmit` removed; `paddingBottom: 24` removed from step 1 wrapper; new props passed
 - ✅ Both parents add `paddingBottom: 24` to step 1 padding wrapper
 - ✅ All `console.log` preserved
 
