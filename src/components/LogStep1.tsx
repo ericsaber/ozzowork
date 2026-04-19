@@ -168,7 +168,11 @@ const LogStep1 = ({
   };
 
   const handlePillClick = (value: string) => {
-    setConnectType(connectType === value ? "" : value);
+    const newType = connectType === value ? "" : value;
+    setConnectType(newType);
+    if (newType) {
+      setTimeout(() => setTypeOpen(false), 180);
+    }
   };
 
   // Avatar initials for contact chip
@@ -176,8 +180,7 @@ const LogStep1 = ({
     ? contactName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "";
 
-  // Type pills reveal gate
-  const showTypeRow = note.trim().length > 0 || connectType !== "";
+  const SelectedTypeIcon = connectType ? typeIconMap[connectType] : null;
 
   // Used to silence unused-var warning on isRawTranscript while we don't render it explicitly
   void isRawTranscript;
