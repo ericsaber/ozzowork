@@ -239,9 +239,9 @@ const CompleteFollowupSheet = ({
   return (
     <>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
-        <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto" }}>
+        <div className="px-5 pb-6" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", minHeight: 0 }}>
           {step === 1 ? (
-            <div style={{ paddingTop: 20 }}>
+            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <LogStep1
                 connectType={connectType}
                 setConnectType={setConnectType}
@@ -254,7 +254,7 @@ const CompleteFollowupSheet = ({
               />
             </div>
           ) : (
-            <div style={{ paddingTop: 20 }}>
+            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <LogStep2
                 connectType={connectType}
                 contactName={contactName}
