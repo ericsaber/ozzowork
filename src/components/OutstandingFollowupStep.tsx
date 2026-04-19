@@ -137,6 +137,7 @@ const OutstandingFollowupStep = ({
           letterSpacing: "-0.01em",
           marginBottom: 16,
           margin: 0,
+          paddingRight: 44,
         }}
       >
         {contactName} has an active follow-up. What would you like to do with it?
