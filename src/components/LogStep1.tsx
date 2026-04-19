@@ -367,55 +367,100 @@ const LogStep1 = ({
         </div>
       </div>
 
-      {/* Section 3 — Type pills (progressive reveal) */}
+      {/* Section 3 — Log Type affordance */}
       <div
         style={{
-          maxHeight: showTypeRow ? 200 : 0,
-          opacity: showTypeRow ? 1 : 0,
+          background: "#faf8f5",
+          border: "1px solid #e8e4de",
+          borderRadius: 16,
           overflow: "hidden",
-          transition: "max-height 0.3s ease, opacity 0.2s ease",
+          flexShrink: 0,
         }}
       >
-        <p
+        {/* Trigger row */}
+        <div
+          onClick={() => setTypeOpen((v) => !v)}
           style={{
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "#888480",
-            fontFamily: "Outfit, sans-serif",
-            marginBottom: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "13px 14px",
+            cursor: "pointer",
+            userSelect: "none",
           }}
         >
-          How'd you connect?
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {typeOptions.map((t) => {
-            const selected = connectType === t.value;
-            return (
-              <button
-                key={t.value}
-                onClick={() => handlePillClick(t.value)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "6px 12px",
-                  borderRadius: 100,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  fontFamily: "Outfit, sans-serif",
-                  cursor: "pointer",
-                  background: selected ? "#fdf4f0" : "#faf8f5",
-                  border: selected ? "1px solid #c8622a" : "1px solid #e8e4de",
-                  color: selected ? "#c8622a" : "#6b6860",
-                }}
-              >
-                <t.icon size={13} color={selected ? "#c8622a" : "#6b6860"} />
-                {t.label}
-              </button>
-            );
-          })}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {connectType && SelectedTypeIcon ? (
+              <SelectedTypeIcon size={16} color="#c8622a" />
+            ) : (
+              <Tag size={16} color="#888480" />
+            )}
+            {connectType ? (
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#c8622a", fontFamily: "Outfit, sans-serif" }}>
+                {typeLabels[connectType]}
+              </span>
+            ) : (
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#888480", fontFamily: "Outfit, sans-serif" }}>
+                Log Type
+              </span>
+            )}
+          </div>
+          <ChevronDown
+            size={16}
+            color="#888480"
+            style={{
+              transform: typeOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.22s ease",
+              flexShrink: 0,
+            }}
+          />
+        </div>
+
+        {/* Pills reveal */}
+        <div
+          style={{
+            maxHeight: typeOpen ? "120px" : "0",
+            opacity: typeOpen ? 1 : 0,
+            overflow: "hidden",
+            transition: "max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease",
+          }}
+        >
+          <div
+            style={{
+              padding: "0 14px 14px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+            }}
+          >
+            {typeOptions.map((t) => {
+              const selected = connectType === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => handlePillClick(t.value)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    borderRadius: 100,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontFamily: "Outfit, sans-serif",
+                    transition: "all 0.12s",
+                    ...(selected
+                      ? { background: "#fdf4f0", border: "1px solid #c8622a", color: "#c8622a" }
+                      : { background: "#faf8f5", border: "1px solid #e8e4de", color: "#6b6860" }),
+                  }}
+                >
+                  <t.icon size={13} color={selected ? "#c8622a" : "#6b6860"} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
