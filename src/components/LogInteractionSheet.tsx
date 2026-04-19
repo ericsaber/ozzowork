@@ -614,7 +614,7 @@ const LogInteractionSheet = ({
       return;
     }
     if (isDirty) {
-      setShowDiscardDialog(true);
+      setShowSkipDiscardDialog(true);
       return;
     }
     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
@@ -625,7 +625,7 @@ const LogInteractionSheet = ({
     }
     setConnectType("");
     setNote("");
-    
+    setLogSkipped(true);
     setStep(2);
   };
 
