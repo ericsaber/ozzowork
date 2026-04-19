@@ -1026,7 +1026,7 @@ const LogInteractionSheet = ({
               {!logMutation.isPending && <ArrowRight size={18} />}
             </button>
 
-            {!logOnly && !activeFollowup && !isContactPrefilled && (
+            {!logOnly && !activeFollowup && !preselectedContactId && (
               <button
                 onClick={handleSkipToFollowup}
                 style={{
