@@ -196,7 +196,7 @@ const LogStep1 = ({
     if (canNext && !alertRevealed) setAlertRevealed(true);
   }, [canNext, alertRevealed]);
 
-  const showAlert = !!(activeFollowup && onSaveLogOnly && (isContactPrefilled || alertRevealed));
+  const showAlert = !!(activeFollowup && onSaveLogOnly && (connectType !== "" || alertRevealed));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 12, paddingTop: 0 }}>
