@@ -28,7 +28,10 @@ import { format, startOfToday } from "date-fns";
 
 const parseDate = (dateStr: string) => {
   if (!dateStr) return new Date();
-  return new Date(dateStr.slice(0, 10) + 'T00:00:00');
+  // Plain date string (yyyy-MM-dd) — append local midnight to avoid UTC shift
+  if (!dateStr.includes('T')) return new Date(dateStr + 'T00:00:00');
+  // Full UTC timestamp — parse directly, JS converts to local time
+  return new Date(dateStr);
 };
 
 const typeVerbs: Record<string, string> = { call: "Called", email: "Emailed", text: "Texted", meet: "Met", video: "Video called" };
