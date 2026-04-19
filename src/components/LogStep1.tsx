@@ -147,7 +147,7 @@ const LogStep1 = ({
       const { summary, isRawTranscript: rawFlag } = resData;
       if (summary) {
         setNote(summary);
-        setTypeOpen(true);
+        if (!connectType) setTypeOpen(true);
         setIsRawTranscript(!!rawFlag);
       } else {
         toast.info("No speech detected.");
@@ -255,7 +255,7 @@ const LogStep1 = ({
           placeholder="What did you talk about?"
           onChange={(e) => {
             setNote(e.target.value);
-            if (e.target.value.trim().length > 0 && !typeOpen) setTypeOpen(true);
+            if (e.target.value.trim().length > 0 && !typeOpen && !connectType) setTypeOpen(true);
             const el = e.target;
             el.style.height = "auto";
             el.style.height = el.scrollHeight + "px";
@@ -468,7 +468,7 @@ const LogStep1 = ({
       </div>
 
       {/* Bottom action area */}
-      <div style={{ marginTop: "auto", paddingTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ paddingTop: 12, paddingBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Active follow-up nudge */}
         {activeFollowup && onSaveLogOnly && (
           <div
