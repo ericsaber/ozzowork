@@ -1,58 +1,47 @@
 
 
-## Plan: Skip Log Condition, Follow-up Set Text, Note Pill Label
+## Plan: LogStep1 Note Card Height in CompleteFollowupSheet
 
-**Files:** `src/components/LogInteractionSheet.tsx` and `src/components/LogStep2.tsx`.
+**File:** `src/components/CompleteFollowupSheet.tsx` only.
 
-### Fix 1 — Skip log link shows in all LogInteractionSheet flows
-In `LogInteractionSheet.tsx`, remove `!preselectedContactId` from the Skip log button condition:
+### Changes
 
+**1. Scrollable content div** — add flex column properties so children can stretch:
 ```tsx
-// Before:
-{!logOnly && !activeFollowup && !preselectedContactId && (
-// After:
-{!logOnly && !activeFollowup && (
+<div className="px-5 pb-6" style={{
+  flex: 1,
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+}}>
 ```
 
-### Fix 2 — "Follow-up set." when no log was saved
-In `LogInteractionSheet.tsx`:
-
-- In `followupMutation.mutationFn`, change the normal step 2 path's final return to include `hadDraft`:
-  ```ts
-  return { completePath: false, hasFollowup: true, hadDraft: !!draftId };
-  ```
-- In `followupMutation.onSuccess`, replace the existing text logic with:
-  ```ts
-  let text: string;
-  if (result?.completePath) {
-    text = result.hasFollowup ? "Logged & set." : "Logged.";
-  } else if (result?.hasFollowup) {
-    text = result?.hadDraft ? "Logged & set." : "Follow-up set.";
-  } else {
-    text = "Logged.";
-  }
-  triggerCelebration(text, contactId);
-  ```
-
-### Fix 3 — "Connected" in step 2 summary pill
-In `LogStep2.tsx`, update the pill label fallback:
-
+**2. Step 1 padding wrapper** — add flex chain properties:
 ```tsx
-// Before:
-{connectType ? `${typeLabel} · ${contactName}` : `Note · ${contactName}`}
-// After:
-{connectType ? `${typeLabel} · ${contactName}` : `Connected · ${contactName}`}
+<div style={{
+  paddingTop: 20,
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  minHeight: 0,
+}}>
+  <LogStep1 ... />
+</div>
 ```
+
+**3. Step 2 padding wrapper** — apply the same set of properties to keep both branches consistent.
 
 ### Preserved
 - All `console.log` statements
-- All other state, mutations, handlers, and rendering
+- All mutations, handlers, state, dialogs, celebration overlay
+- All component props and structure outside the three style blocks above
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` and `LogStep2.tsx` touched
-- ✅ `!preselectedContactId` removed from Skip log condition
-- ✅ `followupMutation.mutationFn` normal path returns `hadDraft: !!draftId`
-- ✅ `followupMutation.onSuccess` uses `hadDraft` to pick "Follow-up set." vs "Logged & set."
-- ✅ Summary pill shows "Connected · {contactName}" when no `connectType`
+- ✅ Only `CompleteFollowupSheet.tsx` touched
+- ✅ Scrollable content div gets `display: flex` + `flexDirection: column` (+ `minHeight: 0`)
+- ✅ Step 1 padding wrapper gets `flex: 1` + flex column + `minHeight: 0`
+- ✅ Step 2 padding wrapper updated to match
+- ✅ No other changes
 - ✅ All `console.log` preserved
 
