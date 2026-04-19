@@ -43,7 +43,7 @@ const canNext = note.trim().length > 0 || connectType !== "";
 - Remove the `{step === 1 && <div>...</div>}` bottom action block (lines ~276–315).
 - Remove the `step1CanSubmit` computed value (line ~237).
 - Update `<LogStep1 ... />` call site to add: `onNext={() => logMutation.mutate()}`, `isSubmitting={logMutation.isPending}`. No `onSkipLog`, no `activeFollowup`/`onSaveLogOnly`.
-- Add `paddingBottom: 24` to the step 1 padding wrapper.
+- Remove `paddingBottom: 24` from the step 1 padding wrapper since LogStep1's bottom area now handles its own spacing.
 
 ### Preserved
 - All `console.log` statements.
