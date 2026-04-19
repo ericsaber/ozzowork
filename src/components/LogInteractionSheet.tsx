@@ -543,7 +543,9 @@ const LogInteractionSheet = ({
 
     setShowCancelConfirmDialog(false);
     invalidateAll();
-    triggerCelebration("Logged.", contactId);
+    toast.success("Log saved. Follow-up cancelled.");
+    clearAndClose();
+    navigate(`/contact/${contactId}`);
   };
 
   // ── Contact & UI helpers ──
