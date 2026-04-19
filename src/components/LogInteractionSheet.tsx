@@ -91,6 +91,8 @@ const LogInteractionSheet = ({
   const [outstandingDate, setOutstandingDate] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationText, setCelebrationText] = useState("Logged.");
+  const [showSkipDiscardDialog, setShowSkipDiscardDialog] = useState(false);
+  const [logSkipped, setLogSkipped] = useState(false);
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
