@@ -389,13 +389,8 @@ const LogInteractionSheet = ({
     },
     onSuccess: (result: any) => {
       invalidateAll();
-      if (result?.completePath) {
-        toast.success(result.hasFollowup ? "Nice work. Follow-up marked complete." : "Nice work. Log saved.");
-      } else {
-        toast.success("Done. Log saved.");
-      }
-      clearAndClose();
-      navigate(`/contact/${contactId}`);
+      const text = result?.hasFollowup ? "Logged & set." : "Logged.";
+      triggerCelebration(text, contactId);
     },
     onError: (e: any) => toast.error(e.message),
   });
