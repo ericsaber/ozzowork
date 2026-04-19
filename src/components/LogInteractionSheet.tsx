@@ -148,6 +148,8 @@ const LogInteractionSheet = ({
       setPendingDate("");
       setPendingType("");
       setPendingReminder("");
+      setOutstandingChoice(null);
+      setOutstandingDate("");
     }, 300);
   };
 
