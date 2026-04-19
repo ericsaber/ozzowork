@@ -126,7 +126,7 @@ const LogStep2 = ({
               minWidth: 0,
             }}
           >
-            {connectType ? `${typeLabel} · ${contactName}` : `Note · ${contactName}`}
+            {connectType ? `${typeLabel} · ${contactName}` : `Connected · ${contactName}`}
           </span>
           {onUpdateLog && !isEditing && (
             <>
