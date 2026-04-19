@@ -1,48 +1,84 @@
 
 
-## Plan: Fix `parseDate` Utility for UTC Timestamps
+## Plan: Z-Index + Save Log Only Fix
 
-**Files:** `src/components/InteractionItem.tsx` and `src/pages/ContactHistory.tsx` only.
+**Files:** `src/components/FullscreenTakeover.tsx` and `src/components/LogInteractionSheet.tsx` only.
 
-### Problem
-`dateStr.slice(0, 10)` on a UTC timestamp like `2026-04-19T01:53:00.000Z` returns the UTC calendar date, not the user's local date. For US users logging in the evening, this shows tomorrow's date.
+### Fix 1 — `FullscreenTakeover.tsx` z-index bump
 
-### Fix
-Update both helpers to branch on whether the input contains a `T`:
-- **Plain date string** (`yyyy-MM-dd`): append `T00:00:00` so JS interprets as local midnight (avoids UTC shift on date-only fields like `planned_date`).
-- **Full ISO timestamp** (contains `T`): parse directly with `new Date(iso)` — JS automatically converts UTC to local time.
+Bottom nav uses Tailwind `z-50`, conflicting with the sheet's `zIndex: 50`, so the nav floats above the takeover.
 
-### Change 1 — `src/components/InteractionItem.tsx`
-Replace the `parseLocalDate` helper:
+- Backdrop: `zIndex: 49` → `zIndex: 59`
+- Sheet container: `zIndex: 50` → `zIndex: 60`
+
+No other changes.
+
+### Fix 2 — `LogInteractionSheet.tsx` `handleSaveLogOnly` (lines 615–626)
+
+Current implementation aborts when `draftId` is null, so a typed-but-not-advanced interaction is silently discarded. Replace with a version that:
+
+1. If `draftId` exists → publish it (existing behavior).
+2. Else if `note.trim()` or `connectType` has content → insert a new `interactions` row directly with `status: "published"`.
+3. Else → close without saving.
+
+After saving (either branch), invalidate queries, toast, and `clearAndClose()`. **No navigation** — user returns to wherever they were.
+
 ```ts
-const parseLocalDate = (iso: string) => {
-  if (!iso) return new Date();
-  if (!iso.includes('T')) return new Date(iso + 'T00:00:00');
-  return new Date(iso);
+const handleSaveLogOnly = async () => {
+  if (!contactId) {
+    clearAndClose();
+    return;
+  }
+
+  if (draftId) {
+    await supabase
+      .from("interactions")
+      .update({ status: "published" })
+      .eq("id", draftId);
+    console.log("[saveLogOnly] existing draft published:", draftId);
+  } else if (note.trim() || connectType) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("interactions")
+      .insert({
+        contact_id: contactId,
+        user_id: user.id,
+        connect_type: connectType || null,
+        connect_date: getConnectDateISO(),
+        note: note.trim() || null,
+        status: "published",
+      })
+      .select("id")
+      .single();
+    if (error) {
+      console.log("[saveLogOnly] insert error:", error);
+      return;
+    }
+    console.log("[saveLogOnly] new interaction created + published:", data.id);
+  } else {
+    console.log("[saveLogOnly] nothing to save, closing");
+    clearAndClose();
+    return;
+  }
+
+  invalidateAll();
+  toast.success("Log saved.");
+  clearAndClose();
 };
 ```
-All five existing call sites remain unchanged.
 
-### Change 2 — `src/pages/ContactHistory.tsx`
-Replace the `parseDate` helper:
-```ts
-const parseDate = (dateStr: string) => {
-  if (!dateStr) return new Date();
-  if (!dateStr.includes('T')) return new Date(dateStr + 'T00:00:00');
-  return new Date(dateStr);
-};
-```
-All existing call sites remain unchanged.
+All referenced helpers (`contactId`, `draftId`, `note`, `connectType`, `getConnectDateISO`, `invalidateAll`, `clearAndClose`) already exist in the file.
 
 ### Preserved
-- All `console.log` statements
-- All call sites (only helper internals change)
-- All other logic, imports, and rendering
+- All existing `console.log` statements (line 622's log is replaced by the new branch-specific logs which retain the same intent).
+- All other logic, state, mutations, and navigation flows.
 
 ### Checklist
-- ✅ Only `InteractionItem.tsx` and `ContactHistory.tsx` touched
-- ✅ `parseLocalDate` updated to detect `T` in string
-- ✅ `parseDate` updated to detect `T` in string
-- ✅ No call sites changed
-- ✅ All `console.log` preserved
+- ✅ Only `FullscreenTakeover.tsx` and `LogInteractionSheet.tsx` touched
+- ✅ Backdrop `zIndex: 59`, sheet `zIndex: 60`
+- ✅ `handleSaveLogOnly` creates + publishes when no draft exists
+- ✅ Still publishes existing draft when present
+- ✅ No navigation on completion
+- ✅ All `console.log` preserved (and new ones added per spec)
 
