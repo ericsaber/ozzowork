@@ -201,7 +201,7 @@ const LogStep2 = ({
                 marginBottom: 6,
               }}
             >
-              How did you connect?
+              Type
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {typeOptions.map((t) => {
