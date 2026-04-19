@@ -36,7 +36,7 @@ const canNext = note.trim().length > 0 || connectType !== "";
   activeFollowup={activeFollowup && contactId && !logOnly ? activeFollowup : null}
   onSaveLogOnly={activeFollowup && contactId && !logOnly ? handleSaveLogOnly : undefined}
   ```
-- Add `paddingBottom: 24` to the step 1 padding wrapper (line ~877).
+- Add `paddingBottom: 24` to the step 1 padding wrapper (line ~877). Remove this `paddingBottom: 24` since LogStep1's bottom area now handles its own spacing.
 
 ### Part 3 — CompleteFollowupSheet.tsx
 
