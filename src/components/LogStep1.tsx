@@ -12,6 +12,22 @@ const typeOptions = [
   { value: "video", icon: Video, label: "Video" },
 ];
 
+const typeIconMap: Record<string, React.ElementType> = {
+  call: Phone,
+  email: Mail,
+  text: MessageSquare,
+  meet: Users,
+  video: Video,
+};
+
+const typeLabels: Record<string, string> = {
+  call: "Call",
+  email: "Email",
+  text: "Text",
+  meet: "Meeting",
+  video: "Video",
+};
+
 const getAvatarColors = (name: string) => {
   const palette = [
     { bg: "#fde8da", text: "#c8622a" },
