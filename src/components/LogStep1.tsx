@@ -69,6 +69,7 @@ const LogStep1 = ({
   setNote,
   contactId,
   contactName,
+  isContactPrefilled,
   onNext,
   isSubmitting,
   logOnly,
@@ -80,6 +81,7 @@ const LogStep1 = ({
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isRawTranscript, setIsRawTranscript] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
+  const [alertRevealed, setAlertRevealed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -181,12 +183,20 @@ const LogStep1 = ({
     ? contactName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "";
 
+  const firstName = contactName ? contactName.split(" ")[0] : "";
+
   const SelectedTypeIcon = connectType ? typeIconMap[connectType] : null;
 
   // Used to silence unused-var warning on isRawTranscript while we don't render it explicitly
   void isRawTranscript;
 
   const canNext = note.trim().length > 0 || connectType !== "";
+
+  useEffect(() => {
+    if (canNext && !alertRevealed) setAlertRevealed(true);
+  }, [canNext, alertRevealed]);
+
+  const showAlert = !!(activeFollowup && onSaveLogOnly && (isContactPrefilled || alertRevealed));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 12, paddingTop: 0 }}>
@@ -469,55 +479,87 @@ const LogStep1 = ({
 
       {/* Bottom action area */}
       <div style={{ paddingTop: 12, paddingBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-        {/* Active follow-up nudge */}
-        {activeFollowup && onSaveLogOnly && (
+        {/* Active follow-up alert */}
+        {showAlert && (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
               background: "#fdf4f0",
               border: "1px solid #e8c4b0",
               borderRadius: 16,
               padding: "12px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
             }}
           >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "50%",
-                background: "white",
-                border: "1px solid #e8c4b0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <CalendarIcon size={16} color="#c8622a" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "#6b6860", fontFamily: "Outfit, sans-serif" }}>
-                {contactName} has an active follow-up
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: "white",
+                  border: "1px solid #e8c4b0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <CalendarIcon size={15} color="#c8622a" />
               </div>
-              <button
-                onClick={onSaveLogOnly}
+              <span
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#c8622a",
+                  color: "#6b6860",
                   fontFamily: "Outfit, sans-serif",
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  textDecoration: "underline",
-                  textUnderlineOffset: "2px",
-                  textAlign: "left",
                 }}
               >
-                Save log only?
+                {firstName} has an active follow-up
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={onSaveLogOnly}
+                style={{
+                  flex: 1,
+                  background: "#c8622a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 100,
+                  padding: "10px 8px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+              >
+                Save Log Only
+              </button>
+              <button
+                onClick={onNext}
+                style={{
+                  flex: 1,
+                  background: "white",
+                  color: "#c8622a",
+                  border: "1.5px solid #e8c4b0",
+                  borderRadius: 100,
+                  padding: "10px 8px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
+              >
+                Next
+                <ArrowRight size={14} color="#c8622a" />
               </button>
             </div>
           </div>
@@ -526,8 +568,8 @@ const LogStep1 = ({
         {/* Next button — progressive reveal */}
         <div
           style={{
-            maxHeight: canNext ? "60px" : "0",
-            opacity: canNext ? 1 : 0,
+            maxHeight: (canNext && !showAlert) ? "60px" : "0",
+            opacity: (canNext && !showAlert) ? 1 : 0,
             overflow: "hidden",
             transition: "max-height 0.3s ease, opacity 0.25s ease",
           }}
