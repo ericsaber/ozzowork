@@ -152,7 +152,18 @@ const LogInteractionSheet = ({
       setPendingReminder("");
       setOutstandingChoice(null);
       setOutstandingDate("");
+      setShowCelebration(false);
     }, 300);
+  };
+
+  const triggerCelebration = (text: string, contactIdForNav: string) => {
+    setCelebrationText(text);
+    setShowCelebration(true);
+    setTimeout(() => {
+      setShowCelebration(false);
+      clearAndClose();
+      navigate(`/contact/${contactIdForNav}`);
+    }, 1800);
   };
 
   // Dismiss interceptor: show discard dialog when draft exists
