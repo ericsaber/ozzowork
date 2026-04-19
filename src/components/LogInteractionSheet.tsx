@@ -1273,6 +1273,37 @@ const LogInteractionSheet = ({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Skip-to-followup discard dialog */}
+      <AlertDialog open={showSkipDiscardDialog} onOpenChange={setShowSkipDiscardDialog}>
+        <AlertDialogContent className="z-[60]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard your note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your note won't be saved if you skip logging.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowSkipDiscardDialog(false)}>
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              setShowSkipDiscardDialog(false);
+              if (draftId) {
+                await supabase.from("interactions").delete().eq("id", draftId);
+                console.log("[skip] discarded draft on skip-to-followup:", draftId);
+                setDraftId(null);
+              }
+              setConnectType("");
+              setNote("");
+              setLogSkipped(true);
+              setStep(2);
+            }}>
+              Discard and skip
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Cancel follow-up confirmation */}
       <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
         <AlertDialogContent className="z-[60]">
