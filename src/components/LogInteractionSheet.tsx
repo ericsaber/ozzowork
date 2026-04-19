@@ -278,9 +278,7 @@ const LogInteractionSheet = ({
           .then(() => {
             console.log("[LogInteractionSheet] logOnly — draft published:", result.id);
             invalidateAll();
-            toast.success("Log saved.");
-            clearAndClose();
-            navigate(`/contact/${contactId}`);
+            triggerCelebration("Logged.", contactId);
           });
         return;
       }
