@@ -1,79 +1,73 @@
 
 
-## Plan: CompleteFollowupSheet Fix + Celebration Overlay
+## Plan: LogInteractionSheet Celebration + Nudge + Skip Fixes
 
-**File:** `src/components/CompleteFollowupSheet.tsx` only.
+**File:** `src/components/LogInteractionSheet.tsx` only.
 
-### Fix 1 — Remove StepIndicator
-- Remove `import StepIndicator from "@/components/StepIndicator"`
-- Remove `<StepIndicator currentStep={step} />` render
-- `StepIndicator.tsx` file untouched
+### Fix 1 — Celebration overlay
+- Add import: `Check` to existing `lucide-react` import line.
+- Add state:
+  ```ts
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationText, setCelebrationText] = useState("Logged.");
+  ```
+- Add `setShowCelebration(false)` inside `clearAndClose`'s reset block.
+- Add helper `triggerCelebration(text, contactIdForNav)` that sets text/visibility and after 1800ms calls `clearAndClose()` + `navigate(\`/contact/${contactIdForNav}\`)`.
 
-### Fix 2 — Remove CelebrationHeader usage
-- Remove `import CelebrationHeader from "@/components/CelebrationHeader"`
-- Remove the `{showToast && <CelebrationHeader … />}` render block
-- `CelebrationHeader.tsx` file untouched (still used elsewhere)
+**Replace `toast.success + clearAndClose + navigate` patterns with `triggerCelebration(...)`:**
+- `logMutation.onSuccess` logOnly path (line ~268–270): `triggerCelebration("Logged.", contactId)`
+- `followupMutation.onSuccess` (line ~379–388): drop the toast + close + nav, use `triggerCelebration(result?.completePath && result.hasFollowup ? "Logged & set." : (result?.completePath ? "Logged." : "Logged & set."), contactId)` — per spec: `result.hasFollowup ? "Logged & set." : "Logged."`
+- `handleSkip` complete-path (line ~422–425): `triggerCelebration("Logged.", contactId)`
+- `handleSkip` normal-path (line ~439–442): `triggerCelebration("Logged.", contactId)`
+- `handleSaveLogOnly` (line ~654–657): `triggerCelebration("Logged.", contactId)`
+- `handleOutstandingUpdate` (line ~494–497): `triggerCelebration("Logged.", contactId)`
+- `handleOutstandingCancelConfirm` (line ~531–535): keep `setShowCancelConfirmDialog(false)` then `triggerCelebration("Logged.", contactId)` (drop toast/close/nav).
 
-### Fix 3 — Step 1 bottom action area
-- Wrap both `LogStep1` and `LogStep2` renders in a `paddingTop: 20` div to clear the × close button
-- Remove `onSubmit` and `isSubmitting` props from `LogStep1` call
-- Add a fixed bottom area mirroring the existing step 2 pattern, rendered when `step === 1`:
-  - Next button (full-width, sienna `#c8622a` when valid, `#ddd8d1`/`#b0ada8` when disabled, ArrowRight icon)
-  - Disabled when `logMutation.isPending || (!note.trim() && !connectType)`
-  - On click: `logMutation.mutate()`
-  - Skip follow-up link below (calls `handleSkip`)
-
-### Fix 4 — Full-screen celebration overlay
-**New state:**
-```ts
-const [showCelebration, setShowCelebration] = useState(false);
-const [celebrationText, setCelebrationText] = useState("Logged.");
-```
-
-**Update `followupMutation.onSuccess`:** replace immediate `handleClose()`/`navigate()` with:
-```ts
-invalidateAll();
-setCelebrationText(pendingDate ? "Logged & set." : "Logged.");
-setShowCelebration(true);
-setTimeout(() => {
-  setShowCelebration(false);
-  handleClose();
-  navigate(`/contact/${contactId}`);
-}, 1800);
-```
-(Remove the existing `toast.success(...)` call here — celebration overlay replaces it.)
-
-**Update `handleSkip`:** after `invalidateAll()`, replace `toast.success`/`handleClose`/`navigate` with the same celebration trigger pattern (text always "Logged.").
-
-**Update `handleClose`:** add `setShowCelebration(false)` to the reset block.
-
-**Overlay JSX** (sibling of `FullscreenTakeover`, inside outer `<>` fragment, before `AlertDialog`):
-- Fixed full-screen, `zIndex: 70`, bg `#f0f7f4` (green), centered column flex
-- Lucide `Check` icon, size 32, stroke `#2d6a4f`, strokeWidth 2.5, with `celebCheck` scale animation
-- `celebrationText` in Crimson Pro, size 32, color `#2d6a4f`
-- `contactName` in Outfit, size 16, color `#888480`
+**Overlay JSX** added after `</FullscreenTakeover>` (line 1164), before the AlertDialogs, inside the outer `<>`:
+- Fixed full-screen, `zIndex: 70`, bg `#f0f7f4`, centered column flex
 - `<style>` tag with `celebFadeIn` and `celebCheck` keyframes
-- Container animated with `celebFadeIn`
+- Animated check circle (Lucide `Check`, size 32, stroke `#2d6a4f`, strokeWidth 2.5)
+- `celebrationText` in Crimson Pro 32 / `#2d6a4f`
+- `contactName` in Outfit 16 / `#888480`
 
-**New import:** `Check` from `lucide-react` (in addition to existing `ArrowRight`).
+### Fix 2 — Hide nudge when logOnly
+Update line 929 condition:
+```tsx
+{activeFollowup && contactId && !logOnly && (
+```
+
+### Fix 3 — `handleSkipToFollowup` checks dirty
+Insert at top of `handleSkipToFollowup` (after the `contactId` guard, before the existing console.log on line 603):
+```ts
+if (isDirty) {
+  setShowDiscardDialog(true);
+  return;
+}
+```
+
+### Fix 4 — `handleSkip` early-return when nothing to do
+Insert at top of `handleSkip` (after the `user` fetch, before the `existingFollowup` branch on line 398):
+```ts
+if (!draftId && !existingFollowup) {
+  console.log("[handleSkip] no draft, no follow-up — closing");
+  clearAndClose();
+  return;
+}
+```
 
 ### Preserved
 - All `console.log` statements
-- All mutations, state, handlers (only `onSuccess` bodies updated)
-- All `invalidateAll` calls
-- `AlertDialog` discard flow
+- All mutations, queries, draft flow, AlertDialog flows
+- All other behavior (only save-success bodies, two early returns, one render condition, and added overlay)
 
 ### Checklist
-- ✅ Only `CompleteFollowupSheet.tsx` touched
-- ✅ `StepIndicator` import + render removed
-- ✅ `CelebrationHeader` import + render removed (file untouched)
-- ✅ Step 1 bottom area with Next + Skip
-- ✅ Next disabled when `!note.trim() && !connectType`
-- ✅ `paddingTop: 20` wrapper around both step renders
-- ✅ `onSubmit`/`isSubmitting` removed from `LogStep1`
-- ✅ Celebration overlay at `zIndex: 70`
-- ✅ `showCelebration` reset in `handleClose`
-- ✅ Text "Logged & set." when `pendingDate`, else "Logged."
-- ✅ Auto-dismiss 1800ms → close + navigate
+- ✅ Only `LogInteractionSheet.tsx` touched
+- ✅ `showCelebration` + `celebrationText` state added; reset in `clearAndClose`
+- ✅ `triggerCelebration` replaces all `toast.success + clearAndClose + navigate` save paths
+- ✅ Celebration overlay at `zIndex: 70` with spring check animation
+- ✅ `Check` imported from lucide-react
+- ✅ Nudge hidden when `logOnly === true`
+- ✅ `handleSkipToFollowup` shows discard dialog if `isDirty`
+- ✅ `handleSkip` early-return when no draft and no existing follow-up
 - ✅ All `console.log` preserved
 
