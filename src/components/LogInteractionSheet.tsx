@@ -945,7 +945,7 @@ const LogInteractionSheet = ({
               padding: "8px 20px 24px",
               display: "flex",
               flexDirection: "column",
-              gap: 8,
+              gap: 12,
             }}
           >
             {activeFollowup && contactId && !logOnly && (
@@ -1008,30 +1008,38 @@ const LogInteractionSheet = ({
               </div>
             )}
 
-            <button
-              onClick={() => logMutation.mutate()}
-              disabled={!canNext}
+            <div
               style={{
-                width: "100%",
-                background: canNext ? "#c8622a" : "#ddd8d1",
-                color: canNext ? "white" : "#b0ada8",
-                border: "none",
-                borderRadius: 100,
-                padding: 15,
-                fontSize: 16,
-                fontWeight: 500,
-                fontFamily: "Outfit, sans-serif",
-                cursor: canNext ? "pointer" : "default",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                transition: "background 0.15s ease, color 0.15s ease",
+                maxHeight: canNext ? "60px" : "0",
+                opacity: canNext ? 1 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.3s ease, opacity 0.25s ease",
               }}
             >
-              {logMutation.isPending ? "Saving…" : logOnly ? "Save" : "Next"}
-              {!logMutation.isPending && <ArrowRight size={18} />}
-            </button>
+              <button
+                onClick={() => logMutation.mutate()}
+                disabled={logMutation.isPending}
+                style={{
+                  width: "100%",
+                  background: "#c8622a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 100,
+                  padding: 15,
+                  fontSize: 16,
+                  fontWeight: 500,
+                  fontFamily: "Outfit, sans-serif",
+                  cursor: logMutation.isPending ? "default" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                {logMutation.isPending ? "Saving…" : logOnly ? "Save" : "Next"}
+                {!logMutation.isPending && <ArrowRight size={18} />}
+              </button>
+            </div>
 
             {!logOnly && !activeFollowup && (
               <button
