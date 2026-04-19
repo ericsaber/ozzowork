@@ -1154,7 +1154,7 @@ const LogInteractionSheet = ({
               </button>
             </div>
 
-            {startStep !== 2 && (
+            {startStep !== 2 && !logSkipped && (
               <button
                 onClick={handleSkip}
                 disabled={followupMutation.isPending}
