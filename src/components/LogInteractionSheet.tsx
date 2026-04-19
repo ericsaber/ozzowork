@@ -614,12 +614,43 @@ const LogInteractionSheet = ({
 
   // Active follow-up nudge — publish draft if any, then close (no navigation)
   const handleSaveLogOnly = async () => {
-    if (!draftId) {
+    if (!contactId) {
       clearAndClose();
       return;
     }
-    await supabase.from("interactions").update({ status: "published" }).eq("id", draftId);
-    console.log("[saveLogOnly] draft published without touching follow-up:", draftId);
+
+    if (draftId) {
+      await supabase
+        .from("interactions")
+        .update({ status: "published" })
+        .eq("id", draftId);
+      console.log("[saveLogOnly] existing draft published:", draftId);
+    } else if (note.trim() || connectType) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("interactions")
+        .insert({
+          contact_id: contactId,
+          user_id: user.id,
+          connect_type: connectType || null,
+          connect_date: getConnectDateISO(),
+          note: note.trim() || null,
+          status: "published",
+        })
+        .select("id")
+        .single();
+      if (error) {
+        console.log("[saveLogOnly] insert error:", error);
+        return;
+      }
+      console.log("[saveLogOnly] new interaction created + published:", data.id);
+    } else {
+      console.log("[saveLogOnly] nothing to save, closing");
+      clearAndClose();
+      return;
+    }
+
     invalidateAll();
     toast.success("Log saved.");
     clearAndClose();
