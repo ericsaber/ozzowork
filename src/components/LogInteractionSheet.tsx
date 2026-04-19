@@ -568,8 +568,6 @@ const LogInteractionSheet = ({
   const handleStepBack = () => {
     if (step === "outstanding") {
       setStep(1);
-    } else if (step === 3) {
-      setStep("outstanding");
     } else if (step === 2 && !preselectedContactId) {
       setStep(1);
     } else {
