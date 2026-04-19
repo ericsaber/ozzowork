@@ -51,14 +51,14 @@ const LogInteractionSheet = ({
   const navigate = useNavigate();
 
   // Determine initial step based on whether contact is pre-filled
-  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 | 3 => {
+  const getInitialStep = (): "contact-picker" | 1 | "outstanding" | 2 => {
     if (preselectedContactId && startStep === 1) return 1;
     if (startStep === 2) return 2;
     if (!preselectedContactId) return "contact-picker";
     return startStep;
   };
 
-  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2 | 3>(getInitialStep());
+  const [step, setStep] = useState<"contact-picker" | 1 | "outstanding" | 2>(getInitialStep());
 
   useEffect(() => {
     if (open) {
