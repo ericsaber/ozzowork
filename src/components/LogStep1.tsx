@@ -146,6 +146,7 @@ const LogStep1 = ({
       const { summary, isRawTranscript: rawFlag } = resData;
       if (summary) {
         setNote(summary);
+        setTypeOpen(true);
         setIsRawTranscript(!!rawFlag);
       } else {
         toast.info("No speech detected.");
