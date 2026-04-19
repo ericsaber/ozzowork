@@ -404,7 +404,7 @@ const LogStep1 = ({
               </span>
             ) : (
               <span style={{ fontSize: 14, fontWeight: 500, color: "#888480", fontFamily: "Outfit, sans-serif" }}>
-                Log Type
+                How did you connect?
               </span>
             )}
           </div>
