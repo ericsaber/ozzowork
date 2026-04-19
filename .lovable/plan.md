@@ -1,45 +1,79 @@
 
 
-## Plan: Save Log Only Nav, Skip Link, Outstanding Heading
+## Plan: CompleteFollowupSheet Fix + Celebration Overlay
 
-**Files:** `src/components/LogInteractionSheet.tsx` and `src/components/OutstandingFollowupStep.tsx`.
+**File:** `src/components/CompleteFollowupSheet.tsx` only.
 
-### Fix 1 — `handleSaveLogOnly` navigates to contact record
-In `LogInteractionSheet.tsx`, after the existing `clearAndClose()` call at the end of `handleSaveLogOnly`, add:
+### Fix 1 — Remove StepIndicator
+- Remove `import StepIndicator from "@/components/StepIndicator"`
+- Remove `<StepIndicator currentStep={step} />` render
+- `StepIndicator.tsx` file untouched
+
+### Fix 2 — Remove CelebrationHeader usage
+- Remove `import CelebrationHeader from "@/components/CelebrationHeader"`
+- Remove the `{showToast && <CelebrationHeader … />}` render block
+- `CelebrationHeader.tsx` file untouched (still used elsewhere)
+
+### Fix 3 — Step 1 bottom action area
+- Wrap both `LogStep1` and `LogStep2` renders in a `paddingTop: 20` div to clear the × close button
+- Remove `onSubmit` and `isSubmitting` props from `LogStep1` call
+- Add a fixed bottom area mirroring the existing step 2 pattern, rendered when `step === 1`:
+  - Next button (full-width, sienna `#c8622a` when valid, `#ddd8d1`/`#b0ada8` when disabled, ArrowRight icon)
+  - Disabled when `logMutation.isPending || (!note.trim() && !connectType)`
+  - On click: `logMutation.mutate()`
+  - Skip follow-up link below (calls `handleSkip`)
+
+### Fix 4 — Full-screen celebration overlay
+**New state:**
 ```ts
-navigate(`/contact/${contactId}`);
+const [showCelebration, setShowCelebration] = useState(false);
+const [celebrationText, setCelebrationText] = useState("Logged.");
 ```
-This matches the pattern used by other save paths.
 
-### Fix 2 — Hide skip link when active follow-up exists
-In the step 1 bottom action area, change the skip-link condition from rendered-but-disabled to fully hidden:
-```tsx
-{!logOnly && !activeFollowup && (
-  <button
-    onClick={handleSkipToFollowup}
-    style={{ fontSize: 13, color: "#888480", fontFamily: "Outfit, sans-serif",
-      background: "none", border: "none", cursor: "pointer",
-      textDecoration: "underline", textUnderlineOffset: "3px",
-      textAlign: "center", padding: "4px" }}
-  >
-    Set a follow-up without logging
-  </button>
-)}
+**Update `followupMutation.onSuccess`:** replace immediate `handleClose()`/`navigate()` with:
+```ts
+invalidateAll();
+setCelebrationText(pendingDate ? "Logged & set." : "Logged.");
+setShowCelebration(true);
+setTimeout(() => {
+  setShowCelebration(false);
+  handleClose();
+  navigate(`/contact/${contactId}`);
+}, 1800);
 ```
-Removes the `disabled` prop and the conditional `#ccc` color — link is simply absent when an active follow-up is present.
+(Remove the existing `toast.success(...)` call here — celebration overlay replaces it.)
 
-### Fix 3 — Heading clears × close button
-In `OutstandingFollowupStep.tsx`, add `paddingRight: 44` to the `<h2>` style so the heading wraps before colliding with the FullscreenTakeover's top-right close button.
+**Update `handleSkip`:** after `invalidateAll()`, replace `toast.success`/`handleClose`/`navigate` with the same celebration trigger pattern (text always "Logged.").
+
+**Update `handleClose`:** add `setShowCelebration(false)` to the reset block.
+
+**Overlay JSX** (sibling of `FullscreenTakeover`, inside outer `<>` fragment, before `AlertDialog`):
+- Fixed full-screen, `zIndex: 70`, bg `#f0f7f4` (green), centered column flex
+- Lucide `Check` icon, size 32, stroke `#2d6a4f`, strokeWidth 2.5, with `celebCheck` scale animation
+- `celebrationText` in Crimson Pro, size 32, color `#2d6a4f`
+- `contactName` in Outfit, size 16, color `#888480`
+- `<style>` tag with `celebFadeIn` and `celebCheck` keyframes
+- Container animated with `celebFadeIn`
+
+**New import:** `Check` from `lucide-react` (in addition to existing `ArrowRight`).
 
 ### Preserved
 - All `console.log` statements
-- `handleSaveLogOnly` logic (draft publish vs. fresh insert vs. close)
-- All other state, mutations, and rendering
+- All mutations, state, handlers (only `onSuccess` bodies updated)
+- All `invalidateAll` calls
+- `AlertDialog` discard flow
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` and `OutstandingFollowupStep.tsx` touched
-- ✅ `navigate(\`/contact/${contactId}\`)` added after `clearAndClose()` in `handleSaveLogOnly`
-- ✅ Skip link hidden entirely with `!activeFollowup` (no disabled state)
-- ✅ Heading has `paddingRight: 44`
+- ✅ Only `CompleteFollowupSheet.tsx` touched
+- ✅ `StepIndicator` import + render removed
+- ✅ `CelebrationHeader` import + render removed (file untouched)
+- ✅ Step 1 bottom area with Next + Skip
+- ✅ Next disabled when `!note.trim() && !connectType`
+- ✅ `paddingTop: 20` wrapper around both step renders
+- ✅ `onSubmit`/`isSubmitting` removed from `LogStep1`
+- ✅ Celebration overlay at `zIndex: 70`
+- ✅ `showCelebration` reset in `handleClose`
+- ✅ Text "Logged & set." when `pendingDate`, else "Logged."
+- ✅ Auto-dismiss 1800ms → close + navigate
 - ✅ All `console.log` preserved
 
