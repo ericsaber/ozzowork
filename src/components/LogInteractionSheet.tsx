@@ -506,7 +506,8 @@ const LogInteractionSheet = ({
 
     invalidateAll();
     console.log("[handleOutstandingUpdate] success — isKeep:", isKeep);
-    triggerCelebration("Logged.", contactId);
+    const text = !isKeep ? "Logged & set." : "Logged.";
+    triggerCelebration(text, contactId);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
