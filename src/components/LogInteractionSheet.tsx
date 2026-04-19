@@ -1171,6 +1171,71 @@ const LogInteractionSheet = ({
         )}
       </FullscreenTakeover>
 
+      {showCelebration && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            background: "#f0f7f4",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            paddingTop: "env(safe-area-inset-top)",
+            paddingBottom: "env(safe-area-inset-bottom)",
+            animation: "celebFadeIn 200ms ease",
+          }}
+        >
+          <style>{`
+            @keyframes celebFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes celebCheck {
+              0% { transform: scale(0.5); opacity: 0; }
+              60% { transform: scale(1.15); opacity: 1; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "white",
+              border: "1.5px solid #b7d9cc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "celebCheck 480ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          >
+            <Check size={32} color="#2d6a4f" strokeWidth={2.5} />
+          </div>
+          <div
+            style={{
+              fontFamily: "'Crimson Pro', serif",
+              fontSize: 32,
+              fontWeight: 500,
+              color: "#2d6a4f",
+            }}
+          >
+            {celebrationText}
+          </div>
+          <div
+            style={{
+              fontFamily: "Outfit, sans-serif",
+              fontSize: 16,
+              color: "#888480",
+            }}
+          >
+            {contactName}
+          </div>
+        </div>
+      )}
+
       {/* Discard dialog */}
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
         <AlertDialogContent className="z-[60]">
