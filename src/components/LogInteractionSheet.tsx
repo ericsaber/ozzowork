@@ -1026,7 +1026,7 @@ const LogInteractionSheet = ({
               {!logMutation.isPending && <ArrowRight size={18} />}
             </button>
 
-            {!logOnly && !activeFollowup && (
+            {!logOnly && !activeFollowup && !isContactPrefilled && (
               <button
                 onClick={handleSkipToFollowup}
                 style={{
@@ -1042,7 +1042,7 @@ const LogInteractionSheet = ({
                   padding: 4,
                 }}
               >
-                Set a follow-up without logging
+                Skip log
               </button>
             )}
           </div>
