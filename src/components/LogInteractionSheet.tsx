@@ -119,7 +119,7 @@ const LogInteractionSheet = ({
       if (!contactId) return null;
       const { data } = await supabase
         .from("follow_ups")
-        .select("id, planned_type, planned_date, status")
+        .select("id, planned_type, planned_date, status, reminder_note")
         .eq("contact_id", contactId)
         .eq("status", "active")
         .limit(1)
