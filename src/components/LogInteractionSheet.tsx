@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Search, CalendarIcon, ArrowRight } from "lucide-react";
+import { Search, CalendarIcon, ArrowRight, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
@@ -89,6 +89,8 @@ const LogInteractionSheet = ({
   const [pendingReminder, setPendingReminder] = useState("");
   const [outstandingChoice, setOutstandingChoice] = useState<"keep" | "reschedule" | "cancel" | null>(null);
   const [outstandingDate, setOutstandingDate] = useState("");
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationText, setCelebrationText] = useState("Logged.");
   
 
   // Draft state (FAB / Log button flows only — not completion flow)
@@ -150,7 +152,18 @@ const LogInteractionSheet = ({
       setPendingReminder("");
       setOutstandingChoice(null);
       setOutstandingDate("");
+      setShowCelebration(false);
     }, 300);
+  };
+
+  const triggerCelebration = (text: string, contactIdForNav: string) => {
+    setCelebrationText(text);
+    setShowCelebration(true);
+    setTimeout(() => {
+      setShowCelebration(false);
+      clearAndClose();
+      navigate(`/contact/${contactIdForNav}`);
+    }, 1800);
   };
 
   // Dismiss interceptor: show discard dialog when draft exists
@@ -265,9 +278,7 @@ const LogInteractionSheet = ({
           .then(() => {
             console.log("[LogInteractionSheet] logOnly — draft published:", result.id);
             invalidateAll();
-            toast.success("Log saved.");
-            clearAndClose();
-            navigate(`/contact/${contactId}`);
+            triggerCelebration("Logged.", contactId);
           });
         return;
       }
@@ -378,13 +389,8 @@ const LogInteractionSheet = ({
     },
     onSuccess: (result: any) => {
       invalidateAll();
-      if (result?.completePath) {
-        toast.success(result.hasFollowup ? "Nice work. Follow-up marked complete." : "Nice work. Log saved.");
-      } else {
-        toast.success("Done. Log saved.");
-      }
-      clearAndClose();
-      navigate(`/contact/${contactId}`);
+      const text = result?.hasFollowup ? "Logged & set." : "Logged.";
+      triggerCelebration(text, contactId);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -393,6 +399,13 @@ const LogInteractionSheet = ({
   const handleSkip = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    // Nothing to save and no outstanding follow-up — just close
+    if (!draftId && !existingFollowup) {
+      console.log("[handleSkip] no draft, no follow-up — closing");
+      clearAndClose();
+      return;
+    }
 
     // Complete path skip — mark existing follow-up complete, publish draft, no new follow-up
     if (existingFollowup) {
@@ -420,9 +433,7 @@ const LogInteractionSheet = ({
       }
 
       invalidateAll();
-      toast.success("Nice work. Log saved.");
-      clearAndClose();
-      navigate(`/contact/${contactId}`);
+      triggerCelebration("Logged.", contactId);
       return;
     }
 
@@ -437,9 +448,7 @@ const LogInteractionSheet = ({
       console.log("[handleSkip] no draft and no follow-up — nothing to save");
     }
     invalidateAll();
-    toast.success("Log saved.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Outstanding follow-up: Update/keep chosen → save immediately ──
@@ -492,9 +501,8 @@ const LogInteractionSheet = ({
     console.log("[handleOutstandingUpdate] interaction draft published:", draftId);
 
     invalidateAll();
-    toast.success(isKeep ? "Log saved." : "Log saved. Follow-up rescheduled.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    console.log("[handleOutstandingUpdate] success — isKeep:", isKeep);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Outstanding follow-up: Cancel chosen → show confirm dialog ──
@@ -530,9 +538,7 @@ const LogInteractionSheet = ({
 
     setShowCancelConfirmDialog(false);
     invalidateAll();
-    toast.success("Log saved. Follow-up cancelled.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // ── Contact & UI helpers ──
@@ -600,6 +606,10 @@ const LogInteractionSheet = ({
       toast.error("Select a contact first.");
       return;
     }
+    if (isDirty) {
+      setShowDiscardDialog(true);
+      return;
+    }
     console.log("[skip] Step 1 skipped — routing to Step 2 with no draft");
     if (draftId) {
       await supabase.from("interactions").delete().eq("id", draftId);
@@ -652,9 +662,7 @@ const LogInteractionSheet = ({
     }
 
     invalidateAll();
-    toast.success("Log saved.");
-    clearAndClose();
-    navigate(`/contact/${contactId}`);
+    triggerCelebration("Logged.", contactId);
   };
 
   // Next button enablement (does not require contact — already chosen in picker or pre-filled)
@@ -926,7 +934,7 @@ const LogInteractionSheet = ({
               gap: 8,
             }}
           >
-            {activeFollowup && contactId && (
+            {activeFollowup && contactId && !logOnly && (
               <div
                 style={{
                   display: "flex",
@@ -1162,6 +1170,71 @@ const LogInteractionSheet = ({
           </div>
         )}
       </FullscreenTakeover>
+
+      {showCelebration && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            background: "#f0f7f4",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            paddingTop: "env(safe-area-inset-top)",
+            paddingBottom: "env(safe-area-inset-bottom)",
+            animation: "celebFadeIn 200ms ease",
+          }}
+        >
+          <style>{`
+            @keyframes celebFadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes celebCheck {
+              0% { transform: scale(0.5); opacity: 0; }
+              60% { transform: scale(1.15); opacity: 1; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "white",
+              border: "1.5px solid #b7d9cc",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "celebCheck 480ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          >
+            <Check size={32} color="#2d6a4f" strokeWidth={2.5} />
+          </div>
+          <div
+            style={{
+              fontFamily: "'Crimson Pro', serif",
+              fontSize: 32,
+              fontWeight: 500,
+              color: "#2d6a4f",
+            }}
+          >
+            {celebrationText}
+          </div>
+          <div
+            style={{
+              fontFamily: "Outfit, sans-serif",
+              fontSize: 16,
+              color: "#888480",
+            }}
+          >
+            {contactName}
+          </div>
+        </div>
+      )}
 
       {/* Discard dialog */}
       <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
