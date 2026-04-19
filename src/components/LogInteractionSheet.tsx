@@ -389,11 +389,18 @@ const LogInteractionSheet = ({
       if (insertError) throw insertError;
       console.log("[followupMutation] follow_up inserted:", { type, date, reminder_note: reminderNote.trim() || null });
 
-      return { completePath: false, hasFollowup: true };
+      return { completePath: false, hasFollowup: true, hadDraft: !!draftId };
     },
     onSuccess: (result: any) => {
       invalidateAll();
-      const text = result?.hasFollowup ? "Logged & set." : "Logged.";
+      let text: string;
+      if (result?.completePath) {
+        text = result.hasFollowup ? "Logged & set." : "Logged.";
+      } else if (result?.hasFollowup) {
+        text = result?.hadDraft ? "Logged & set." : "Follow-up set.";
+      } else {
+        text = "Logged.";
+      }
       triggerCelebration(text, contactId);
     },
     onError: (e: any) => toast.error(e.message),
