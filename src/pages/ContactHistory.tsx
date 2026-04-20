@@ -276,7 +276,9 @@ const ContactHistory = () => {
                   }}
                 >
                   <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
-                  {(contact as any).address}
+                  <span style={{ minWidth: 0, wordBreak: "break-word" }}>
+                    {(contact as any).address}
+                  </span>
                 </a>
               )}
             </div>
