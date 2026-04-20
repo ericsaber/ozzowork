@@ -343,12 +343,17 @@ const Contacts = () => {
               <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
             </div>
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
+            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
+            <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             {!showAddressFields ? (
               <button
                 onClick={() => setShowAddressFields(true)}
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  width: "100%",
                   gap: 6,
                   fontSize: 13,
                   fontWeight: 500,
@@ -374,8 +379,6 @@ const Contacts = () => {
                 </div>
               </div>
             )}
-            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
-            <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             <Button onClick={() => addContact.mutate(form)} disabled={!form.first_name || addContact.isPending} className="w-full">
               {addContact.isPending ? "Adding..." : "Add Contact"}
             </Button>
