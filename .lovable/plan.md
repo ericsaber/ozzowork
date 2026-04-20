@@ -1,12 +1,12 @@
 
 
-## Plan: MapPin Centering + Add Address Position
+## Plan: Remove MapPin from Address Display + Reorder Quick-add Form
 
-**Files:** `src/pages/ContactHistory.tsx`, `src/pages/Contacts.tsx`
+**Files:** `src/pages/ContactHistory.tsx`, `src/components/LogInteractionSheet.tsx`
 
-### Fix 1 — MapPin icon spans both address lines (ContactHistory.tsx ~line 287)
+### Fix 1 — Remove MapPin from address display (ContactHistory.tsx ~line 290–310)
 
-Restructure the address display so the MapPin sits to the left of a column containing both lines. Change `alignItems` to `"center"` on the `<a>` tag and use `alignSelf: "center"` on the MapPin. Remove `paddingLeft: 19` from line2.
+Strip the `<MapPin>` element from the address `<a>` tag. The `<a>` becomes a simple flex column of `line1` + optional `line2`, still tappable, still linking to Google Maps.
 
 ```tsx
 <a
@@ -15,8 +15,8 @@ Restructure the address display so the MapPin sits to the left of a column conta
   rel="noopener noreferrer"
   style={{
     display: "flex",
-    alignItems: "center",
-    gap: 6,
+    flexDirection: "column",
+    gap: 1,
     fontSize: 13,
     color: "#c8622a",
     fontFamily: "var(--font-body)",
@@ -24,39 +24,40 @@ Restructure the address display so the MapPin sits to the left of a column conta
     marginTop: 2,
   }}
 >
-  <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, alignSelf: "center" }} />
-  <span style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-    <span>{line1}</span>
-    {line2 && <span>{line2}</span>}
-  </span>
+  <span>{line1}</span>
+  {line2 && <span>{line2}</span>}
 </a>
 ```
 
-### Fix 2 — Move "+ Add address" in ContactHistory.tsx edit form (~line 492)
+**Import note:** `MapPin` is still used in the edit form's "+ Add address" button (line 513), so the `lucide-react` import stays unchanged.
 
-Move the address section from after Company to after Email. Add `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"` to center the "+ Add address" button.
+### Fix 2 — Move "+ Add address" after Email in quick-add form (LogInteractionSheet.tsx)
 
-New order: First/Last Name → Company → Phone → Email → Address section → Save Changes
+Two locations: contact picker step (~lines 925–967) and step 1 (~lines 989–1031). In both, reorder so the address block sits between Email and the Create & Select button.
 
-### Fix 3 — Move "+ Add address" in Contacts.tsx new contact form (~line 345)
+**New order:**
+1. First/Last Name grid
+2. Company
+3. Phone
+4. Email
+5. Address section (`+ Add address` button OR expanded fields)
+6. Create & Select button
 
-Same change as Fix 2: move address section from after Company to after Email, with centered "+ Add address" button.
-
-New order: First/Last Name → Company → Phone → Email → Address section → Add Contact button
+Center the "+ Add address" button by adding `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"` to its inline style (in both locations).
 
 ### Preserved
 - All `console.log` statements
-- All existing form field logic and mutations
-- All styling except the specific changes noted
+- Map link query logic (line1/line2 join)
+- Address field inputs and their existing styles
+- `MapPin` icon on the "+ Add address" buttons (both files)
+- All other component logic
 
 ### Checklist
-- ✅ Only `ContactHistory.tsx` and `Contacts.tsx` touched
-- ✅ Address `<a>` restructured: MapPin left, column of line1+line2 right
-- ✅ `alignItems: "center"` on `<a>` so icon centers across both lines
-- ✅ `alignSelf: "center"` on MapPin
-- ✅ `paddingLeft: 19` removed from line2 span
-- ✅ Address section moved to after Email, before Save Changes in ContactHistory edit form
-- ✅ Address section moved to after Email, before Add Contact button in Contacts new contact form
-- ✅ "+ Add address" button centered with `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"`
+- ✅ Only `ContactHistory.tsx` and `LogInteractionSheet.tsx` touched
+- ✅ `<MapPin>` removed from address display in ContactHistory
+- ✅ `lucide-react` import unchanged (MapPin still used elsewhere in file)
+- ✅ Address `<a>` uses `flexDirection: "column"` with line1 + line2 spans
+- ✅ Quick-add address section moved to after Email in both form locations
+- ✅ "+ Add address" button centered in both quick-add locations
 - ✅ All `console.log` preserved
 
