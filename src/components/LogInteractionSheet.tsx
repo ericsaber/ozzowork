@@ -728,6 +728,10 @@ const LogInteractionSheet = ({
 
   return (
     <>
+      <style>{`@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}`}</style>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div
           style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0, display: "flex", flexDirection: "column" }}
