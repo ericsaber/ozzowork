@@ -158,6 +158,7 @@ const LogInteractionSheet = ({
       setShowCelebration(false);
       setShowSkipDiscardDialog(false);
       setLogSkipped(false);
+      setSlideOut(false);
     }, 300);
   };
 
