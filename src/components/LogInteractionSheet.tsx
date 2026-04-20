@@ -628,10 +628,10 @@ const LogInteractionSheet = ({
     }
   };
 
-  // Filtered contacts for picker (top 8 always)
+  // Filtered contacts for picker
   const filteredContacts = useMemo(() => {
     if (!contacts) return [];
-    if (!searchQuery) return contacts.slice(0, 8);
+    if (!searchQuery) return contacts;
     const q = searchQuery.toLowerCase();
     return contacts
       .filter((c) => {
@@ -641,10 +641,19 @@ const LogInteractionSheet = ({
       .slice(0, 8);
   }, [contacts, searchQuery]);
 
+  const recentContacts = ((recentContactIds || [])
+    .map((id) => contacts?.find((c) => c.id === id))
+    .filter(Boolean) as NonNullable<typeof contacts>);
+
   const handleContactSelect = (id: string) => {
     setContactId(id);
     setSearchOpen(false);
     setSearchQuery("");
+    setSlideOut(true);
+    setTimeout(() => {
+      setStep(1);
+      setSlideOut(false);
+    }, 220);
   };
 
   // Skip step 1 → go to follow-up step with no draft
