@@ -195,6 +195,37 @@ const LogInteractionSheet = ({
     enabled: open,
   });
 
+  const { data: recentContactIds } = useQuery({
+    queryKey: ["recent-contact-ids"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("interactions")
+        .select("contact_id, connect_date")
+        .eq("user_id", user.id)
+        .eq("status", "published")
+        .order("connect_date", { ascending: false })
+        .limit(20);
+      if (error) {
+        console.log("[recentContactIds] error:", error);
+        return [];
+      }
+      const seen = new Set<string>();
+      const ids: string[] = [];
+      for (const row of data || []) {
+        if (!seen.has(row.contact_id)) {
+          seen.add(row.contact_id);
+          ids.push(row.contact_id);
+          if (ids.length === 3) break;
+        }
+      }
+      console.log("[recentContactIds] top 3:", ids);
+      return ids;
+    },
+    enabled: open,
+  });
+
   const selectedContact = contacts?.find((c) => c.id === contactId);
   const contactName = selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "";
   const isContactPrefilled = !!preselectedContactId && !contactCleared;
