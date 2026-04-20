@@ -1,95 +1,84 @@
 
 
-## Plan: Contact Picker Redesign + Slide Animation
+## Plan: Address Field + Quick-add Auto-advance
 
-**File:** `src/components/LogInteractionSheet.tsx`
+### Prerequisite — Migration
 
-### Part 1 — Contact picker redesign
-
-**1.1 Remove 8-cap on no-query branch** (line 601):
-```ts
-if (!searchQuery) return contacts;  // was contacts.slice(0, 8)
-```
-Keep `.slice(0, 8)` on the search branch.
-
-**1.2 Add `recentContactIds` query** (near the existing `contacts` useQuery):
-- Query `interactions` filtered by `user_id`, `status = 'published'`, ordered by `connect_date` desc, limit 20.
-- Deduplicate to top 3 distinct `contact_id`s.
-- `enabled: open`.
-- Includes `console.log("[recentContactIds] top 3:", ids)`.
-
-**1.3 Derive `recentContacts`**:
-```ts
-const recentContacts = (recentContactIds || [])
-  .map((id) => contacts?.find((c) => c.id === id))
-  .filter(Boolean) as typeof contacts;
+Add `address` column to `contacts` via migration tool (no manual SQL needed):
+```sql
+ALTER TABLE contacts ADD COLUMN address text;
 ```
 
-**1.4 Replace existing static "RECENT" label block (lines 743-758) and contact list rendering (lines 760-829)** with the new sectioned layout:
-- Extract the contact-row JSX into a small inline `renderRow(c)` helper inside the picker block to avoid duplicating the avatar/button markup.
-- When `!searchQuery`:
-  - If `recentContacts.length > 0`: render "RECENT" section label (existing styling) followed by `recentContacts.map(renderRow)`.
-  - Always render "ALL CONTACTS" section label (same styling, with appropriate `marginTop`) followed by `filteredContacts.map(renderRow)`.
-- When `searchQuery` is active: no labels, just `filteredContacts.map(renderRow)` (current behavior, capped at 8).
+### Files in scope
+1. `src/components/LogInteractionSheet.tsx`
+2. `src/pages/Contacts.tsx`
+3. `src/pages/ContactHistory.tsx`
 
-### Part 2 — Slide animation on contact select
+---
 
-**2.1 Add state**:
+### Fix 1 — Quick-add auto-advances (LogInteractionSheet.tsx, line 246-250)
+
+Replace `quickAddContact.onSuccess` body — drop the toast, call `handleContactSelect(data.id)` to trigger slide animation:
 ```ts
-const [slideOut, setSlideOut] = useState(false);
+onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: ["contacts"] });
+  setShowQuickAdd(false);
+  setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+  handleContactSelect(data.id);
+},
 ```
 
-**2.2 Update `handleContactSelect`** (line 611) — also update the inline onClick on line 768-771 to call only `handleContactSelect(c.id)` (move `setStep(1)` into the helper):
-```ts
-const handleContactSelect = (id: string) => {
-  setContactId(id);
-  setSearchOpen(false);
-  setSearchQuery("");
-  setSlideOut(true);
-  setTimeout(() => {
-    setStep(1);
-    setSlideOut(false);
-  }, 220);
-};
-```
+### Fix 2 — Address in quick-add (LogInteractionSheet.tsx)
 
-**2.3 Wrap picker content** (line 695 wrapper div) with transform + transition style driven by `slideOut`:
+- Line 87 (initial state): add `address: ""`
+- Line 151 (clearAndClose reset): add `address: ""`
+- Line 233-242 (mutation insert): add `address: quickForm.address || null`
+- Line ~925 (picker quick-add form): add Address `<Input>` after Email
+- Line ~955 (step 1 quick-add form): add Address `<Input>` after Email
+
+### Fix 3 — Address in Contacts.tsx new contact form
+
+- `form` initial state: add `address: ""`
+- Reset after submit: add `address: ""`
+- `addContact` mutation insert: add `address: d.address || null`
+- After Email `<Input>` in `showAdd` panel: add Address `<Input>`
+- `handlePickFromPhone` `contactData` object: add `address: ""`
+
+### Fix 4 — Address display + edit on ContactHistory.tsx
+
+- Imports (line 6-8): add `MapPin` to lucide-react import
+- Line 48 (form state): add `address: ""`
+- Line 200-203 (updateContact mutation): add `address: form.address || null`
+- Line 238 (startEditing): add `address: contact.address || ""`
+- Line 442 (edit form, after Email Input): add Address `<Input>`
+- Line 260 area (contact header, after company `<p>`): add maps link block:
 ```tsx
-style={{
-  paddingTop: 20,
-  transform: slideOut ? "translateX(-100%)" : "translateX(0)",
-  opacity: slideOut ? 0 : 1,
-  transition: "transform 220ms ease-out, opacity 220ms ease-out",
-}}
+{contact.address && (
+  <a href={`https://maps.google.com/maps?q=${encodeURIComponent(contact.address)}`}
+     target="_blank" rel="noopener noreferrer"
+     style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13,
+              color: "#c8622a", fontFamily: "var(--font-body)",
+              textDecoration: "none", marginTop: 2 }}>
+    <MapPin size={13} color="#c8622a" />
+    {contact.address}
+  </a>
+)}
 ```
-
-**2.4 Wrap step 1 content** (line 876 wrapper div) with `animation: "slideInFromRight 280ms ease-out"`.
-
-**2.5 Inject keyframes** via a `<style>` tag inside the component return (top of fragment):
-```tsx
-<style>{`@keyframes slideInFromRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}`}</style>
-```
-
-### Reset
-Add `setSlideOut(false)` to `clearAndClose` reset block to be safe.
 
 ### Preserved
-- All `console.log` statements (existing + new one in `recentContactIds`).
-- Avatar palette helper, search input, quick-add panel, "+ Add" button — unchanged.
-- Contact row visual (avatar, name, company) — unchanged.
+- All `console.log` statements (e.g., line 612 `[draft] contact changed`, `[recentContactIds]`, etc.)
+- Slide animation behavior (handleContactSelect already triggers it)
+- All other component logic
 
 ### Checklist
-- ✅ Only `LogInteractionSheet.tsx` touched
-- ✅ `filteredContacts` no-query branch shows all contacts
-- ✅ `recentContactIds` query fetches top 3 distinct by latest `connect_date`
-- ✅ `recentContacts` derived from contacts list
-- ✅ Picker shows "RECENT" (when data) + "ALL CONTACTS" sections when no search
-- ✅ Search active → no labels, capped at 8
-- ✅ `slideOut` state added, set in `handleContactSelect`
-- ✅ Picker slides out left; step 1 slides in from right
-- ✅ `slideInFromRight` keyframe defined via `<style>` tag
+- ✅ Only 3 files touched + 1 migration
+- ✅ Quick-add `onSuccess` calls `handleContactSelect(data.id)`, no toast
+- ✅ `quickForm` includes `address` in all initial/reset states
+- ✅ Address Input added to both quick-add form locations (picker + step 1)
+- ✅ Quick-add mutation insert includes `address`
+- ✅ Contacts.tsx form + mutation + handlePickFromPhone include `address`
+- ✅ ContactHistory shows address as MapPin tappable maps link
+- ✅ `MapPin` imported from lucide-react
+- ✅ Edit form includes address; startEditing populates; mutation saves
 - ✅ All `console.log` preserved
 
