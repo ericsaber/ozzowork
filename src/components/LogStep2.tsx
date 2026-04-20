@@ -354,6 +354,7 @@ const LogStep2 = ({
             border: "1px solid #e8e4de",
             borderRadius: 12,
             overflow: "hidden",
+            width: "100%",
           }}
         >
           <Calendar
@@ -367,7 +368,7 @@ const LogStep2 = ({
             }}
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
             initialFocus
-            className="p-3 pointer-events-auto"
+            className="pointer-events-auto w-full"
           />
         </div>
       )}
@@ -376,7 +377,7 @@ const LogStep2 = ({
       {selectedDate && (
         <div
           style={{
-            marginTop: 16,
+            marginTop: 24,
             display: "flex",
             flexDirection: "column",
             gap: 10,
@@ -409,7 +410,7 @@ const LogStep2 = ({
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
-                      background: selected ? "#c8622a" : "#f0ede8",
+                      background: selected ? "#c8622a" : "white",
                       border: selected ? "none" : "1px solid #e8e4de",
                       transition: "all 0.12s ease",
                     }}
