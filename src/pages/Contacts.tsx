@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, X, UserPlus, Upload, Trash2 } from "lucide-react";
+import { Search, Plus, X, UserPlus, Upload, Trash2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,7 +23,8 @@ const Contacts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+  const [showAddressFields, setShowAddressFields] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: contacts, isLoading } = useQuery({
@@ -39,7 +40,7 @@ const Contacts = () => {
   });
 
   const addContact = useMutation({
-    mutationFn: async (contactData?: { first_name: string; last_name: string; company: string; phone: string; email: string; address: string }) => {
+    mutationFn: async (contactData?: { first_name: string; last_name: string; company: string; phone: string; email: string; street?: string; street2?: string; city?: string; state?: string; zip?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const d = contactData || form;
@@ -49,7 +50,11 @@ const Contacts = () => {
         company: d.company || null,
         phone: d.phone || null,
         email: d.email || null,
-        address: d.address || null,
+        street: d.street || null,
+        street2: d.street2 || null,
+        city: d.city || null,
+        state: d.state || null,
+        zip: d.zip || null,
         user_id: user.id,
       });
       if (error) throw error;
@@ -57,7 +62,8 @@ const Contacts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowAdd(false);
-      setForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      setForm({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+      setShowAddressFields(false);
       toast.success("Contact added");
     },
     onError: (e) => toast.error(e.message),
@@ -122,7 +128,11 @@ const Contacts = () => {
             company: "",
             phone: picked.tel?.[0] || "",
             email: picked.email?.[0] || "",
-            address: "",
+            street: "",
+            street2: "",
+            city: "",
+            state: "",
+            zip: "",
           };
           addContact.mutate(contactData);
         }
@@ -333,7 +343,37 @@ const Contacts = () => {
               <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
             </div>
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
-            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
+            {!showAddressFields ? (
+              <button
+                onClick={() => setShowAddressFields(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#c8622a",
+                  fontFamily: "Outfit, sans-serif",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 0",
+                }}
+              >
+                <MapPin size={14} color="#c8622a" />
+                + Add address
+              </button>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Input placeholder="Street address" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} className="bg-background" />
+                <Input placeholder="Street address line 2" value={form.street2} onChange={(e) => setForm({ ...form, street2: e.target.value })} className="bg-background" />
+                <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="bg-background" />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="bg-background" />
+                  <Input placeholder="ZIP code" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} className="bg-background" />
+                </div>
+              </div>
+            )}
             <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
             <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             <Button onClick={() => addContact.mutate(form)} disabled={!form.first_name || addContact.isPending} className="w-full">
