@@ -354,6 +354,7 @@ const LogStep2 = ({
             border: "1px solid #e8e4de",
             borderRadius: 12,
             overflow: "hidden",
+            width: "100%",
           }}
         >
           <Calendar
@@ -367,7 +368,7 @@ const LogStep2 = ({
             }}
             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
             initialFocus
-            className="p-3 pointer-events-auto"
+            className="pointer-events-auto w-full"
           />
         </div>
       )}
