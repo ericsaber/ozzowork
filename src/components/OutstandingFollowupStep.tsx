@@ -72,6 +72,7 @@ const OutstandingFollowupStep = ({
   const fuDate = startOfDay(parseDate(existingFollowup.planned_date));
   const isToday = isDateToday(fuDate);
   const isOverdue = !isToday && isPast(fuDate);
+  const isTomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd") === existingFollowup.planned_date;
   const status: "today" | "overdue" | "future" = isToday
     ? "today"
     : isOverdue
@@ -112,6 +113,8 @@ const OutstandingFollowupStep = ({
     ? "Today"
     : isOverdue
     ? `Was due ${format(fuDate, "MMM d")}`
+    : isTomorrow
+    ? "Tomorrow"
     : format(fuDate, "MMM d");
 
   const options: { id: Exclude<Choice, null>; title: string; sub: string; danger?: boolean }[] = [
