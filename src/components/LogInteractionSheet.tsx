@@ -934,7 +934,17 @@ const LogInteractionSheet = ({
           })()}
 
           {step === 1 && (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div
+              key={`step1-${contactId}`}
+              style={{
+                paddingTop: 20,
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+                animation: "slideInFromRight 280ms ease-out",
+              }}
+            >
               {showQuickAdd && (
                 <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
                   <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
