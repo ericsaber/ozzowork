@@ -265,7 +265,7 @@ const ContactHistory = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    display: "inline-flex",
+                    display: "flex",
                     alignItems: "flex-start",
                     gap: 4,
                     fontSize: 13,
