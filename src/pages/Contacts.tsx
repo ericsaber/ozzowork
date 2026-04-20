@@ -23,7 +23,7 @@ const Contacts = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: contacts, isLoading } = useQuery({
@@ -39,7 +39,7 @@ const Contacts = () => {
   });
 
   const addContact = useMutation({
-    mutationFn: async (contactData?: { first_name: string; last_name: string; company: string; phone: string; email: string }) => {
+    mutationFn: async (contactData?: { first_name: string; last_name: string; company: string; phone: string; email: string; address: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const d = contactData || form;
@@ -49,6 +49,7 @@ const Contacts = () => {
         company: d.company || null,
         phone: d.phone || null,
         email: d.email || null,
+        address: d.address || null,
         user_id: user.id,
       });
       if (error) throw error;
@@ -56,7 +57,7 @@ const Contacts = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowAdd(false);
-      setForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+      setForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
       toast.success("Contact added");
     },
     onError: (e) => toast.error(e.message),
@@ -82,7 +83,7 @@ const Contacts = () => {
   });
 
   const bulkAddContacts = useMutation({
-    mutationFn: async (rows: { first_name: string; last_name: string; company: string; phone: string; email: string }[]) => {
+    mutationFn: async (rows: { first_name: string; last_name: string; company: string; phone: string; email: string; address?: string }[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
       const insertData = rows.map((r) => ({
@@ -121,6 +122,7 @@ const Contacts = () => {
             company: "",
             phone: picked.tel?.[0] || "",
             email: picked.email?.[0] || "",
+            address: "",
           };
           addContact.mutate(contactData);
         }
@@ -333,6 +335,7 @@ const Contacts = () => {
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
             <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
             <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
+            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
             <Button onClick={() => addContact.mutate(form)} disabled={!form.first_name || addContact.isPending} className="w-full">
               {addContact.isPending ? "Adding..." : "Add Contact"}
             </Button>

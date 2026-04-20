@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Phone, Mail, MessageSquare, Users, Video, ClipboardList,
-  Pencil, Trash2, X, MoreHorizontal, Clock, Check, CornerDownRight,
+  Pencil, Trash2, X, MoreHorizontal, Clock, Check, CornerDownRight, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,7 @@ const ContactHistory = () => {
   const todayStr = format(startOfToday(), "yyyy-MM-dd");
 
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [logSheetMode, setLogSheetMode] = useState<{ startStep: 1 | 2; logOnly: boolean } | null>(null);
@@ -200,6 +200,7 @@ const ContactHistory = () => {
       const { error } = await supabase.from("contacts").update({
         first_name: form.first_name, last_name: form.last_name,
         company: form.company || null, phone: form.phone || null, email: form.email || null,
+        address: form.address || null,
       }).eq("id", id!);
       if (error) throw error;
     },
@@ -235,7 +236,7 @@ const ContactHistory = () => {
 
   const startEditing = () => {
     if (contact) {
-      setForm({ first_name: contact.first_name, last_name: contact.last_name, company: contact.company || "", phone: contact.phone || "", email: contact.email || "" });
+      setForm({ first_name: contact.first_name, last_name: contact.last_name, company: contact.company || "", phone: contact.phone || "", email: contact.email || "", address: (contact as any).address || "" });
       setEditing(true);
     }
   };
@@ -258,6 +259,26 @@ const ContactHistory = () => {
             <div className="flex-1 min-w-0">
             <h1 className="text-foreground" style={{ fontFamily: "var(--font-heading)", fontSize: "22px" }}>{fullName}</h1>
               {contact.company && <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{contact.company}</p>}
+              {(contact as any).address && (
+                <a
+                  href={`https://maps.google.com/maps?q=${encodeURIComponent((contact as any).address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: 13,
+                    color: "#c8622a",
+                    fontFamily: "var(--font-body)",
+                    textDecoration: "none",
+                    marginTop: 2,
+                  }}
+                >
+                  <MapPin size={13} color="#c8622a" />
+                  {(contact as any).address}
+                </a>
+              )}
             </div>
             <DropdownMenu open={openMenuId === "contact-menu"} onOpenChange={(o) => setOpenMenuId(o ? "contact-menu" : null)}>
               <DropdownMenuTrigger asChild>
@@ -440,6 +461,7 @@ const ContactHistory = () => {
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
             <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
             <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
+            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
             <Button onClick={() => updateContact.mutate()} disabled={!form.first_name || updateContact.isPending} className="w-full">
               {updateContact.isPending ? "Saving..." : "Save Changes"}
             </Button>
