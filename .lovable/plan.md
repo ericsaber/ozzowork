@@ -1,63 +1,53 @@
 
 
-## Plan: Remove MapPin from Address Display + Reorder Quick-add Form
+## Plan: LogStep2 Via Icons, Spacing, Calendar Gap
 
-**Files:** `src/pages/ContactHistory.tsx`, `src/components/LogInteractionSheet.tsx`
+**File:** `src/components/LogStep2.tsx`
 
-### Fix 1 — Remove MapPin from address display (ContactHistory.tsx ~line 290–310)
+### Fix 1 — Via icon background (line 412)
 
-Strip the `<MapPin>` element from the address `<a>` tag. The `<a>` becomes a simple flex column of `line1` + optional `line2`, still tappable, still linking to Google Maps.
+Change unselected via icon circle background from `#f0ede8` to `white`:
 
 ```tsx
-<a
-  href={`https://maps.google.com/maps?q=${encodeURIComponent(query)}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  style={{
-    display: "flex",
-    flexDirection: "column",
-    gap: 1,
-    fontSize: 13,
-    color: "#c8622a",
-    fontFamily: "var(--font-body)",
-    textDecoration: "none",
-    marginTop: 2,
-  }}
->
-  <span>{line1}</span>
-  {line2 && <span>{line2}</span>}
-</a>
+background: selected ? "#c8622a" : "white",
+border: selected ? "none" : "1px solid #e8e4de",
 ```
 
-**Import note:** `MapPin` is still used in the edit form's "+ Add address" button (line 513), so the `lucide-react` import stays unchanged.
+### Fix 2 — Via + reminder section spacing (line 379)
 
-### Fix 2 — Move "+ Add address" after Email in quick-add form (LogInteractionSheet.tsx)
+Change `marginTop: 16` → `marginTop: 24` on the `{selectedDate && (...)}` wrapper for more breathing room between date chips and the via/reminder section.
 
-Two locations: contact picker step (~lines 925–967) and step 1 (~lines 989–1031). In both, reorder so the address block sits between Email and the Create & Select button.
+### Fix 3 — Calendar right gap (lines 349–373)
 
-**New order:**
-1. First/Last Name grid
-2. Company
-3. Phone
-4. Email
-5. Address section (`+ Add address` button OR expanded fields)
-6. Create & Select button
+Add `width: "100%"` to the calendar wrapper div and add `w-full` to the Calendar's className (keeping existing `pointer-events-auto`, removing `p-3` so the wrapper controls spacing):
 
-Center the "+ Add address" button by adding `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"` to its inline style (in both locations).
+```tsx
+<div
+  style={{
+    marginTop: 8,
+    background: "#faf8f5",
+    border: "1px solid #e8e4de",
+    borderRadius: 12,
+    overflow: "hidden",
+    width: "100%",
+  }}
+>
+  <Calendar
+    ...
+    className="pointer-events-auto w-full"
+  />
+</div>
+```
 
 ### Preserved
 - All `console.log` statements
-- Map link query logic (line1/line2 join)
-- Address field inputs and their existing styles
-- `MapPin` icon on the "+ Add address" buttons (both files)
-- All other component logic
+- All other styling and logic
 
 ### Checklist
-- ✅ Only `ContactHistory.tsx` and `LogInteractionSheet.tsx` touched
-- ✅ `<MapPin>` removed from address display in ContactHistory
-- ✅ `lucide-react` import unchanged (MapPin still used elsewhere in file)
-- ✅ Address `<a>` uses `flexDirection: "column"` with line1 + line2 spans
-- ✅ Quick-add address section moved to after Email in both form locations
-- ✅ "+ Add address" button centered in both quick-add locations
+- ✅ Only `LogStep2.tsx` touched
+- ✅ Via icon unselected background changed from `#f0ede8` to `white`
+- ✅ Via + reminder section `marginTop` increased from 16 to 24
+- ✅ Calendar wrapper gets `width: "100%"`
+- ✅ Calendar className gets `w-full` added, `p-3` removed
 - ✅ All `console.log` preserved
 
