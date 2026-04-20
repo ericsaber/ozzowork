@@ -70,6 +70,7 @@ const LogInteractionSheet = ({
   // Contact picker search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [slideOut, setSlideOut] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
@@ -157,6 +158,7 @@ const LogInteractionSheet = ({
       setShowCelebration(false);
       setShowSkipDiscardDialog(false);
       setLogSkipped(false);
+      setSlideOut(false);
     }, 300);
   };
 
@@ -189,6 +191,37 @@ const LogInteractionSheet = ({
       const { data, error } = await supabase.from("contacts").select("*").order("first_name");
       if (error) throw error;
       return data;
+    },
+    enabled: open,
+  });
+
+  const { data: recentContactIds } = useQuery({
+    queryKey: ["recent-contact-ids"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("interactions")
+        .select("contact_id, connect_date")
+        .eq("user_id", user.id)
+        .eq("status", "published")
+        .order("connect_date", { ascending: false })
+        .limit(20);
+      if (error) {
+        console.log("[recentContactIds] error:", error);
+        return [];
+      }
+      const seen = new Set<string>();
+      const ids: string[] = [];
+      for (const row of data || []) {
+        if (!seen.has(row.contact_id)) {
+          seen.add(row.contact_id);
+          ids.push(row.contact_id);
+          if (ids.length === 3) break;
+        }
+      }
+      console.log("[recentContactIds] top 3:", ids);
+      return ids;
     },
     enabled: open,
   });
@@ -595,10 +628,10 @@ const LogInteractionSheet = ({
     }
   };
 
-  // Filtered contacts for picker (top 8 always)
+  // Filtered contacts for picker
   const filteredContacts = useMemo(() => {
     if (!contacts) return [];
-    if (!searchQuery) return contacts.slice(0, 8);
+    if (!searchQuery) return contacts;
     const q = searchQuery.toLowerCase();
     return contacts
       .filter((c) => {
@@ -608,10 +641,19 @@ const LogInteractionSheet = ({
       .slice(0, 8);
   }, [contacts, searchQuery]);
 
+  const recentContacts = ((recentContactIds || [])
+    .map((id) => contacts?.find((c) => c.id === id))
+    .filter(Boolean) as NonNullable<typeof contacts>);
+
   const handleContactSelect = (id: string) => {
     setContactId(id);
     setSearchOpen(false);
     setSearchQuery("");
+    setSlideOut(true);
+    setTimeout(() => {
+      setStep(1);
+      setSlideOut(false);
+    }, 220);
   };
 
   // Skip step 1 → go to follow-up step with no draft
@@ -686,13 +728,98 @@ const LogInteractionSheet = ({
 
   return (
     <>
+      <style>{`@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}`}</style>
       <FullscreenTakeover open={open} onOpenChange={handleOpen}>
         <div
           style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0, display: "flex", flexDirection: "column" }}
           onContextMenu={(e) => e?.preventDefault?.()}
         >
-          {step === "contact-picker" && (
-            <div style={{ paddingTop: 20 }}>
+          {step === "contact-picker" && (() => {
+            const sectionLabelStyle: React.CSSProperties = {
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#888480",
+              fontFamily: "Outfit, sans-serif",
+              marginBottom: 8,
+            };
+            const renderRow = (c: NonNullable<typeof contacts>[number]) => {
+              const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
+              const colors = getAvatarColors(`${c.first_name} ${c.last_name}`);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => handleContactSelect(c.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 0",
+                    background: "none",
+                    border: "none",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: colors.bg,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontFamily: "Outfit, sans-serif",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 600,
+                        color: "#1c1a17",
+                        fontFamily: "Outfit, sans-serif",
+                      }}
+                    >
+                      {`${c.first_name} ${c.last_name}`.trim()}
+                    </div>
+                    {c.company && (
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#888480",
+                          fontFamily: "Outfit, sans-serif",
+                        }}
+                      >
+                        {c.company}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            };
+            return (
+            <div
+              style={{
+                paddingTop: 20,
+                transform: slideOut ? "translateX(-100%)" : "translateX(0)",
+                opacity: slideOut ? 0 : 1,
+                transition: "transform 220ms ease-out, opacity 220ms ease-out",
+              }}
+            >
               <h2
                 style={{
                   fontFamily: "'Crimson Pro', serif",
@@ -740,93 +867,26 @@ const LogInteractionSheet = ({
                 />
               </div>
 
-              {!searchQuery && (
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "#888480",
-                    fontFamily: "Outfit, sans-serif",
-                    marginTop: 20,
-                    marginBottom: 8,
-                  }}
-                >
-                  RECENT
+              {!searchQuery ? (
+                <>
+                  {recentContacts.length > 0 && (
+                    <>
+                      <div style={{ ...sectionLabelStyle, marginTop: 20 }}>RECENT</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {recentContacts.map(renderRow)}
+                      </div>
+                    </>
+                  )}
+                  <div style={{ ...sectionLabelStyle, marginTop: recentContacts.length > 0 ? 20 : 20 }}>ALL CONTACTS</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {filteredContacts.map(renderRow)}
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 12 }}>
+                  {filteredContacts.map(renderRow)}
                 </div>
               )}
-
-              {/* Contact results */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                {filteredContacts.map((c) => {
-                  const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
-                  const colors = getAvatarColors(`${c.first_name} ${c.last_name}`);
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        handleContactSelect(c.id);
-                        setStep(1);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 0",
-                        background: "none",
-                        border: "none",
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        textAlign: "left",
-                        width: "100%",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          background: colors.bg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: colors.text,
-                          fontFamily: "Outfit, sans-serif",
-                        }}
-                      >
-                        {initials}
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 15,
-                            fontWeight: 600,
-                            color: "#1c1a17",
-                            fontFamily: "Outfit, sans-serif",
-                          }}
-                        >
-                          {`${c.first_name} ${c.last_name}`.trim()}
-                        </div>
-                        {c.company && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#888480",
-                              fontFamily: "Outfit, sans-serif",
-                            }}
-                          >
-                            {c.company}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
 
               {searchQuery && (
                 <button
@@ -870,10 +930,21 @@ const LogInteractionSheet = ({
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {step === 1 && (
-            <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div
+              key={`step1-${contactId}`}
+              style={{
+                paddingTop: 20,
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+                animation: "slideInFromRight 280ms ease-out",
+              }}
+            >
               {showQuickAdd && (
                 <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
                   <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
