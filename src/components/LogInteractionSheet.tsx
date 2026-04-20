@@ -928,7 +928,32 @@ const LogInteractionSheet = ({
                       {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                     </Button>
                   </div>
-...
+                </div>
+              )}
+            </div>
+            );
+          })()}
+
+          {step === 1 && (
+            <div
+              key={`step1-${contactId}`}
+              style={{
+                paddingTop: 20,
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+                animation: "slideInFromRight 280ms ease-out",
+              }}
+            >
+              {showQuickAdd && (
+                <div className="p-3 rounded-[12px] border border-border bg-card animate-fade-in">
+                  <p className="text-[12px] font-medium text-muted-foreground mb-2 uppercase tracking-[0.1em]" style={{ fontFamily: "var(--font-body)" }}>Quick-add contact</p>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="First Name *" value={quickForm.first_name} onChange={(e) => setQuickForm({ ...quickForm, first_name: e.target.value })} className="h-9 text-sm bg-background" />
+                      <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
+                    </div>
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Address" value={quickForm.address} onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
