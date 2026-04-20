@@ -291,8 +291,8 @@ const ContactHistory = () => {
                     rel="noopener noreferrer"
                     style={{
                       display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
+                      alignItems: "center",
+                      gap: 6,
                       fontSize: 13,
                       color: "#c8622a",
                       fontFamily: "var(--font-body)",
@@ -300,13 +300,11 @@ const ContactHistory = () => {
                       marginTop: 2,
                     }}
                   >
-                    <span style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                      <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, alignSelf: "center" }} />
+                    <span style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                       <span>{line1}</span>
+                      {line2 && <span>{line2}</span>}
                     </span>
-                    {line2 && (
-                      <span style={{ paddingLeft: 19 }}>{line2}</span>
-                    )}
                   </a>
                 );
               })()}
@@ -490,12 +488,17 @@ const ContactHistory = () => {
               <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
             </div>
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
+            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
+            <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             {!showAddressFields ? (
               <button
                 onClick={() => setShowAddressFields(true)}
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  width: "100%",
                   gap: 6,
                   fontSize: 13,
                   fontWeight: 500,
@@ -521,8 +524,6 @@ const ContactHistory = () => {
                 </div>
               </div>
             )}
-            <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
-            <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             <Button onClick={() => updateContact.mutate()} disabled={!form.first_name || updateContact.isPending} className="w-full">
               {updateContact.isPending ? "Saving..." : "Save Changes"}
             </Button>
