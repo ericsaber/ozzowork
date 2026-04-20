@@ -113,6 +113,8 @@ const OutstandingFollowupStep = ({
     ? "Today"
     : isOverdue
     ? `Was due ${format(fuDate, "MMM d")}`
+    : isTomorrow
+    ? "Tomorrow"
     : format(fuDate, "MMM d");
 
   const options: { id: Exclude<Choice, null>; title: string; sub: string; danger?: boolean }[] = [
