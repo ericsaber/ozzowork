@@ -1,45 +1,31 @@
 
 
-## Plan: Address Text Wrapping
+## Plan: Address Wrapping — Text Container Padding
 
 **File:** `src/pages/ContactHistory.tsx`
 
-### Change to address maps link block (~line 269)
+### Change
 
-Wrap the address text node in a `<span>` with `minWidth: 0` and `wordBreak: "break-word"` so it wraps naturally within the flex container.
+Add `style={{ paddingRight: 8 }}` to the `flex-1 min-w-0` div that wraps the contact name, company, and address. This creates a natural right margin before the `MoreHorizontal` button so the address wraps earlier.
 
 ```tsx
-<a
-  href={`https://maps.google.com/maps?q=${encodeURIComponent((contact as any).address)}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  style={{
-    display: "flex",
-    alignItems: "flex-start",
-    gap: 4,
-    fontSize: 13,
-    color: "#c8622a",
-    fontFamily: "var(--font-body)",
-    textDecoration: "none",
-    marginTop: 2,
-  }}
->
-  <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
-  <span style={{ minWidth: 0, wordBreak: "break-word" }}>
-    {(contact as any).address}
-  </span>
-</a>
+<div className="flex-1 min-w-0" style={{ paddingRight: 8 }}>
+  <h1 ...>{fullName}</h1>
+  {contact.company && <p ...>{contact.company}</p>}
+  {(contact as any).address && (
+    <a ...>...</a>
+  )}
+</div>
 ```
 
 ### Preserved
-- All `<a>` tag styles (`display: "flex"`, `alignItems: "flex-start"`, etc.)
-- All `<MapPin>` styles (`size={15}`, `flexShrink: 0`, `marginTop: 2`)
 - All `console.log` statements
+- All existing `<a>`, `<MapPin>`, and `<span>` styles from previous fixes
+- All other component logic
 
 ### Checklist
 - ✅ Only `ContactHistory.tsx` touched
-- ✅ Address text node wrapped in `<span>` with `minWidth: 0` and `wordBreak: "break-word"`
-- ✅ All existing `<a>` and `<MapPin>` styles preserved
+- ✅ `style={{ paddingRight: 8 }}` added to the `flex-1 min-w-0` div
 - ✅ No other changes
 - ✅ All `console.log` preserved
 
