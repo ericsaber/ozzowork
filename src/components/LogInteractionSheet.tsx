@@ -70,6 +70,7 @@ const LogInteractionSheet = ({
   // Contact picker search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [slideOut, setSlideOut] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [contactId, setContactId] = useState(preselectedContactId || "");
   const [connectType, setConnectType] = useState("");
