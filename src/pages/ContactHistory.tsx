@@ -45,7 +45,8 @@ const ContactHistory = () => {
   const todayStr = format(startOfToday(), "yyyy-MM-dd");
 
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+  const [showAddressFields, setShowAddressFields] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deleteContactOpen, setDeleteContactOpen] = useState(false);
   const [logSheetMode, setLogSheetMode] = useState<{ startStep: 1 | 2; logOnly: boolean } | null>(null);
@@ -200,7 +201,11 @@ const ContactHistory = () => {
       const { error } = await supabase.from("contacts").update({
         first_name: form.first_name, last_name: form.last_name,
         company: form.company || null, phone: form.phone || null, email: form.email || null,
-        address: form.address || null,
+        street: form.street || null,
+        street2: form.street2 || null,
+        city: form.city || null,
+        state: form.state || null,
+        zip: form.zip || null,
       }).eq("id", id!);
       if (error) throw error;
     },
@@ -236,7 +241,20 @@ const ContactHistory = () => {
 
   const startEditing = () => {
     if (contact) {
-      setForm({ first_name: contact.first_name, last_name: contact.last_name, company: contact.company || "", phone: contact.phone || "", email: contact.email || "", address: (contact as any).address || "" });
+      const c: any = contact;
+      setForm({
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        company: contact.company || "",
+        phone: contact.phone || "",
+        email: contact.email || "",
+        street: c.street || "",
+        street2: c.street2 || "",
+        city: c.city || "",
+        state: c.state || "",
+        zip: c.zip || "",
+      });
+      setShowAddressFields(!!(c.street || c.street2 || c.city || c.state || c.zip));
       setEditing(true);
     }
   };
@@ -259,28 +277,39 @@ const ContactHistory = () => {
             <div className="flex-1 min-w-0" style={{ paddingRight: 8 }}>
             <h1 className="text-foreground" style={{ fontFamily: "var(--font-heading)", fontSize: "22px" }}>{fullName}</h1>
               {contact.company && <p className="text-muted-foreground" style={{ fontFamily: "var(--font-body)", fontSize: "13px" }}>{contact.company}</p>}
-              {(contact as any).address && (
-                <a
-                  href={`https://maps.google.com/maps?q=${encodeURIComponent((contact as any).address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 4,
-                    fontSize: 13,
-                    color: "#c8622a",
-                    fontFamily: "var(--font-body)",
-                    textDecoration: "none",
-                    marginTop: 2,
-                  }}
-                >
-                  <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
-                  <span style={{ minWidth: 0, wordBreak: "break-word" }}>
-                    {(contact as any).address}
-                  </span>
-                </a>
-              )}
+              {((contact as any).street || (contact as any).city) && (() => {
+                const line1 = [(contact as any).street, (contact as any).street2].filter(Boolean).join(", ");
+                const line2 = [
+                  (contact as any).city,
+                  [(contact as any).state, (contact as any).zip].filter(Boolean).join(" "),
+                ].filter(Boolean).join(", ");
+                const query = [line1, line2].filter(Boolean).join(", ");
+                return (
+                  <a
+                    href={`https://maps.google.com/maps?q=${encodeURIComponent(query)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                      fontSize: 13,
+                      color: "#c8622a",
+                      fontFamily: "var(--font-body)",
+                      textDecoration: "none",
+                      marginTop: 2,
+                    }}
+                  >
+                    <span style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
+                      <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{line1}</span>
+                    </span>
+                    {line2 && (
+                      <span style={{ paddingLeft: 19 }}>{line2}</span>
+                    )}
+                  </a>
+                );
+              })()}
             </div>
             <DropdownMenu open={openMenuId === "contact-menu"} onOpenChange={(o) => setOpenMenuId(o ? "contact-menu" : null)}>
               <DropdownMenuTrigger asChild>
@@ -461,7 +490,37 @@ const ContactHistory = () => {
               <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
             </div>
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
-            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
+            {!showAddressFields ? (
+              <button
+                onClick={() => setShowAddressFields(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#c8622a",
+                  fontFamily: "Outfit, sans-serif",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 0",
+                }}
+              >
+                <MapPin size={14} color="#c8622a" />
+                + Add address
+              </button>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Input placeholder="Street address" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} className="bg-background" />
+                <Input placeholder="Street address line 2" value={form.street2} onChange={(e) => setForm({ ...form, street2: e.target.value })} className="bg-background" />
+                <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="bg-background" />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="bg-background" />
+                  <Input placeholder="ZIP code" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} className="bg-background" />
+                </div>
+              </div>
+            )}
             <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
             <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
             <Button onClick={() => updateContact.mutate()} disabled={!form.first_name || updateContact.isPending} className="w-full">

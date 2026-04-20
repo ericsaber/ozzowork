@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Search, CalendarIcon, ArrowRight, Check } from "lucide-react";
+import { Search, CalendarIcon, ArrowRight, Check, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
@@ -84,7 +84,8 @@ const LogInteractionSheet = ({
       ? new Date().toISOString()
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+  const [showQuickAddressFields, setShowQuickAddressFields] = useState(false);
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
@@ -148,7 +149,8 @@ const LogInteractionSheet = ({
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+      setShowQuickAddressFields(false);
       setShowCancelConfirmDialog(false);
       setPendingDate("");
       setPendingType("");
@@ -237,7 +239,12 @@ const LogInteractionSheet = ({
       const { data, error } = await supabase.from("contacts").insert({
         first_name: quickForm.first_name, last_name: quickForm.last_name,
         company: quickForm.company || null, phone: quickForm.phone || null,
-        email: quickForm.email || null, address: quickForm.address || null,
+        email: quickForm.email || null,
+        street: quickForm.street || null,
+        street2: quickForm.street2 || null,
+        city: quickForm.city || null,
+        state: quickForm.state || null,
+        zip: quickForm.zip || null,
         user_id: user.id,
       }).select("id").single();
       if (error) throw error;
@@ -246,7 +253,8 @@ const LogInteractionSheet = ({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+      setShowQuickAddressFields(false);
       handleContactSelect(data.id);
     },
     onError: (e: any) => toast.error(e.message),
@@ -921,7 +929,37 @@ const LogInteractionSheet = ({
                       <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                     </div>
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Address" value={quickForm.address} onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })} className="h-9 text-sm bg-background" />
+                    {!showQuickAddressFields ? (
+                      <button
+                        onClick={() => setShowQuickAddressFields(true)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "#c8622a",
+                          fontFamily: "Outfit, sans-serif",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "4px 0",
+                        }}
+                      >
+                        <MapPin size={14} color="#c8622a" />
+                        + Add address
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <Input placeholder="Street address" value={quickForm.street} onChange={(e) => setQuickForm({ ...quickForm, street: e.target.value })} className="h-9 text-sm bg-background" />
+                        <Input placeholder="Street address line 2" value={quickForm.street2} onChange={(e) => setQuickForm({ ...quickForm, street2: e.target.value })} className="h-9 text-sm bg-background" />
+                        <Input placeholder="City" value={quickForm.city} onChange={(e) => setQuickForm({ ...quickForm, city: e.target.value })} className="h-9 text-sm bg-background" />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          <Input placeholder="State" value={quickForm.state} onChange={(e) => setQuickForm({ ...quickForm, state: e.target.value })} className="h-9 text-sm bg-background" />
+                          <Input placeholder="ZIP code" value={quickForm.zip} onChange={(e) => setQuickForm({ ...quickForm, zip: e.target.value })} className="h-9 text-sm bg-background" />
+                        </div>
+                      </div>
+                    )}
                     <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
@@ -955,7 +993,37 @@ const LogInteractionSheet = ({
                       <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                     </div>
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Address" value={quickForm.address} onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })} className="h-9 text-sm bg-background" />
+                    {!showQuickAddressFields ? (
+                      <button
+                        onClick={() => setShowQuickAddressFields(true)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "#c8622a",
+                          fontFamily: "Outfit, sans-serif",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "4px 0",
+                        }}
+                      >
+                        <MapPin size={14} color="#c8622a" />
+                        + Add address
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <Input placeholder="Street address" value={quickForm.street} onChange={(e) => setQuickForm({ ...quickForm, street: e.target.value })} className="h-9 text-sm bg-background" />
+                        <Input placeholder="Street address line 2" value={quickForm.street2} onChange={(e) => setQuickForm({ ...quickForm, street2: e.target.value })} className="h-9 text-sm bg-background" />
+                        <Input placeholder="City" value={quickForm.city} onChange={(e) => setQuickForm({ ...quickForm, city: e.target.value })} className="h-9 text-sm bg-background" />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          <Input placeholder="State" value={quickForm.state} onChange={(e) => setQuickForm({ ...quickForm, state: e.target.value })} className="h-9 text-sm bg-background" />
+                          <Input placeholder="ZIP code" value={quickForm.zip} onChange={(e) => setQuickForm({ ...quickForm, zip: e.target.value })} className="h-9 text-sm bg-background" />
+                        </div>
+                      </div>
+                    )}
                     <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
