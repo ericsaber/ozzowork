@@ -355,6 +355,7 @@ const LogStep2 = ({
             borderRadius: 12,
             overflow: "hidden",
             width: "100%",
+            padding: "12px 12px 8px",
           }}
         >
           <Calendar
