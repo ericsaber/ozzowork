@@ -737,8 +737,89 @@ const LogInteractionSheet = ({
           style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0, display: "flex", flexDirection: "column" }}
           onContextMenu={(e) => e?.preventDefault?.()}
         >
-          {step === "contact-picker" && (
-            <div style={{ paddingTop: 20 }}>
+          {step === "contact-picker" && (() => {
+            const sectionLabelStyle: React.CSSProperties = {
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#888480",
+              fontFamily: "Outfit, sans-serif",
+              marginBottom: 8,
+            };
+            const renderRow = (c: NonNullable<typeof contacts>[number]) => {
+              const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
+              const colors = getAvatarColors(`${c.first_name} ${c.last_name}`);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => handleContactSelect(c.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 0",
+                    background: "none",
+                    border: "none",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: colors.bg,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: colors.text,
+                      fontFamily: "Outfit, sans-serif",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 600,
+                        color: "#1c1a17",
+                        fontFamily: "Outfit, sans-serif",
+                      }}
+                    >
+                      {`${c.first_name} ${c.last_name}`.trim()}
+                    </div>
+                    {c.company && (
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "#888480",
+                          fontFamily: "Outfit, sans-serif",
+                        }}
+                      >
+                        {c.company}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            };
+            return (
+            <div
+              style={{
+                paddingTop: 20,
+                transform: slideOut ? "translateX(-100%)" : "translateX(0)",
+                opacity: slideOut ? 0 : 1,
+                transition: "transform 220ms ease-out, opacity 220ms ease-out",
+              }}
+            >
               <h2
                 style={{
                   fontFamily: "'Crimson Pro', serif",
@@ -786,93 +867,26 @@ const LogInteractionSheet = ({
                 />
               </div>
 
-              {!searchQuery && (
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "#888480",
-                    fontFamily: "Outfit, sans-serif",
-                    marginTop: 20,
-                    marginBottom: 8,
-                  }}
-                >
-                  RECENT
+              {!searchQuery ? (
+                <>
+                  {recentContacts.length > 0 && (
+                    <>
+                      <div style={{ ...sectionLabelStyle, marginTop: 20 }}>RECENT</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {recentContacts.map(renderRow)}
+                      </div>
+                    </>
+                  )}
+                  <div style={{ ...sectionLabelStyle, marginTop: recentContacts.length > 0 ? 20 : 20 }}>ALL CONTACTS</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {filteredContacts.map(renderRow)}
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 12 }}>
+                  {filteredContacts.map(renderRow)}
                 </div>
               )}
-
-              {/* Contact results */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                {filteredContacts.map((c) => {
-                  const initials = `${c.first_name[0] || ""}${c.last_name[0] || ""}`.toUpperCase();
-                  const colors = getAvatarColors(`${c.first_name} ${c.last_name}`);
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        handleContactSelect(c.id);
-                        setStep(1);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        padding: "10px 0",
-                        background: "none",
-                        border: "none",
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        textAlign: "left",
-                        width: "100%",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: "50%",
-                          background: colors.bg,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: colors.text,
-                          fontFamily: "Outfit, sans-serif",
-                        }}
-                      >
-                        {initials}
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 15,
-                            fontWeight: 600,
-                            color: "#1c1a17",
-                            fontFamily: "Outfit, sans-serif",
-                          }}
-                        >
-                          {`${c.first_name} ${c.last_name}`.trim()}
-                        </div>
-                        {c.company && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#888480",
-                              fontFamily: "Outfit, sans-serif",
-                            }}
-                          >
-                            {c.company}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
 
               {searchQuery && (
                 <button
@@ -916,7 +930,8 @@ const LogInteractionSheet = ({
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {step === 1 && (
             <div style={{ paddingTop: 20, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
