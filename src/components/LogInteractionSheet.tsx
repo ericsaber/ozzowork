@@ -84,7 +84,7 @@ const LogInteractionSheet = ({
       ? new Date().toISOString()
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
@@ -148,7 +148,7 @@ const LogInteractionSheet = ({
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
       setShowCancelConfirmDialog(false);
       setPendingDate("");
       setPendingType("");
@@ -237,17 +237,17 @@ const LogInteractionSheet = ({
       const { data, error } = await supabase.from("contacts").insert({
         first_name: quickForm.first_name, last_name: quickForm.last_name,
         company: quickForm.company || null, phone: quickForm.phone || null,
-        email: quickForm.email || null, user_id: user.id,
+        email: quickForm.email || null, address: quickForm.address || null,
+        user_id: user.id,
       }).select("id").single();
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      setContactId(data.id);
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "" });
-      toast.success("Contact created & selected");
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      handleContactSelect(data.id);
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -923,6 +923,7 @@ const LogInteractionSheet = ({
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Address" value={quickForm.address} onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
                       {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                     </Button>
@@ -956,6 +957,7 @@ const LogInteractionSheet = ({
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
                     <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Address" value={quickForm.address} onChange={(e) => setQuickForm({ ...quickForm, address: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
                       {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                     </Button>
