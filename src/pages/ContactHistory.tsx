@@ -266,7 +266,7 @@ const ContactHistory = () => {
                   rel="noopener noreferrer"
                   style={{
                     display: "inline-flex",
-                    alignItems: "flex-start",
+                    alignItems: "center",
                     gap: 4,
                     fontSize: 13,
                     color: "#c8622a",
