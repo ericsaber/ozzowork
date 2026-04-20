@@ -266,7 +266,7 @@ const ContactHistory = () => {
                   rel="noopener noreferrer"
                   style={{
                     display: "inline-flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: 4,
                     fontSize: 13,
                     color: "#c8622a",
@@ -275,7 +275,7 @@ const ContactHistory = () => {
                     marginTop: 2,
                   }}
                 >
-                  <MapPin size={13} color="#c8622a" style={{ flexShrink: 0 }} />
+                  <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, marginTop: 2 }} />
                   {(contact as any).address}
                 </a>
               )}
