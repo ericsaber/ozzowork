@@ -377,7 +377,7 @@ const LogStep2 = ({
       {selectedDate && (
         <div
           style={{
-            marginTop: 16,
+            marginTop: 24,
             display: "flex",
             flexDirection: "column",
             gap: 10,
