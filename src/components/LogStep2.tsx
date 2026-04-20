@@ -410,7 +410,7 @@ const LogStep2 = ({
                       alignItems: "center",
                       justifyContent: "center",
                       cursor: "pointer",
-                      background: selected ? "#c8622a" : "#f0ede8",
+                      background: selected ? "#c8622a" : "white",
                       border: selected ? "none" : "1px solid #e8e4de",
                       transition: "all 0.12s ease",
                     }}
