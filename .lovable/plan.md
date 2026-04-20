@@ -1,65 +1,62 @@
 
 
-## Plan: Structured Address Fields
+## Plan: MapPin Centering + Add Address Position
 
-Replace the single `address` text field with five structured fields (`street`, `street2`, `city`, `state`, `zip`) across three form locations + the contact-record display, with progressive-disclosure UI ("+ Add address" button that expands the section).
+**Files:** `src/pages/ContactHistory.tsx`, `src/pages/Contacts.tsx`
 
-### Database migration
+### Fix 1 — MapPin icon spans both address lines (ContactHistory.tsx ~line 287)
 
-The `contacts` table currently only has an `address` text column. I'll add five new nullable columns (`address` is left in place to preserve existing data — not displayed, not written to going forward):
+Restructure the address display so the MapPin sits to the left of a column containing both lines. Change `alignItems` to `"center"` on the `<a>` tag and use `alignSelf: "center"` on the MapPin. Remove `paddingLeft: 19` from line2.
 
-```sql
-ALTER TABLE public.contacts
-  ADD COLUMN street text,
-  ADD COLUMN street2 text,
-  ADD COLUMN city text,
-  ADD COLUMN state text,
-  ADD COLUMN zip text;
+```tsx
+<a
+  href={`https://maps.google.com/maps?q=${encodeURIComponent(query)}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    color: "#c8622a",
+    fontFamily: "var(--font-body)",
+    textDecoration: "none",
+    marginTop: 2,
+  }}
+>
+  <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, alignSelf: "center" }} />
+  <span style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+    <span>{line1}</span>
+    {line2 && <span>{line2}</span>}
+  </span>
+</a>
 ```
 
-No RLS changes needed — existing policies already cover all columns on the table.
+### Fix 2 — Move "+ Add address" in ContactHistory.tsx edit form (~line 492)
 
-### Part 1 — `src/pages/ContactHistory.tsx`
+Move the address section from after Company to after Email. Add `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"` to center the "+ Add address" button.
 
-- Replace `address: ""` in form state with the five new fields.
-- Add `showAddressFields` state.
-- Update `startEditing` to populate all five fields and auto-open the section if any address field has a value.
-- Update `updateContact` mutation: drop `address`, write `street`, `street2`, `city`, `state`, `zip` (each `|| null`).
-- Replace the existing single-line address `<a>` (line ~262) with the structured two-line display block from the spec — `line1 = street, street2`, `line2 = city, state zip`, both used to build the maps query. Preserve `MapPin size={15}` styling.
-- Replace the single Address `<Input>` (line 464) with the progressive-disclosure block: "+ Add address" button (sienna), or expanded fields (`Street`, `Street 2`, `City`, then `State`/`ZIP` in a 2-col grid).
+New order: First/Last Name → Company → Phone → Email → Address section → Save Changes
 
-### Part 2 — `src/pages/Contacts.tsx`
+### Fix 3 — Move "+ Add address" in Contacts.tsx new contact form (~line 345)
 
-- Replace `address: ""` in `form` state with the five new fields.
-- Add `showAddressFields` state, reset to `false` in `addContact.onSuccess` alongside the existing form reset.
-- Replace the single Address `<Input>` in the new-contact form with the same progressive-disclosure pattern.
-- Update `addContact` mutation insert: drop `address`, write the five new fields.
-- Update `handlePickFromPhone`'s `contactData` to include the five empty fields.
-- Note: `bulkAddContacts` (CSV import) is left as-is — only `address` reference there was already removed. No address mapping in CSV import currently.
+Same change as Fix 2: move address section from after Company to after Email, with centered "+ Add address" button.
 
-### Part 3 — `src/components/LogInteractionSheet.tsx`
-
-- Replace `address: ""` in `quickForm` state and in both reset locations (initial state line 87, `clearAndClose` line 151, `quickAddContact.onSuccess` line 249).
-- Add `showQuickAddressFields` state. Reset to `false` in `clearAndClose` and `quickAddContact.onSuccess`.
-- Update `quickAddContact` mutation insert: drop `address`, write the five new fields.
-- Replace both Address `<Input>` instances (lines 924 and 958) with the same progressive-disclosure pattern, sized for the compact quick-add form (`h-9 text-sm`).
+New order: First/Last Name → Company → Phone → Email → Address section → Add Contact button
 
 ### Preserved
 - All `console.log` statements
-- All existing `<a>`, `<MapPin>`, and `<span>` styles from prior fixes (kept on `line1` row)
-- All other component logic
-- Existing `address` column in DB (no data loss)
+- All existing form field logic and mutations
+- All styling except the specific changes noted
 
 ### Checklist
-- ✅ Migration adds 5 nullable columns (`street`, `street2`, `city`, `state`, `zip`)
-- ✅ Only `ContactHistory.tsx`, `Contacts.tsx`, `LogInteractionSheet.tsx` touched
-- ✅ All `address` field references in code replaced with the five new fields
-- ✅ Contact record displays address as two structured lines with `MapPin`
-- ✅ Maps link uses concatenated query string from all five fields
-- ✅ All forms show "+ Add address" button, expand on tap
-- ✅ `showAddressFields` auto-opens in edit mode when address data exists
-- ✅ State/ZIP in a 2-column grid
-- ✅ `showAddressFields` / `showQuickAddressFields` reset on form close/submit
-- ✅ `handlePickFromPhone` updated to include five empty address fields
-- ✅ All `console.log` statements preserved
+- ✅ Only `ContactHistory.tsx` and `Contacts.tsx` touched
+- ✅ Address `<a>` restructured: MapPin left, column of line1+line2 right
+- ✅ `alignItems: "center"` on `<a>` so icon centers across both lines
+- ✅ `alignSelf: "center"` on MapPin
+- ✅ `paddingLeft: 19` removed from line2 span
+- ✅ Address section moved to after Email, before Save Changes in ContactHistory edit form
+- ✅ Address section moved to after Email, before Add Contact button in Contacts new contact form
+- ✅ "+ Add address" button centered with `width: "100%"`, `justifyContent: "center"`, `textAlign: "center"`
+- ✅ All `console.log` preserved
 
