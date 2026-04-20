@@ -1,36 +1,36 @@
 
 
-## Plan: Alert Visibility Condition
+## Plan: Tomorrow Label in Outstanding Follow-up Card
 
-**File:** `src/components/LogStep1.tsx`
+**File:** `src/components/OutstandingFollowupStep.tsx`
 
 ### Change
 
-Update the `showAlert` computed value on line 199 to use `connectType !== ""` instead of `isContactPrefilled`:
+Add an `isTomorrow` check to the `dueDateStr` computation to display "Tomorrow" when the follow-up is due tomorrow:
 
 ```tsx
-// Before (line 199):
-const showAlert = !!(activeFollowup && onSaveLogOnly && (isContactPrefilled || alertRevealed));
+// After line 74 (after isOverdue computation):
+const isTomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd") === existingFollowup.planned_date;
 
-// After:
-const showAlert = !!(activeFollowup && onSaveLogOnly && (connectType !== "" || alertRevealed));
+// Replace lines 111-115 (dueDateStr computation):
+const dueDateStr = isToday
+  ? "Today"
+  : isOverdue
+  ? `Was due ${format(fuDate, "MMM d")}`
+  : isTomorrow
+  ? "Tomorrow"
+  : format(fuDate, "MMM d");
 ```
-
-### Behavior
-
-| Entry point | `connectType` on mount | Alert shows |
-|---|---|---|
-| Log it from card (type pre-selected) | non-empty | immediately |
-| FAB from contact page (no type pre-selected) | empty | after first action (canNext flips true) |
 
 ### Preserved
 - All `console.log` statements
-- `alertRevealed` state and its `useEffect` trigger
-- All other component logic
+- `addDays` and `format` are already imported from `date-fns`
+- All other component logic unchanged
 
 ### Checklist
-- ✅ Only `LogStep1.tsx` touched
-- ✅ `showAlert` condition uses `connectType !== ""` instead of `isContactPrefilled`
+- ✅ Only `OutstandingFollowupStep.tsx` touched
+- ✅ `isTomorrow` computed by comparing tomorrow's date string to `existingFollowup.planned_date`
+- ✅ `dueDateStr` returns "Tomorrow" when `isTomorrow` is true
 - ✅ No other changes
 - ✅ All `console.log` preserved
 
