@@ -929,12 +929,17 @@ const LogInteractionSheet = ({
                       <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                     </div>
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     {!showQuickAddressFields ? (
                       <button
                         onClick={() => setShowQuickAddressFields(true)}
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
+                          textAlign: "center",
+                          width: "100%",
                           gap: 6,
                           fontSize: 13,
                           fontWeight: 500,
@@ -960,8 +965,6 @@ const LogInteractionSheet = ({
                         </div>
                       </div>
                     )}
-                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
                       {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                     </Button>
@@ -993,12 +996,17 @@ const LogInteractionSheet = ({
                       <Input placeholder="Last Name" value={quickForm.last_name} onChange={(e) => setQuickForm({ ...quickForm, last_name: e.target.value })} className="h-9 text-sm bg-background" />
                     </div>
                     <Input placeholder="Company" value={quickForm.company} onChange={(e) => setQuickForm({ ...quickForm, company: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
+                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     {!showQuickAddressFields ? (
                       <button
                         onClick={() => setShowQuickAddressFields(true)}
                         style={{
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: "center",
+                          textAlign: "center",
+                          width: "100%",
                           gap: 6,
                           fontSize: 13,
                           fontWeight: 500,
@@ -1024,8 +1032,6 @@ const LogInteractionSheet = ({
                         </div>
                       </div>
                     )}
-                    <Input placeholder="Phone" value={quickForm.phone} onChange={(e) => setQuickForm({ ...quickForm, phone: e.target.value })} className="h-9 text-sm bg-background" />
-                    <Input placeholder="Email" type="email" value={quickForm.email} onChange={(e) => setQuickForm({ ...quickForm, email: e.target.value })} className="h-9 text-sm bg-background" />
                     <Button size="sm" onClick={() => quickAddContact.mutate()} disabled={!quickForm.first_name || quickAddContact.isPending} className="w-full">
                       {quickAddContact.isPending ? "Creating..." : "Create & Select"}
                     </Button>

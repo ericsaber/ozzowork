@@ -291,8 +291,8 @@ const ContactHistory = () => {
                     rel="noopener noreferrer"
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      gap: 6,
+                      flexDirection: "column",
+                      gap: 1,
                       fontSize: 13,
                       color: "#c8622a",
                       fontFamily: "var(--font-body)",
@@ -300,11 +300,8 @@ const ContactHistory = () => {
                       marginTop: 2,
                     }}
                   >
-                    <MapPin size={15} color="#c8622a" style={{ flexShrink: 0, alignSelf: "center" }} />
-                    <span style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      <span>{line1}</span>
-                      {line2 && <span>{line2}</span>}
-                    </span>
+                    <span>{line1}</span>
+                    {line2 && <span>{line2}</span>}
                   </a>
                 );
               })()}
