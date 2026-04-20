@@ -266,7 +266,7 @@ const ContactHistory = () => {
                   rel="noopener noreferrer"
                   style={{
                     display: "inline-flex",
-                    alignItems: "center",
+                    alignItems: "flex-start",
                     gap: 4,
                     fontSize: 13,
                     color: "#c8622a",
@@ -275,7 +275,7 @@ const ContactHistory = () => {
                     marginTop: 2,
                   }}
                 >
-                  <MapPin size={13} color="#c8622a" />
+                  <MapPin size={13} color="#c8622a" style={{ flexShrink: 0 }} />
                   {(contact as any).address}
                 </a>
               )}
@@ -459,9 +459,9 @@ const ContactHistory = () => {
               <Input placeholder="Last Name" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className="bg-background" />
             </div>
             <Input placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className="bg-background" />
+            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
             <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-background" />
             <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-background" />
-            <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="bg-background" />
             <Button onClick={() => updateContact.mutate()} disabled={!form.first_name || updateContact.isPending} className="w-full">
               {updateContact.isPending ? "Saving..." : "Save Changes"}
             </Button>
