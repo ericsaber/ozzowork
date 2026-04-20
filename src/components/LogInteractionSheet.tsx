@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Search, CalendarIcon, ArrowRight, Check } from "lucide-react";
+import { Search, CalendarIcon, ArrowRight, Check, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FullscreenTakeover from "@/components/FullscreenTakeover";
@@ -84,7 +84,8 @@ const LogInteractionSheet = ({
       ? new Date().toISOString()
       : new Date(connectDate + "T12:00:00").toISOString();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+  const [quickForm, setQuickForm] = useState({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+  const [showQuickAddressFields, setShowQuickAddressFields] = useState(false);
   const [pendingDate, setPendingDate] = useState("");
   const [pendingType, setPendingType] = useState("");
   const [pendingReminder, setPendingReminder] = useState("");
@@ -148,7 +149,8 @@ const LogInteractionSheet = ({
       setContactCleared(false);
       setConnectDate(format(new Date(), "yyyy-MM-dd"));
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+      setShowQuickAddressFields(false);
       setShowCancelConfirmDialog(false);
       setPendingDate("");
       setPendingType("");
@@ -237,7 +239,12 @@ const LogInteractionSheet = ({
       const { data, error } = await supabase.from("contacts").insert({
         first_name: quickForm.first_name, last_name: quickForm.last_name,
         company: quickForm.company || null, phone: quickForm.phone || null,
-        email: quickForm.email || null, address: quickForm.address || null,
+        email: quickForm.email || null,
+        street: quickForm.street || null,
+        street2: quickForm.street2 || null,
+        city: quickForm.city || null,
+        state: quickForm.state || null,
+        zip: quickForm.zip || null,
         user_id: user.id,
       }).select("id").single();
       if (error) throw error;
@@ -246,7 +253,8 @@ const LogInteractionSheet = ({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowQuickAdd(false);
-      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", address: "" });
+      setQuickForm({ first_name: "", last_name: "", company: "", phone: "", email: "", street: "", street2: "", city: "", state: "", zip: "" });
+      setShowQuickAddressFields(false);
       handleContactSelect(data.id);
     },
     onError: (e: any) => toast.error(e.message),
